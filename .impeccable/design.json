@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-16T00:00:00Z",
+  "title": "Design System: GiftHub",
+  "extensions": {
+    "colorMeta": {
+      "navy-ink": { "role": "neutral", "displayName": "Navy Ink", "tonalRamp": ["#14162A", "#20233F", "#2E3258", "#454A75", "#666B91", "#8C90AE", "#B5B8CC", "#E0E2EC"] },
+      "tissue-paper": { "role": "neutral", "displayName": "Tissue Paper", "tonalRamp": ["#2A2C36", "#4A4D5C", "#6E7283", "#9599A8", "#BABDC9", "#D7D9E2", "#E6E8EF", "#F1F2F6"] },
+      "slate-muted": { "role": "neutral", "displayName": "Slate Muted", "tonalRamp": ["#262839", "#3B3E55", "#4D506B", "#5D6280", "#7A7F99", "#9A9EB3", "#C0C3D1", "#E4E5EC"] },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "tonalRamp": ["#5F6273", "#7F8394", "#9DA1B1", "#B9BDCC", "#CDD0DB", "#DCDFE8", "#E8EAF0", "#F4F5F8"] },
+      "berry-ribbon": { "role": "primary", "displayName": "Berry Ribbon", "tonalRamp": ["#3D0418", "#5A0725", "#8C0F3D", "#B0174F", "#CF4A79", "#E487A6", "#F1C1D1", "#F8E4EB"] },
+      "sale-green": { "role": "secondary", "displayName": "Sale Green", "tonalRamp": ["#0A2E1F", "#124A33", "#1C7350", "#2E9469", "#5BB38D", "#94D0B4", "#C6E7D7", "#E2F2EA"] },
+      "focus-blue": { "role": "neutral", "displayName": "Focus Blue", "tonalRamp": ["#122057", "#1D3285", "#2B46B5", "#3B5BDB", "#6680E4", "#94A7EC", "#C3CEF5", "#E6EBFC"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "One page heading per screen, e.g. a member's list name." },
+      "title": { "displayName": "Title", "purpose": "Item titles." },
+      "body": { "displayName": "Body", "purpose": "Running text, notes, empty states; max 72ch." },
+      "label": { "displayName": "Label", "purpose": "Store, occasion, counts, meter band names; sentence case." },
+      "price": { "displayName": "Price", "purpose": "Prices in tabular figures." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "ease-wrap", "value": "cubic-bezier(.2,.7,.2,1)", "purpose": "Ribbon bands drawing across a claimed tile (380ms; horizontal band delayed 160ms)." },
+      { "name": "ease-bow", "value": "cubic-bezier(.3,1.5,.5,1)", "purpose": "Bow pop with slight overshoot (320ms, 420ms delay)." },
+      { "name": "toast", "value": "opacity .2s, transform .2s", "purpose": "Toast rises 20px and fades in; dismisses after 3.2s." }
+    ],
+    "breakpoints": [
+      { "name": "phone-narrow", "value": "420px" },
+      { "name": "shell", "value": "900px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The main action of a section, such as Add.",
+      "html": "<button class=\"ds-btn-primary\">Add</button>",
+      "css": ".ds-btn-primary{height:44px;padding:0 16px;border-radius:8px;border:1px solid #20233F;background:#20233F;color:#fff;font:600 15px 'Schibsted Grotesk',system-ui,sans-serif;cursor:pointer}.ds-btn-primary:hover{background:#2E3258}.ds-btn-primary:focus-visible{outline:2px solid #3B5BDB;outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Per-item actions such as Reserve.",
+      "html": "<button class=\"ds-btn-secondary\">Reserve</button>",
+      "css": ".ds-btn-secondary{height:36px;padding:0 14px;border-radius:8px;border:1px solid #DCDFE8;background:#fff;color:#20233F;font:600 14px 'Schibsted Grotesk',system-ui,sans-serif;cursor:pointer}.ds-btn-secondary:hover{border-color:#B9BDCC}.ds-btn-secondary:focus-visible{outline:2px solid #3B5BDB;outline-offset:2px}"
+    },
+    {
+      "name": "Paste-a-link Input",
+      "kind": "input",
+      "refersTo": "input-link",
+      "description": "Quick-add field for product URLs.",
+      "html": "<input class=\"ds-input\" type=\"url\" placeholder=\"Paste a product link to add to your list\">",
+      "css": ".ds-input{height:44px;width:320px;padding:0 14px;border:1px solid #DCDFE8;border-radius:8px;background:#fff;color:#20233F;font:400 15px 'Schibsted Grotesk',system-ui,sans-serif}.ds-input::placeholder{color:#8A8FA8}.ds-input:focus-visible{outline:2px solid #3B5BDB;outline-offset:2px}"
+    },
+    {
+      "name": "Occasion Chips",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Single-select occasion filter.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"true\">All</button><button class=\"ds-chip\" aria-pressed=\"false\">Birthday</button><button class=\"ds-chip\" aria-pressed=\"false\">Anniversary</button></div>",
+      "css": ".ds-chips{display:flex;gap:6px}.ds-chip{height:34px;padding:0 13px;border-radius:999px;border:1px solid #DCDFE8;background:transparent;color:#20233F;font:500 14px 'Schibsted Grotesk',system-ui,sans-serif;cursor:pointer}.ds-chip[aria-pressed=true]{background:#20233F;border-color:#20233F;color:#fff}.ds-chip:hover{border-color:#B9BDCC}.ds-chip:focus-visible{outline:2px solid #3B5BDB;outline-offset:2px}"
+    },
+    {
+      "name": "Member Tabs",
+      "kind": "nav",
+      "description": "One tab per Circle member.",
+      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab\" aria-selected=\"true\">Maya <span>7</span></button><button class=\"ds-tab\" aria-selected=\"false\">You <span>3</span></button></div>",
+      "css": ".ds-tabs{display:flex;border-bottom:1px solid #DCDFE8}.ds-tab{position:relative;border:0;background:none;padding:10px 4px 12px;margin-right:20px;color:#5D6280;font:600 15px 'Schibsted Grotesk',system-ui,sans-serif;cursor:pointer}.ds-tab span{font-size:13px;margin-left:6px;color:#5D6280}.ds-tab[aria-selected=true]{color:#20233F}.ds-tab[aria-selected=true]::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:2px;background:#20233F}.ds-tab:focus-visible{outline:2px solid #3B5BDB;outline-offset:2px}"
+    },
+    {
+      "name": "Claimed Product Tile",
+      "kind": "custom",
+      "refersTo": "product-tile",
+      "description": "Signature component: a claimed item wrapped in the berry ribbon. Never shown to the item's owner.",
+      "html": "<div class=\"ds-tile\"><span class=\"ds-sale\">Sale</span><span class=\"ds-v\"></span><span class=\"ds-h\"></span><svg class=\"ds-bow\" viewBox=\"0 0 44 30\"><path d=\"M22 15C15 3 3 2 4 10s10 7 18 5c8 2 17 3 18-5S29 3 22 15z\" fill=\"currentColor\"/><path d=\"M22 15l-7 13M22 15l7 13\" stroke=\"currentColor\" stroke-width=\"5\" stroke-linecap=\"round\"/></svg></div>",
+      "css": ".ds-tile{position:relative;width:240px;aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:#F3E6DF}.ds-sale{position:absolute;left:10px;top:10px;background:#E2F2EA;color:#1C7350;font:700 12.5px 'Schibsted Grotesk',system-ui,sans-serif;padding:3px 8px;border-radius:6px}.ds-v{position:absolute;left:calc(68% - 9px);top:0;bottom:0;width:18px;background:#B0174F}.ds-h{position:absolute;top:calc(58% - 9px);left:0;right:0;height:18px;background:#B0174F}.ds-bow{position:absolute;left:68%;top:58%;width:44px;height:30px;transform:translate(-50%,-50%);color:#8C0F3D}"
+    },
+    {
+      "name": "Priority Meter",
+      "kind": "custom",
+      "description": "Ten-step priority bar with its band name.",
+      "html": "<span class=\"ds-prio\"><span class=\"ds-meter\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i></i></span>Must have</span>",
+      "css": ".ds-prio{display:inline-flex;align-items:center;gap:8px;color:#5D6280;font:500 13px 'Schibsted Grotesk',system-ui,sans-serif}.ds-meter{display:flex;gap:2px}.ds-meter i{width:4px;height:12px;border-radius:1px;background:#D3D6E2}.ds-meter i.on{background:#20233F}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Tissue and Ribbon",
+    "overview": "GiftHub looks like the inside of a gift box: cool tissue-paper surfaces, navy ink for everything you read, and a single berry ribbon that only appears when someone has claimed a gift. The interface stays calm and plain, as the product voice does, so the ribbon is the one thing that feels like an event.\n\nDensity is moderate. Product imagery leads in the grid and steps back in the list, and controls are familiar and quiet so givers can scan a partner's list quickly on a phone. Depth comes from tone and hairlines, not shadows.\n\nThe system rejects the warm cream-and-terracotta look, black-with-neon accents, and the generic SaaS card kit (identical shadowed cards and gradient washes).",
+    "keyCharacteristics": [
+      "Cool, near-white tissue background with navy ink; no pure black anywhere.",
+      "Berry is reserved for claims: the ribbon, claim status text, and nothing else.",
+      "One typeface (Schibsted Grotesk) carries every role through weight and size alone.",
+      "Flat surfaces separated by hairlines and tonal fills.",
+      "Priority shown as a 10-step meter plus its band name, never as a lone number in the grid."
+    ],
+    "rules": [
+      { "name": "The Ribbon Is Earned Rule", "body": "Berry appears only where a claim exists. It is never used for decoration, brand flourishes, primary buttons, or links.", "section": "colors" },
+      { "name": "The Owner Never Sees Berry Rule", "body": "On any screen showing a user their own items, no berry renders, because a claim would be the only reason for it.", "section": "colors" },
+      { "name": "The Sentence Case Rule", "body": "No all-caps labels, no tracked-out eyebrows, and no monospace. Hierarchy comes from weight and size.", "section": "typography" },
+      { "name": "The Flat Box Rule", "body": "If something needs to stand out, change its fill or border, not its elevation.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep berry for claims only, so a ribbon always means \"someone is giving this\".",
+      "Do show price in tabular figures and format it in the item's own currency, for the viewer's locale.",
+      "Do put store domain, title, price with priority, then occasion, in that order under every product tile.",
+      "Do separate surfaces with 1px hairlines and tonal fills.",
+      "Do keep visible 2px focus-blue focus rings on every interactive element."
+    ],
+    "donts": [
+      "Don't render any claim colour, badge, count, or motion on a screen showing users their own items.",
+      "Don't add drop shadows to cards, tiles, or buttons.",
+      "Don't use all-caps labels, tracked eyebrows, monospace labels, or arrows appended to button text.",
+      "Don't wrap item metadata in bordered or shadowed cards; it sits on the tissue background.",
+      "Don't add a second display typeface or decorative motion beyond the ribbon wrap."
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+.impeccable/config.local.json
+.impeccable/questions/
+.impeccable/mocks/
+.impeccable/review/
+node_modules/
+.env
+.env.*
+!.env.example
