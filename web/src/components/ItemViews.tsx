@@ -147,7 +147,7 @@ export function ItemList({ items, slot }: { items: Item[]; slot: (item: Item) =>
 const chip =
   'h-[34px] shrink-0 rounded-full px-[13px] text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)] aria-pressed:bg-print aria-pressed:shadow-[inset_0_0_0_1.5px_var(--color-plum)]'
 const pill =
-  'h-[34px] rounded-full bg-print px-3 text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
+  'h-[34px] rounded-full bg-print pl-3.5 text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
 
 /** Occasion chips, priority and price filters, sort, and the Strip/List control. */
 export function ListTools({
@@ -179,15 +179,25 @@ export function ListTools({
           ))}
         </div>
       )}
-      <div className="flex w-full flex-wrap items-center gap-2.5 sm:ml-auto sm:w-auto">
+      <div className="grid w-full grid-cols-2 gap-2.5 sm:ml-auto sm:flex sm:w-auto sm:items-center">
         <label className="sr-only" htmlFor="band">
           Priority
         </label>
-        <select id="band" className={`${pill} flex-1 sm:flex-none`} value={filter.band ?? ''} onChange={(e) => set({ band: (e.target.value || null) as PriorityBand | null })}>
+        <select id="band" className={`${pill} select-pill min-w-0`} value={filter.band ?? ''} onChange={(e) => set({ band: (e.target.value || null) as PriorityBand | null })}>
           <option value="">Any priority</option>
           <option>Must have</option>
           <option>Would love</option>
           <option>Nice to have</option>
+        </select>
+        <label className="sr-only" htmlFor="sort">
+          Sort
+        </label>
+        <select id="sort" className={`${pill} select-pill min-w-0`} value={filter.sort} onChange={(e) => set({ sort: e.target.value as SortKey })}>
+          {SORTS.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
         </select>
         <label className="sr-only" htmlFor="maxprice">
           Highest price
@@ -196,31 +206,21 @@ export function ListTools({
           id="maxprice"
           inputMode="decimal"
           placeholder="Up to price"
-          className={`${pill} w-[112px] placeholder:font-semibold placeholder:text-placeholder`}
+          className={`${pill} min-w-0 px-3.5 placeholder:font-semibold placeholder:text-placeholder hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)] sm:w-[118px]`}
           value={filter.maxPrice ?? ''}
           onChange={(e) => {
             const v = e.target.value.replace(/[^\d.]/g, '')
             set({ maxPrice: v === '' || Number.isNaN(Number(v)) ? null : Number(v) })
           }}
         />
-        <label className="sr-only" htmlFor="sort">
-          Sort
-        </label>
-        <select id="sort" className={`${pill} flex-1 sm:flex-none`} value={filter.sort} onChange={(e) => set({ sort: e.target.value as SortKey })}>
-          {SORTS.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-        <div role="group" aria-label="View" className="inline-flex rounded-full bg-print p-[3px] shadow-[inset_0_0_0_1.5px_var(--color-edge)]">
+        <div role="group" aria-label="View" className="grid grid-cols-2 rounded-full bg-print p-[3px] shadow-[inset_0_0_0_1.5px_var(--color-edge)] sm:inline-grid">
           {(['strip', 'list'] as const).map((v) => (
             <button
               key={v}
               type="button"
               aria-pressed={view === v}
               onClick={() => onView(v)}
-              className="h-7 rounded-full px-3 text-small font-semibold text-plum-soft aria-pressed:bg-plum aria-pressed:text-white"
+              className="h-7 rounded-full px-3 text-small font-semibold text-plum-soft hover:text-plum aria-pressed:bg-plum aria-pressed:text-white"
             >
               {v === 'strip' ? 'Strip' : 'List'}
             </button>

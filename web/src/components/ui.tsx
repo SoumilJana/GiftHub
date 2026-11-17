@@ -135,7 +135,7 @@ export function SelectField({
         {...rest}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(id, hint, error)}
-        className={`${inputClass} appearance-auto font-semibold`}
+        className={`${inputClass} select-pill pl-[18px] font-semibold`}
       >
         {children}
       </select>
