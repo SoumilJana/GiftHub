@@ -66,13 +66,17 @@ export function Photo({ item, size = 'frame' }: { item: Item; size?: 'frame' | '
 
 export function Price({ item, className = '' }: { item: Item; className?: string }) {
   if (item.price === null) return <span className={`text-small text-plum-soft ${className}`}>No price</span>
+  const was = item.original_price !== null && item.original_price > item.price
   return (
-    <span className={`font-extrabold tabular-nums ${className}`}>
-      {formatPrice(item.price, item.currency)}
-      {item.original_price !== null && item.original_price > item.price && (
-        <s className="ml-1.5 text-small font-normal text-plum-soft">
+    <span className={`flex min-w-0 flex-col leading-tight font-extrabold tabular-nums ${className}`}>
+      <span>
+        {was && <span className="sr-only">now </span>}
+        {formatPrice(item.price, item.currency)}
+      </span>
+      {was && (
+        <s className="text-small font-normal text-plum-soft">
           <span className="sr-only">was </span>
-          {formatPrice(item.original_price, item.currency)}
+          {formatPrice(item.original_price!, item.currency)}
         </s>
       )}
     </span>
@@ -108,9 +112,9 @@ export function ItemStrip({ items, slot }: { items: Item[]; slot: (item: Item) =
           <div className="flex flex-1 flex-col gap-1 px-[3px] pt-2.5 pb-3">
             <span className="truncate text-small text-plum-soft">{store(item)}</span>
             <Title item={item} />
-            <div className="mt-0.5 flex items-center justify-between gap-2">
+            <div className="mt-0.5 flex items-start justify-between gap-2">
               <Price item={item} />
-              <Hearts priority={item.priority} />
+              <Hearts priority={item.priority} className="h-[1.25em] shrink-0" />
             </div>
             {item.occasions.length > 0 && <span className="text-small text-plum-soft">{occasionsText(item)}</span>}
             <div className="mt-auto flex min-h-12 flex-wrap items-center gap-1.5 pt-2">{slot(item)}</div>

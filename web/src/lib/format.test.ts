@@ -21,6 +21,8 @@ describe('priorityBand', () => {
 describe('formatPrice', () => {
   it('uses the item currency', () => {
     expect(formatPrice(39.9, 'GBP', 'en-GB')).toBe('£39.90')
-    expect(formatPrice(169, 'USD', 'en-US')).toBe('$169.00')
+    expect(formatPrice(169, 'USD', 'en-US')).toBe('$169')
+    expect(formatPrice(1899, 'INR', 'en-IN')).toBe('₹1,899')
+    expect(formatPrice(1234.5, 'EUR', 'en-IE')).toBe('€1,234.50')
   })
 })

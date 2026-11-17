@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { EditItemSheet } from '../components/ItemSheet'
 import { ItemsView, ListTools } from '../components/ItemViews'
-import { useStoredView } from '../lib/view'
+import { useDismissed, useStoredView } from '../lib/view'
 import { EmptyState } from '../components/Page'
 import { Button, LockIcon, Notice, Spinner } from '../components/ui'
 import { friendlyError } from '../lib/errors'
@@ -19,6 +19,7 @@ export function MyListPage() {
   const [filter, setFilter] = useState<ListFilter>(defaultFilter)
   const [view, setView] = useStoredView()
   const [editing, setEditing] = useState<Editing>(null)
+  const [privacySeen, dismissPrivacy] = useDismissed('owner-privacy')
 
   const myCircles = circles.data ?? []
   const all = items.data ?? []
@@ -37,11 +38,14 @@ export function MyListPage() {
         <AddBar onAdd={(url) => setEditing({ item: null, url })} />
       </div>
 
-      {all.length > 0 && (
+      {all.length > 0 && !privacySeen && (
         <div className="mt-5">
           <Notice>
             <LockIcon />
-            <strong className="font-extrabold">You won’t see who is buying what.</strong> Claims on your wishes stay hidden until you mark one received.
+            <strong className="font-extrabold">You won’t see who is buying what.</strong> Claims on your wishes stay hidden until you mark one received.{' '}
+            <button type="button" onClick={dismissPrivacy} className="font-semibold underline underline-offset-3 hover:text-plum">
+              Got it
+            </button>
           </Notice>
         </div>
       )}
@@ -72,7 +76,7 @@ export function MyListPage() {
                   <Button variant="ghost" className="h-[34px]! px-3.5! text-small" onClick={() => setEditing({ item, url: null })}>
                     Edit
                   </Button>
-                  <span className="text-small text-plum-soft">{sharedWith(item, myCircles.length)}</span>
+                  <span className="min-w-[4.75rem] text-small text-plum-soft">{sharedWith(item, myCircles.length)}</span>
                 </>
               )}
             />

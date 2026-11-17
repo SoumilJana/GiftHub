@@ -24,3 +24,26 @@ export function useStoredView(): [ViewMode, (v: ViewMode) => void] {
     },
   ]
 }
+
+/** A one-time note the viewer has dismissed, remembered on this device. */
+export function useDismissed(key: string): [boolean, () => void] {
+  const storageKey = `gifthub.dismissed.${key}`
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(storageKey) === '1'
+    } catch {
+      return false
+    }
+  })
+  return [
+    dismissed,
+    () => {
+      setDismissed(true)
+      try {
+        localStorage.setItem(storageKey, '1')
+      } catch {
+        /* private mode: hidden for this visit only */
+      }
+    },
+  ]
+}

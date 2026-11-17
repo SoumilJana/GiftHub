@@ -1,6 +1,8 @@
 /** Formats a price in the item's own currency, for the viewer's locale. */
+/** Whole amounts drop the minor units (₹1,899, not ₹1,899.00); others keep them (£39.90). */
 export function formatPrice(amount: number, currency: string, locale?: string): string {
-  return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount)
+  const whole = Number.isInteger(amount)
+  return new Intl.NumberFormat(locale, { style: 'currency', currency, ...(whole && { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }).format(amount)
 }
 
 export type PriorityBand = 'Must have' | 'Would love' | 'Nice to have'
