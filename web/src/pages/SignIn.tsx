@@ -169,6 +169,17 @@ export function SignInPage() {
           {signUp ? 'Sign in' : 'Create an account'}
         </button>
       </p>
+      <p className="mt-4 text-small text-plum-soft">
+        By continuing, you agree to the{' '}
+        <Link to="/terms" className="underline underline-offset-3 hover:text-plum">
+          Terms
+        </Link>{' '}
+        and{' '}
+        <Link to="/privacy" className="underline underline-offset-3 hover:text-plum">
+          Privacy Policy
+        </Link>
+        .
+      </p>
     </AuthFrame>
   )
 }

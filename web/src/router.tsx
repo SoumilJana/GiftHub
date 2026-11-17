@@ -4,7 +4,9 @@ import { EmptyState, Page } from './components/Page'
 import { CirclePage } from './pages/Circle'
 import { CirclesPage } from './pages/Circles'
 import { CircleSettingsPage } from './pages/CircleSettings'
+import { HelpPage } from './pages/Help'
 import { JoinPage } from './pages/Join'
+import { CookiesPage, PrivacyPage, TermsPage } from './pages/Legal'
 import { MyListPage } from './pages/MyList'
 import { ResetPasswordPage, UpdatePasswordPage } from './pages/Password'
 import { ProfilePage } from './pages/Profile'
@@ -42,6 +44,12 @@ const resetRoute = createRoute({ getParentRoute: () => rootRoute, path: '/reset-
 const updatePasswordRoute = createRoute({ getParentRoute: () => rootRoute, path: '/update-password', component: UpdatePasswordPage })
 const joinRoute = createRoute({ getParentRoute: () => rootRoute, path: '/join/$code', component: JoinPage })
 
+// Public reading pages, signed in or out
+const helpRoute = createRoute({ getParentRoute: () => rootRoute, path: '/help', component: HelpPage })
+const privacyRoute = createRoute({ getParentRoute: () => rootRoute, path: '/privacy', component: PrivacyPage })
+const termsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/terms', component: TermsPage })
+const cookiesRoute = createRoute({ getParentRoute: () => rootRoute, path: '/cookies', component: CookiesPage })
+
 // Signed-in area
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: 'app', component: AppLayout })
 
@@ -66,6 +74,10 @@ const routeTree = rootRoute.addChildren([
   resetRoute,
   updatePasswordRoute,
   joinRoute,
+  helpRoute,
+  privacyRoute,
+  termsRoute,
+  cookiesRoute,
   appRoute.addChildren([myListRoute, welcomeRoute, circlesRoute, circleRoute, circleSettingsRoute, receivedRoute, profileRoute]),
 ])
 

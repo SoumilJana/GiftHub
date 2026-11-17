@@ -1,6 +1,8 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
+import { BugReportSheet } from '../components/BugReport'
 import { CurrencySelect } from '../components/CurrencySelect'
+import { InfoLinks } from '../components/InfoFrame'
 import { Page } from '../components/Page'
 import { Button, ConfirmButton, Notice, Panel, Spinner, TextField } from '../components/ui'
 import { useAuth } from '../lib/auth'
@@ -25,6 +27,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
   const [name, setName] = useState(profile.display_name)
   const [currency, setCurrency] = useState(profile.currency)
   const [error, setError] = useState<string | null>(null)
+  const [reporting, setReporting] = useState(false)
 
   async function save(e: FormEvent) {
     e.preventDefault()
@@ -58,6 +61,17 @@ function ProfileForm({ profile }: { profile: Profile }) {
         </Panel>
 
         <Panel>
+          <h2 className="font-extrabold">Help and legal</h2>
+          <p className="mt-1 mb-4 text-small text-plum-soft">Answers to common questions, or tell us when something goes wrong.</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+            <Button variant="ghost" onClick={() => setReporting(true)}>
+              Report a bug
+            </Button>
+            <InfoLinks />
+          </div>
+        </Panel>
+
+        <Panel>
           <h2 className="font-extrabold">Sign out</h2>
           <p className="mt-1 mb-4 text-small text-plum-soft">Your lists stay saved in your account.</p>
           <Button variant="ghost" onClick={signOut}>
@@ -87,6 +101,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
           />
         </Panel>
       </div>
+      {reporting && <BugReportSheet onClose={() => setReporting(false)} />}
     </Page>
   )
 }

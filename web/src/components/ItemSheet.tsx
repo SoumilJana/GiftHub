@@ -17,7 +17,11 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
   const id = useId()
   useEffect(() => {
     const d = ref.current
-    if (d && !d.open) d.showModal()
+    if (d && !d.open) {
+      d.showModal()
+      // showModal moves focus to the first control; send it to the field marked for it instead.
+      d.querySelector<HTMLElement>('[data-autofocus]')?.focus()
+    }
   }, [])
   return (
     <dialog

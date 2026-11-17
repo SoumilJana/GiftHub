@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { GiftMark } from './GiftMark'
+import { CONTACT_EMAIL, InfoLinks } from './InfoFrame'
 
 /** Layout for signed-out screens: wordmark, heading and one white panel. */
 export function AuthFrame({ title, lead, children }: { title: string; lead?: ReactNode; children: ReactNode }) {
@@ -13,6 +14,13 @@ export function AuthFrame({ title, lead, children }: { title: string; lead?: Rea
       <h1 className="mt-10 text-display leading-none font-extrabold tracking-[-0.035em]">{title}</h1>
       {lead && <p className="mt-2 text-plum-soft">{lead}</p>}
       <div className="mt-6 rounded-panel bg-print p-5">{children}</div>
+      <InfoLinks className="mt-6 px-1" />
+      <p className="mt-2 px-1 text-small text-plum-soft">
+        Can’t sign in?{' '}
+        <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Can’t sign in to GiftHub')}`} className="underline underline-offset-3 hover:text-plum">
+          Email us
+        </a>
+      </p>
     </div>
   )
 }

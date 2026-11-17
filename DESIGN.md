@@ -243,6 +243,12 @@ Nearly flat. Depth comes from white prints on the blush ground. A print frame ha
 - **Phone top bar:** a white sheet with rounded bottom corners (22px) and a faint downward paper edge, mirroring the bottom nav. It holds the wordmark and the profile avatar. The bar is the app's frame; the page heading below it, on the blush ground, is the page's own name. Brand and page never sit as two stacked headings on the same ground.
 - **Wordmark:** the gift mark plus "GiftHub" in plum at 800, -0.03em. 28px mark and 22px text in the phone top bar, 34px and 28px in the rail, 40px and 32px on signed-out screens. It is the only text outside the three sizes; its white bar (or rail) carries the rank, not its size.
 
+### Reading pages (Help, Privacy, Terms, Cookies)
+- Public and reachable signed in or out. The same white top bar as the phone app on every width, with "Sign in" or "Back to your list" on the right.
+- Display heading, plain lead, "Last updated" in small. A white "On this page" panel when there are more than three sections. Sections sit in one white panel, separated by blush hairlines, with body text held to 68ch.
+- FAQ answers open in place under each question, with a chevron that turns; topic chips at the top jump to each group.
+- Help · Privacy · Terms · Cookies links sit under the sign-in panel, on Profile and at the foot of each reading page.
+
 ### Circles index
 - **Your Circles first:** one white panel card per Circle (14px corners, no shadow; hover adds an inset edge outline). A card holds the name at 800, a blush role pill for owners and admins, a chevron, overlapping member initials (up to four, then "+N") and a "With Maya and Sam" line. A single Circle gets one full-width card with larger initials; several sit two to a row from 640px.
 - **Adding another:** below a hairline, "Add another Circle" with two chip toggles (Start a new Circle, Join with a code). Each reveals only its form and focuses its field. With no Circles, both forms show directly under the empty state.

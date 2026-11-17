@@ -131,6 +131,25 @@ Done when: a user can add 20 items and tag them, and a Circle member sees exactl
 
 ---
 
+### Phase 2.5 — Help, Legal and Bug Reports (2–3 days, in progress 17 Nov 2026)
+**Goal:** the pages a public app needs, plus a way for people to report problems. Required before Google's branding approval, which asks for a privacy policy and home page address.
+
+Scope
+- Public pages, reachable signed in or out, each with a "Last updated" date, a short contents list and a comfortable reading width:
+  - `/help`: about 12 FAQ answers in groups (how it works, privacy and the surprise, wishes, account, limits).
+  - `/privacy`: what is collected and why, who processes it, no ads or data selling, retention, deletion, rights, a complaints contact (janasoumil1005@gmail.com, replies within 90 days per India's DPDP Rules), 18+ only.
+  - `/terms`: 18+, acceptable use, user content, invite codes, free and as-is with quotas, no price guarantee, possible future commissions, ending accounts, liability, Indian law.
+  - `/cookies`: lists the browser storage used. All of it is strictly necessary, so **no consent banner**. A banner (with Accept and Reject given equal weight) arrives only if analytics or error tracking that stores identifiers is added.
+- Font self-hosted instead of loaded from Google Fonts, so visitors' IP addresses are not sent to Google.
+- Links: Help · Privacy · Terms under the sign-in form; an "agree to the Terms and Privacy Policy" line under sign-up; a "Help and legal" section on Profile.
+- **Report a bug:** an in-app form (what happened, what you expected, optional screenshot). It adds the page, app version and device, and tells the person so. The Edge Function `report-bug` saves the report to `bug_reports` (5 a day per person, never readable by users) and emails it to the owner through Resend's free plan. The screenshot goes in a private bucket. Sign-in screens get a "Can't sign in? Email us" link instead.
+- **Affiliate Disclosure is deferred to Phase 7.** Until affiliate links exist, the Terms only mention possible future commissions. Phase 7 adds the disclosure page and a "GiftHub may earn a commission" line next to store links.
+- No call-to-action card grid. Prompts appear only where a step is missing (empty list, a Circle with one member, wishes shared nowhere, a one-time install prompt in Phase 5).
+
+Needs from the owner: a free Resend account and its API key, stored as a Supabase secret. Have the legal text reviewed before relying on it.
+
+---
+
 ### Phase 3 — "Secretly Bought" (1–2 weeks) → **MVP milestone**
 **Goal:** the core differentiator works and is provably private.
 
@@ -252,7 +271,7 @@ Done when: changing a test item's price on a mock store triggers a badge and a n
 **Goal:** sustainable growth and revenue.
 
 Scope
-- Affiliate links (Amazon Associates, impact.com, etc.) rewritten server-side on outbound clicks — main revenue source.
+- Affiliate links (Amazon Associates, impact.com, etc.) rewritten server-side on outbound clicks — main revenue source. Ship with an Affiliate Disclosure page and a "GiftHub may earn a commission" line next to store links (ASCI expects the disclosure near the link).
 - Occasion reminders (birthdays/anniversaries per member) with a "top picks" digest.
 - Group gifting / contribution pooling.
 - Browser extension for desktop quick-add, published free on **Firefox Add-ons** and **Microsoft Edge Add-ons**; Chrome users load it from GitHub Releases or keep using the bookmarklet (the Chrome Web Store charges $5).

@@ -2,7 +2,7 @@
 
 /* Tokens from DESIGN.md ("Photo Booth Strip"). DESIGN.md frontmatter is the source of truth. */
 @theme {
-  --font-sans: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-sans: "Bricolage Grotesque Variable", "Bricolage Grotesque", system-ui, sans-serif;
 
   --color-blush: #FFE4EC;
   --color-blush-deep: #FFD3E0;
@@ -70,4 +70,12 @@
   }
   .select-pill:hover { box-shadow: inset 0 0 0 1.5px var(--color-plum-soft); }
   .select-pill::-ms-expand { display: none; }
+
+  /* Running text on Help and legal pages. */
+  .prose-info { max-width: 68ch; }
+  .prose-info > * + * { margin-top: 10px; }
+  .prose-info ul { list-style: disc; padding-left: 1.25rem; }
+  .prose-info ul > li + li { margin-top: 4px; }
+  .prose-info strong { font-weight: 800; }
+  .prose-info a { text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
 }
