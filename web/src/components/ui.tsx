@@ -1,4 +1,4 @@
-import { useId, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react'
+import { useId, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 
 type Variant = 'primary' | 'ghost' | 'text' | 'danger'
 
@@ -92,6 +92,28 @@ export function TextField({
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(id, hint, error)}
         className={inputClass}
+      />
+    </FieldShell>
+  )
+}
+
+export function TextArea({
+  label,
+  hint,
+  error,
+  className,
+  ...rest
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; hint?: ReactNode; error?: string | null }) {
+  const id = useId()
+  return (
+    <FieldShell id={id} label={label} hint={hint} error={error} className={className}>
+      <textarea
+        id={id}
+        rows={3}
+        {...rest}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(id, hint, error)}
+        className="w-full min-w-0 resize-y rounded-panel bg-print px-[18px] py-3 text-body text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)] placeholder:text-placeholder"
       />
     </FieldShell>
   )

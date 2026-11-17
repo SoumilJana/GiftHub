@@ -5,6 +5,7 @@ import { CirclePage } from './pages/Circle'
 import { CirclesPage } from './pages/Circles'
 import { CircleSettingsPage } from './pages/CircleSettings'
 import { JoinPage } from './pages/Join'
+import { MyListPage } from './pages/MyList'
 import { ResetPasswordPage, UpdatePasswordPage } from './pages/Password'
 import { ProfilePage } from './pages/Profile'
 import { SignInPage } from './pages/SignIn'
@@ -44,21 +45,7 @@ const joinRoute = createRoute({ getParentRoute: () => rootRoute, path: '/join/$c
 // Signed-in area
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: 'app', component: AppLayout })
 
-const myListRoute = createRoute({
-  getParentRoute: () => appRoute,
-  path: '/',
-  component: () => (
-    <Page title="Your list" lead="Things you’d like, shared with the Circles you choose.">
-      <EmptyState title="Your list is empty.">
-        Adding wishes arrives in the next update. Until then you can{' '}
-        <a href="/demo.html" className="font-semibold text-plum underline underline-offset-3">
-          try the design preview
-        </a>
-        .
-      </EmptyState>
-    </Page>
-  ),
-})
+const myListRoute = createRoute({ getParentRoute: () => appRoute, path: '/', component: MyListPage })
 const welcomeRoute = createRoute({ getParentRoute: () => appRoute, path: '/welcome', component: WelcomePage })
 const circlesRoute = createRoute({ getParentRoute: () => appRoute, path: '/circles', component: CirclesPage })
 const circleRoute = createRoute({ getParentRoute: () => appRoute, path: '/circles/$circleId', component: CirclePage })

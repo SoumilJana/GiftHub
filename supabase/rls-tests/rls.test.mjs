@@ -99,4 +99,32 @@ await db.exec('reset role')
 expect('Crew passes to FRIEND', (await db.query(`select role::text r from circle_members where circle_id='${crew.id}'`)).rows.map((r) => r.r), ['owner'])
 expect('Couple survives with BF', (await db.query(`select count(*)::int n from circle_members where circle_id='${couple.id}'`)).rows[0].n, 1)
 expect('GF items and profile are gone', (await db.query(`select (select count(*)::int from items where owner_id='${GF}') + (select count(*)::int from profiles where id='${GF}') n`)).rows[0].n, 0)
+
+// Phase 2: save_item, unsharing on leave, photo quota.
+const P1='00000000-0000-0000-0000-0000000000c1', P2='00000000-0000-0000-0000-0000000000c2', P3='00000000-0000-0000-0000-0000000000c3'
+await db.exec(`reset role; insert into auth.users (id) values ('${P1}'),('${P2}'),('${P3}');`)
+const home = (await as(P1, `select * from create_circle('Home')`))[0]
+const other = (await as(P3, `select * from create_circle('Not mine')`))[0]
+await as(P2, `select join_circle('${home.invite_code}')`)
+const wish = (await as(P1, `select save_item(null, '  Lamp ', 'https://www.Muji.com/x?y=1', null, 45, 'eur', 7::smallint, '', array['birthday','holiday']::occasion[], array['${home.id}','${other.id}']::uuid[]) id`))[0].id
+expect('save_item stores the domain and currency', (await as(P1, `select title, domain, currency::text, notes from items where id='${wish}'`))[0], { title: 'Lamp', domain: 'muji.com', currency: 'EUR', notes: null })
+expect('save_item skips Circles you are not in', (await as(P1, `select count(*)::int n from item_circles where item_id='${wish}'`))[0].n, 1)
+expect('Circle-mate sees the wish and its occasions', (await as(P2, `select count(*)::int n from item_occasions where item_id='${wish}'`))[0].n, 2)
+await as(P1, `select save_item('${wish}', 'Lamp', null, null, null, 'EUR', 4::smallint, null, array['holiday']::occasion[], array[]::uuid[])`)
+expect('editing can unshare and drop occasions', (await as(P2, `select count(*)::int n from items where id='${wish}'`))[0].n, 0)
+err=''; try { await as(P2, `select save_item('${wish}', 'Mine now', null, null, null, 'EUR', 5::smallint, null, null, null)`) } catch (e) { err = e.message }
+expect('cannot edit someone else\'s wish', /no longer exists/.test(err), true)
+const w2 = (await as(P2, `select save_item(null, 'Socks', null, null, null, 'USD', 5::smallint, null, null, array['${home.id}']::uuid[]) id`))[0].id
+expect('P1 sees P2 wish', (await as(P1, `select count(*)::int n from items where id='${w2}'`))[0].n, 1)
+await as(P2, `delete from circle_members where circle_id='${home.id}' and user_id='${P2}'`)
+await as(P2, `select join_circle('${home.invite_code}')`)
+expect('leaving unshares your wishes (rejoining does not reshare)', (await as(P1, `select count(*)::int n from items where id='${w2}'`))[0].n, 0)
+expect('share_my_items shares all active wishes', (await as(P2, `select share_my_items('${home.id}') n`))[0].n, 1)
+expect('P1 sees P2 wish again', (await as(P1, `select count(*)::int n from items where id='${w2}'`))[0].n, 1)
+for (let i = 0; i < 10; i++) await as(P1, `insert into storage.objects (bucket_id, name) values ('item-photos', '${P1}/${i}.webp')`)
+err=''; try { await as(P1, `insert into storage.objects (bucket_id, name) values ('item-photos', '${P1}/10.webp')`) } catch (e) { err = e.message }
+expect('11th photo is refused', /row-level security/.test(err), true)
+err=''; try { await as(P2, `insert into storage.objects (bucket_id, name) values ('item-photos', '${P1}/x.webp')`) } catch (e) { err = e.message }
+expect('cannot upload into someone else\'s folder', /row-level security/.test(err), true)
+
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); process.exit(fails ? 1 : 0)

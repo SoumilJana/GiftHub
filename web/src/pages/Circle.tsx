@@ -1,16 +1,35 @@
 import { Link, useParams } from '@tanstack/react-router'
+import { useState } from 'react'
+import { EditItemSheet, ViewItemSheet } from '../components/ItemSheet'
+import { ItemsView, ListTools } from '../components/ItemViews'
+import { useStoredView } from '../lib/view'
 import { EmptyState, Page } from '../components/Page'
 import { Avatar, Button, Notice, Panel, Spinner } from '../components/ui'
 import { useUserId } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
 import { inviteLink } from '../lib/invite'
-import { isCodeExpired, roleLabel, useCircle, type Circle } from '../lib/queries'
+import { useCircleItems, useMyItems, useShareMyItems } from '../lib/items'
+import { isCodeExpired, roleLabel, useCircle, useMyCircles, useProfile, type Circle } from '../lib/queries'
 import { useToast } from '../lib/toast'
+import { applyFilter, defaultFilter, type Item, type ListFilter } from '../lib/wishlist'
+
+const firstName = (name: string) => name.split(/\s+/)[0] || name
 
 export function CirclePage() {
   const { circleId } = useParams({ strict: false }) as { circleId?: string }
   const uid = useUserId()
   const q = useCircle(circleId)
+  const circleItems = useCircleItems(circleId)
+  const mine = useMyItems()
+  const circles = useMyCircles()
+  const profile = useProfile()
+  const share = useShareMyItems()
+  const toast = useToast()
+  const [who, setWho] = useState<string | null>(null)
+  const [filter, setFilter] = useState<ListFilter>(defaultFilter)
+  const [view, setView] = useStoredView()
+  const [viewing, setViewing] = useState<Item | null>(null)
+  const [editing, setEditing] = useState<{ item: Item | null } | null>(null)
 
   if (q.isPending) return <Spinner />
   if (q.error) return <Notice tone="alert">{friendlyError(q.error)}</Notice>
@@ -31,6 +50,19 @@ export function CirclePage() {
   const { circle, members } = q.data
   const me = members.find((m) => m.user_id === uid)
   const others = members.filter((m) => m.user_id !== uid)
+  const tabs = [...others, ...(me ? [me] : [])]
+  const selected = tabs.find((m) => m.user_id === who) ?? tabs[0]
+  const isMe = selected?.user_id === uid
+
+  const myAll = mine.data ?? []
+  const myHere = myAll.filter((i) => i.circle_ids.includes(circle.id))
+  const notHere = myAll.length - myHere.length
+  const listFor = (id: string) => (id === uid ? myHere : (circleItems.data ?? []).filter((i) => i.owner_id === id))
+  const all = selected ? listFor(selected.user_id) : []
+  const shown = applyFilter(all, filter)
+  const loading = isMe ? mine.isPending : circleItems.isPending
+  const loadError = isMe ? mine.error : circleItems.error
+  const clearFilters = () => setFilter((f) => ({ ...defaultFilter, sort: f.sort }))
 
   return (
     <Page title={circle.name} lead={others.length ? `With ${others.map((m) => m.display_name).join(', ')}.` : 'Just you so far. Invite someone below.'}>
@@ -44,7 +76,106 @@ export function CirclePage() {
         </Link>
       </div>
 
-      <div className="mt-6 grid max-w-[900px] gap-4 md:grid-cols-[1fr_1fr]">
+      {selected && (
+        <section aria-label="Lists" className="mt-6">
+          <div role="tablist" aria-label="Whose list" className="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
+            {tabs.map((m) => (
+              <button
+                key={m.user_id}
+                role="tab"
+                type="button"
+                aria-selected={m.user_id === selected.user_id}
+                onClick={() => {
+                  setWho(m.user_id)
+                  clearFilters()
+                }}
+                className="h-[38px] shrink-0 rounded-full px-4 font-semibold text-plum-soft hover:bg-blush-deep aria-selected:bg-plum aria-selected:text-white"
+              >
+                {m.user_id === uid ? 'Your list' : firstName(m.display_name)}
+                <span className="ml-1.5 opacity-75">{listFor(m.user_id).length}</span>
+              </button>
+            ))}
+          </div>
+
+          <div role="tabpanel" aria-label={isMe ? 'Your list' : `${selected.display_name}’s list`}>
+            {isMe && notHere > 0 && (
+              <div className="mt-4 flex flex-wrap items-center gap-3 rounded-panel bg-print px-4 py-3">
+                <p className="text-small text-plum-soft">
+                  {notHere === 1 ? '1 of your wishes isn’t' : `${notHere} of your wishes aren’t`} shared with {circle.name}.
+                </p>
+                <Button
+                  variant="ghost"
+                  className="h-[34px]! text-small"
+                  busy={share.isPending}
+                  onClick={async () => {
+                    try {
+                      const n = await share.mutateAsync(circle.id)
+                      toast(n === 1 ? '1 wish shared.' : `${n} wishes shared.`)
+                    } catch (err) {
+                      toast(friendlyError(err))
+                    }
+                  }}
+                >
+                  Share {notHere === 1 ? 'it' : 'them all'}
+                </Button>
+              </div>
+            )}
+
+            {loading ? (
+              <Spinner />
+            ) : loadError ? (
+              <div className="mt-4">
+                <Notice tone="alert">{friendlyError(loadError)}</Notice>
+              </div>
+            ) : all.length === 0 ? (
+              <EmptyState
+                title={isMe ? `You haven’t shared any wishes with ${circle.name} yet.` : `${firstName(selected.display_name)} hasn’t shared any wishes here yet.`}
+              >
+                {isMe ? (
+                  <>
+                    <button type="button" className="font-semibold text-plum underline underline-offset-3" onClick={() => setEditing({ item: null })}>
+                      Add a wish
+                    </button>{' '}
+                    and it will show up here.
+                  </>
+                ) : (
+                  'When they add some and share them with this Circle, they’ll show up here.'
+                )}
+              </EmptyState>
+            ) : (
+              <>
+                <ListTools items={all} filter={filter} onFilter={setFilter} view={view} onView={setView} />
+                {shown.length ? (
+                  <ItemsView
+                    items={shown}
+                    view={view}
+                    slot={(item) =>
+                      isMe ? (
+                        <Button variant="ghost" className="h-[34px]! px-3.5! text-small" onClick={() => setEditing({ item })}>
+                          Edit
+                        </Button>
+                      ) : (
+                        <Button variant="text" onClick={() => setViewing(item)}>
+                          Details
+                        </Button>
+                      )
+                    }
+                  />
+                ) : (
+                  <EmptyState title="Nothing matches these filters.">
+                    <button type="button" className="font-semibold text-plum underline underline-offset-3" onClick={clearFilters}>
+                      Clear filters
+                    </button>{' '}
+                    to see the whole list.
+                  </EmptyState>
+                )}
+              </>
+            )}
+          </div>
+        </section>
+      )}
+
+      <div className="mt-10 grid max-w-[900px] gap-4 md:grid-cols-[1fr_1fr]">
         <InvitePanel circle={circle} />
         <Panel>
           <h2 className="font-extrabold">Members</h2>
@@ -65,9 +196,16 @@ export function CirclePage() {
         </Panel>
       </div>
 
-      <EmptyState title="Lists show up here soon.">
-        Once adding wishes is ready, you’ll see each member’s list in this Circle and can reserve gifts without them knowing.
-      </EmptyState>
+      {viewing && (
+        <ViewItemSheet
+          item={viewing}
+          ownerName={firstName(members.find((m) => m.user_id === viewing.owner_id)?.display_name ?? 'Their')}
+          onClose={() => setViewing(null)}
+        />
+      )}
+      {editing && (
+        <EditItemSheet item={editing.item} circles={circles.data ?? []} userCurrency={profile.data?.currency?.trim() || 'USD'} onClose={() => setEditing(null)} />
+      )}
     </Page>
   )
 }
