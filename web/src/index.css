@@ -1,32 +1,34 @@
 @import "tailwindcss";
 
-/* Tokens from DESIGN.md ("Tissue and Ribbon"). DESIGN.md frontmatter is the source of truth. */
+/* Tokens from DESIGN.md ("Photo Booth Strip"). DESIGN.md frontmatter is the source of truth. */
 @theme {
-  --font-sans: "Schibsted Grotesk", system-ui, sans-serif;
+  --font-sans: "Bricolage Grotesque", system-ui, sans-serif;
 
-  --color-tissue: #F1F2F6;
-  --color-surface: #FFFFFF;
-  --color-ink: #20233F;
-  --color-ink-hover: #2E3258;
-  --color-muted: #5D6280;
-  --color-placeholder: #8A8FA8;
-  --color-hairline: #DCDFE8;
-  --color-hairline-hover: #B9BDCC;
-  --color-quiet: #E6E8EF;
-  --color-meter-off: #D3D6E2;
-  --color-berry: #B0174F;
-  --color-berry-deep: #8C0F3D;
-  --color-berry-knot: #5A0725;
-  --color-berry-wash: #F8E4EB;
-  --color-sale: #1C7350;
-  --color-sale-wash: #E2F2EA;
-  --color-focus: #3B5BDB;
+  --color-blush: #FFE4EC;
+  --color-blush-deep: #FFD3E0;
+  --color-print: #FFFFFF;
+  --color-plum: #3B1D3F;
+  --color-plum-hover: #552B5A;
+  --color-plum-soft: #74557A;
+  --color-edge: #F2CFDA;
+  --color-heart-off: #F3D3DD;
+  --color-ribbon: #FF5247;
+  --color-ribbon-deep: #D93A30;
+  --color-ribbon-knot: #A8231B;
+  --color-sky: #7CC4FF;
+  --color-sky-wash: #E2F2FF;
+  --color-sky-ink: #0B4F8A;
+  --color-stamp: #D9570A;
 
-  --radius-meter: 1px;
-  --radius-badge: 6px;
-  --radius-control: 8px;
-  --radius-toast: 10px;
-  --radius-tile: 12px;
+  --radius-photo: 3px;
+  --radius-print: 6px;
+  --radius-panel: 14px;
+  --radius-sheet: 22px;
+
+  /* Three sizes only; weight carries rank. */
+  --text-display: clamp(30px, 4vw, 40px);
+  --text-body: 15px;
+  --text-small: 13px;
 
   --breakpoint-shell: 900px;
 }
@@ -34,13 +36,15 @@
 @layer base {
   html { -webkit-text-size-adjust: 100%; }
   body {
-    @apply bg-tissue text-ink font-sans antialiased;
-    font-size: 15px;
-    line-height: 1.5;
+    @apply bg-blush text-plum font-sans antialiased;
+    font-size: var(--text-body);
+    line-height: 1.45;
   }
+  ::selection { background: var(--color-sky); color: var(--color-plum); }
   :focus-visible {
-    outline: 2px solid var(--color-focus);
+    outline: 2px solid var(--color-plum);
     outline-offset: 2px;
+    border-radius: 3px;
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }

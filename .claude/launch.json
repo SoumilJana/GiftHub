@@ -8,6 +8,12 @@
       "port": 5173
     },
     {
+      "name": "design",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["-y", "http-server@14.1.1", "design", "-p", "5180", "-c-1", "--silent"],
+      "port": 5180
+    },
+    {
       "name": "web",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "web", "run", "preview", "--", "--port", "4173", "--strictPort"],

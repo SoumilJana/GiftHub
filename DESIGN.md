@@ -1,244 +1,262 @@
 ---
 name: GiftHub
-description: A private shared wishlist where claimed gifts are wrapped for givers and invisible to the recipient.
+description: A private shared wishlist where every wish is a frame in your partner's photo-booth strip, and claimed gifts are wrapped in ribbon for givers only.
 colors:
-  tissue-paper: "#F1F2F6"
-  surface: "#FFFFFF"
-  navy-ink: "#20233F"
-  ink-hover: "#2E3258"
-  slate-muted: "#5D6280"
-  placeholder: "#8A8FA8"
-  hairline: "#DCDFE8"
-  hairline-hover: "#B9BDCC"
-  quiet-fill: "#E6E8EF"
-  meter-off: "#D3D6E2"
-  berry-ribbon: "#B0174F"
-  berry-deep: "#8C0F3D"
-  berry-knot: "#5A0725"
-  berry-wash: "#F8E4EB"
-  sale-green: "#1C7350"
-  sale-wash: "#E2F2EA"
-  focus-blue: "#3B5BDB"
+  blush: "#FFE4EC"
+  blush-deep: "#FFD3E0"
+  print: "#FFFFFF"
+  plum: "#3B1D3F"
+  plum-hover: "#552B5A"
+  plum-soft: "#74557A"
+  placeholder: "#85688A"
+  edge: "#F2CFDA"
+  heart-off: "#F3D3DD"
+  ribbon: "#FF5247"
+  ribbon-deep: "#D93A30"
+  ribbon-knot: "#A8231B"
+  sky: "#7CC4FF"
+  sky-wash: "#E2F2FF"
+  sky-ink: "#0B4F8A"
+  stamp: "#D9570A"
 typography:
   display:
-    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
-    fontSize: "clamp(28px, 3.6vw, 40px)"
+    fontFamily: "Bricolage Grotesque, system-ui, sans-serif"
+    fontSize: "clamp(30px, 4vw, 40px)"
     fontWeight: 800
-    lineHeight: 1.05
-    letterSpacing: "-0.03em"
-  title:
-    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
-    fontSize: "15.5px"
-    fontWeight: 600
-    lineHeight: 1.3
+    lineHeight: 1
+    letterSpacing: "-0.035em"
   body:
-    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
+    fontFamily: "Bricolage Grotesque, system-ui, sans-serif"
     fontSize: "15px"
     fontWeight: 400
-    lineHeight: 1.5
-  label:
-    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
+    lineHeight: 1.45
+  title:
+    fontFamily: "Bricolage Grotesque, system-ui, sans-serif"
+    fontSize: "15px"
+    fontWeight: 600
+    lineHeight: 1.25
+  small:
+    fontFamily: "Bricolage Grotesque, system-ui, sans-serif"
     fontSize: "13px"
-    fontWeight: 500
+    fontWeight: 600
     lineHeight: 1.4
   price:
-    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
+    fontFamily: "Bricolage Grotesque, system-ui, sans-serif"
     fontSize: "15px"
-    fontWeight: 700
+    fontWeight: 800
     fontFeature: "\"tnum\" 1"
 rounded:
-  meter: "1px"
-  badge: "6px"
-  control: "8px"
-  toast: "10px"
-  tile: "12px"
+  photo: "3px"
+  print: "6px"
+  panel: "14px"
+  sheet: "22px"
   pill: "999px"
 spacing:
   xs: "4px"
   sm: "8px"
   md: "12px"
-  lg: "16px"
+  lg: "18px"
   xl: "22px"
   2xl: "28px"
 components:
   button-primary:
-    backgroundColor: "{colors.navy-ink}"
-    textColor: "{colors.surface}"
-    rounded: "{rounded.control}"
-    padding: "0 16px"
-    height: "44px"
+    backgroundColor: "{colors.plum}"
+    textColor: "{colors.print}"
+    rounded: "{rounded.pill}"
+    padding: "0 18px"
+    height: "40px"
   button-primary-hover:
-    backgroundColor: "{colors.ink-hover}"
-  button-secondary:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.navy-ink}"
-    rounded: "{rounded.control}"
+    backgroundColor: "{colors.plum-hover}"
+  button-ghost:
+    backgroundColor: "{colors.print}"
+    textColor: "{colors.plum}"
+    rounded: "{rounded.pill}"
     padding: "0 14px"
-    height: "36px"
+    height: "34px"
   input-link:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.navy-ink}"
-    rounded: "{rounded.control}"
-    padding: "0 14px"
-    height: "44px"
+    backgroundColor: "{colors.print}"
+    textColor: "{colors.plum}"
+    rounded: "{rounded.pill}"
+    padding: "0 18px"
+    height: "46px"
+  member-tab-selected:
+    backgroundColor: "{colors.plum}"
+    textColor: "{colors.print}"
+    rounded: "{rounded.pill}"
+    height: "38px"
   chip:
-    backgroundColor: "{colors.tissue-paper}"
-    textColor: "{colors.navy-ink}"
+    textColor: "{colors.plum}"
     rounded: "{rounded.pill}"
     padding: "0 13px"
     height: "34px"
   chip-selected:
-    backgroundColor: "{colors.navy-ink}"
-    textColor: "{colors.surface}"
+    backgroundColor: "{colors.print}"
+    textColor: "{colors.plum}"
   badge-sale:
-    backgroundColor: "{colors.sale-wash}"
-    textColor: "{colors.sale-green}"
-    rounded: "{rounded.badge}"
-    padding: "3px 8px"
-  product-tile:
-    rounded: "{rounded.tile}"
+    backgroundColor: "{colors.sky-wash}"
+    textColor: "{colors.sky-ink}"
+    rounded: "{rounded.pill}"
+    padding: "2px 9px"
+  print-frame:
+    backgroundColor: "{colors.print}"
+    rounded: "{rounded.print}"
+    padding: "8px 8px 0"
   toast:
-    backgroundColor: "{colors.navy-ink}"
-    textColor: "{colors.surface}"
-    rounded: "{rounded.toast}"
-    padding: "12px 16px"
+    backgroundColor: "{colors.plum}"
+    textColor: "{colors.print}"
+    rounded: "{rounded.pill}"
+    padding: "12px 18px"
 ---
 
 # Design System: GiftHub
 
 ## Overview
 
-**Creative North Star: "Tissue and Ribbon"**
+**Creative North Star: "Photo Booth Strip"**
 
-GiftHub looks like the inside of a gift box: cool tissue-paper surfaces, navy ink for everything you read, and a single berry ribbon that only appears when someone has claimed a gift. The interface stays calm and plain, as the product voice does, so the ribbon is the one thing that feels like an event.
+Every wish is a frame in your partner's photo-booth strip. The app sits on a booth-curtain blush ground; each product is a glossy white print with a thick caption edge and a small orange date stamp in the photo's corner, the way a booth prints the day you visited. When a giver claims something, the booth flashes once and a tomato ribbon wraps the photo. That flash-and-wrap is the only orchestrated motion in the system.
 
-Density is moderate. Product imagery leads in the grid and steps back in the list, and controls are familiar and quiet so givers can scan a partner's list quickly on a phone. Depth comes from tone and hairlines, not shadows.
+The look is cute and fun, but kept clean and grown-up for couples: one decoration per frame at most, three type sizes with rank carried by weight, every product at one frame ratio on one white ground, and plain, calm copy (PRODUCT.md voice). Controls are familiar web controls: pills, tabs, a select, a toggle.
 
-The system rejects the warm cream-and-terracotta look, black-with-neon accents, and the generic SaaS card kit (identical shadowed cards and gradient washes).
+This system replaced "Tissue and Ribbon" on 2026-11-17. Merged forward from it: the ribbon-and-bow claim wrap, the rules that the ribbon colour means "claimed" and never appears on an owner's own items, sentence case, and no decorative shadows. It rejects childish sticker-book clutter, the generic white Pinterest masonry with heart buttons, and the warm cream-and-terracotta look.
 
 **Key Characteristics:**
-- Cool, near-white tissue background with navy ink; no pure black anywhere.
-- Berry is reserved for claims: the ribbon, claim status text, and nothing else.
-- One typeface (Schibsted Grotesk) carries every role through weight and size alone.
-- Flat surfaces separated by hairlines and tonal fills.
-- Priority shown as a 10-step meter plus its band name, never as a lone number in the grid.
+- Blush ground, white print frames, plum ink. No grey UI chrome and no pure black.
+- Tomato ribbon is reserved for claims; sky blue carries sale and selection; orange is only the date stamp.
+- Bricolage Grotesque for everything, at three sizes (display, body, small); weight carries rank.
+- Pills for every small control; prints keep sharp-ish 6px corners like real photo paper.
+- Claim changes happen in place: fixed claim slot, zero layout shift.
 
 ## Colors
 
-A cool, low-chroma neutral world with one warm, saturated accent kept for the act of giving.
+A committed blush shell with white prints, plum ink and three small, single-job accents.
 
 ### Primary
-- **Berry Ribbon** (berry-ribbon): the ribbon band across a reserved item's tile and the "Reserved by you" / "Bought by you" status text. It means "a giver has claimed this".
-- **Berry Deep** (berry-deep): the ribbon on bought items, and the bow on reserved ones.
-- **Berry Knot** (berry-knot): the bow on bought items, so it stays visible against the deep ribbon.
-- **Berry Wash** (berry-wash): pale berry tint for future claim-related backgrounds (e.g. activity rows).
+- **Ribbon Tomato** (ribbon): the ribbon bands on a reserved item's photo. It means "a giver has claimed this" and nothing else.
+- **Ribbon Deep** (ribbon-deep): ribbon on bought items, the bow on reserved ones, claim status text ("Reserved by you", "Bought by you"), and filled priority hearts.
+- **Ribbon Knot** (ribbon-knot): the bow on bought items, so it stays visible on the deep ribbon.
 
 ### Secondary
-- **Sale Green** (sale-green) on **Sale Wash** (sale-wash): Sale badge, "On sale" text, and price-drop states only.
+- **Sky** (sky): text selection highlight.
+- **Sky Wash** (sky-wash) with **Sky Ink** (sky-ink): the Sale badge, "On sale" text and privacy notes ("You won't see who is buying what").
+
+### Tertiary
+- **Date Stamp Orange** (stamp): the date-added stamp in each photo's corner, on a translucent white chip so it stays legible over any tint or ribbon.
 
 ### Neutral
-- **Navy Ink** (navy-ink): all primary text, the primary button, selected chips, the active tab underline, filled meter steps, and toasts.
-- **Ink Hover** (ink-hover): hover state for navy-filled controls.
-- **Slate Muted** (slate-muted): secondary text such as store domain, occasion, counts, and helper notes.
-- **Placeholder** (placeholder): input placeholder text only.
-- **Tissue Paper** (tissue-paper): the app background.
-- **Surface** (surface): inputs, buttons, notes, and the selected Circle in the sidebar.
-- **Hairline** (hairline) / **Hairline Hover** (hairline-hover): every border and divider, and the border colour on hover.
-- **Quiet Fill** (quiet-fill): nav hover and the selected segment in segmented controls.
-- **Meter Off** (meter-off): unfilled priority-meter steps.
-- **Focus Blue** (focus-blue): keyboard focus rings only.
+- **Blush** (blush): the app background (booth curtain). **Blush Deep** (blush-deep): hover on unselected member tabs.
+- **Print White** (print): frames, the desktop rail, the bottom nav, inputs, List view panel, notes.
+- **Plum** (plum): all primary text, primary buttons, selected tabs and nav items, toasts, focus rings. **Plum Hover** (plum-hover) for its hover.
+- **Plum Soft** (plum-soft): secondary text (store, occasion, counts, helper text). **Placeholder** (placeholder): input hints only.
+- **Edge** (edge): 1.5px inset outlines on inputs, chips, ghost buttons and segmented controls. **Heart Off** (heart-off): unfilled priority hearts.
 
-Product tiles use pale per-item tints (around 90–94% lightness, such as #E3E7F4, #F3E6DF, #E2EEE6) behind the product image or placeholder. They are content colour, not system tokens.
+Product photos sit on pale per-item tints (around 92–96% lightness, e.g. #E8EEFF, #FFF0E6, #E6F5EC). They are content, not tokens.
 
 ### Named Rules
-**The Ribbon Is Earned Rule.** Berry appears only where a claim exists. It is never used for decoration, brand flourishes, primary buttons, or links.
+**The Ribbon Is Earned Rule.** Tomato appears only where a claim exists. It is never a brand flourish, a primary button, a floating action button, or a link colour.
 
-**The Owner Never Sees Berry Rule.** On any screen showing a user their own items, no berry renders, because a claim would be the only reason for it.
+**The Owner Never Sees The Ribbon Rule.** On any screen showing users their own items, no ribbon, claim status, claim colour or claim motion renders.
 
 ## Typography
 
-**Display Font:** Schibsted Grotesk (with system-ui, sans-serif)
-**Body Font:** Schibsted Grotesk
+**Display and body font:** Bricolage Grotesque (with system-ui, sans-serif), loaded from Google Fonts with optical sizes 12–96 at weights 400, 600 and 800.
 
-**Character:** A sturdy, slightly newsy grotesk. It is heavy and tight in headings, plain and readable in body text, and works as a single family.
+**Character:** Rounded, slightly quirky grotesque that reads friendly without looking like a kids' app. Heavy and tight in headings, open and plain in body.
 
 ### Hierarchy
-- **Display** (800, clamp(28px, 3.6vw, 40px), 1.05, -0.03em): the page heading, e.g. "Maya's list". One per screen.
-- **Title** (600, 15.5px, 1.3; 14.5px on phones): item titles and sidebar wordmark-level labels.
-- **Body** (400, 15px, 1.5): running text, notes, and empty states, kept under 72ch.
-- **Label** (500, 13px): store domain, occasion, counts, and meter band names, in sentence case.
-- **Price** (700, 15px, tabular figures): prices; a struck-through previous price sits beside it at 400, 14px, in slate.
+- **Display** (800, clamp(30px, 4vw, 40px), line-height 1, -0.035em): the page heading, one per screen.
+- **Body** (400, 15px, 1.45): running text and the next-occasion line. Item **titles** use the same size at 600.
+- **Small** (600, 13px): store, occasion, chips, counts, claim status, toasts, badges. Prices are body size at 800 with tabular figures; a struck-through old price is small at 400.
 
 ### Named Rules
-**The Sentence Case Rule.** No all-caps labels, no tracked-out eyebrows, and no monospace. Hierarchy comes from weight and size.
+**The Three Sizes Rule.** Only display, body and small. Need more emphasis? Change the weight, not the size.
+
+**The Sentence Case Rule.** No all-caps labels, no tracked eyebrows, no monospace.
 
 ## Layout
 
-The app shell is a 248px sidebar (wordmark, sections, Circles, invite code) beside a fluid main column, with main padding of clamp(16px, 3.4vw, 44px). Below 900px the sidebar becomes a sticky top bar (wordmark plus a Circle picker) and a fixed bottom nav (My list, Circles, Activity, Received).
+The desktop shell is a 240px white rail with rounded right corners (22px) next to the blush main column, with padding clamp(16px, 3.4vw, 44px). The rail holds the wordmark, sections, Circles and the invite code. Below 900px the rail becomes a top bar (wordmark plus a Circle picker on a white pill) and a white bottom nav with rounded top corners (22px).
 
-Main column order: heading and next-occasion line on the left with the paste-a-link box on the right (full width on phones), then member tabs, then tools (occasion chips, then the owner-preview switch, sort and Grid/List), then an optional note, then items.
+Main column order: heading with the next-occasion line, and the paste-a-link pill beside it (full width on phones); member pills; tools (occasion chips, then the "See it as Maya does" switch, sort and the Strip/List control); an optional note; then items. There is no floating Add button: it would duplicate the paste bar and break the ribbon rule.
 
-The grid uses auto-fill columns at least 232px wide with 28px row and 22px column gaps, and exactly two columns on phones. The list view uses rows of thumbnail, title, price, priority and claim; priority and occasion drop out on phones, and claim actions wrap under the title. Occasion chips scroll horizontally on phones instead of wrapping.
+**Strip view:** auto-fill columns at least 204px wide, gaps of 22px between rows and 18px between columns. Phones always show two columns with 14px × 12px gaps. Each frame holds a square photo, then the store, title, price with hearts, occasion and a fixed-height claim slot pinned to the bottom.
 
-The layout must work from 360px wide with no horizontal scroll.
+**List view:** a single white panel with dense rows of a 48px thumbnail, title, price, hearts and claim actions. On phones the hearts are hidden and the claim actions wrap under the title.
+
+The layout works from 360px wide with no horizontal scroll; occasion chips scroll sideways on phones.
 
 ## Elevation & Depth
 
-Flat. There are no shadows on cards, buttons or tiles. Depth comes from the tissue-to-surface tonal step and 1px hairlines. The selected sidebar item uses an inset hairline instead of a shadow. The toast is the only floating layer, and it is set apart by being filled with navy ink, not by a shadow.
+Nearly flat. Depth comes from white prints on the blush ground. A print frame has one soft paper edge (`0 1px 2px rgba(59,29,63,.08)`), and the phone bottom nav has a faint upward one. Controls use inset 1.5px edge outlines, never drop shadows.
 
-**The Flat Box Rule.** If something needs to stand out, change its fill or border, not its elevation.
+**The Paper Edge Rule.** A shadow only ever says "this is a piece of paper on the table". No floating cards, no glows, no hard offset shadows.
 
 ## Shapes
 
-Corners are gently rounded and step up with object size: the meter at 1px, badges at 6px, controls at 8px, the toast at 10px, product tiles at 12px, and chips and switches as full pills. Product tiles clip their contents so the ribbon runs edge to edge. Item metadata sits directly on the tissue background beneath the tile, with no card around it.
+- **Photo paper:** prints have 6px corners, and photos inside them 3px.
+- **Containers:** panels such as the List view and notes use 14px; the rail and bottom nav use 22px.
+- **Controls:** every small control is a full pill. That includes buttons, inputs, tabs, chips, the sort select, segmented controls, badges, toasts, the Circle picker and the date stamp chip (3px).
+- **Icons:** priority hearts and the bow are filled SVG shapes. Product placeholders are 2.6px line drawings.
 
 ## Components
 
 ### Buttons
-- **Shape:** gently rounded (8px).
-- **Primary:** navy fill with white 600-weight text, 44px tall. Used for the main action of a section, such as Add.
-- **Secondary:** white surface with a hairline border, 36–44px tall. Used for Reserve and similar per-item actions.
-- **Text button:** underlined slate text, which darkens to navy on hover. Used for secondary claim actions (I bought it, Mark bought, Undo, Mark received).
-- **Hover / Focus:** primary moves to ink-hover; secondary's border darkens to hairline-hover. Focus is a 2px focus-blue outline with a 2px offset.
+- **Primary:** a plum pill with white 600-weight text, 40px tall (46px beside the paste input, 34px inside a frame). It moves to plum-hover on hover.
+- **Ghost:** a white pill with an inset edge outline, used for Mark received. The outline darkens to plum-soft on hover.
+- **Text button:** small 600-weight text in plum-soft with an underline, used for I bought it, Mark bought and Undo. It turns plum on hover.
+- **Focus:** a 2px plum outline with a 2px offset everywhere.
 
-### Chips
-- **Style:** pill, 34px tall, hairline border, transparent fill, 500-weight 14px text.
-- **State:** selected chips fill with navy and white text. They are single-select filters with an aria-pressed state.
+### Member tabs, chips and segmented control
+- **Member tabs:** 38px pills. The selected tab is plum with white text and shows the item count at 75% opacity.
+- **Occasion chips:** 34px pills with an inset edge. The selected chip is white with an inset plum outline.
+- **Strip/List control:** a white pill track. The selected segment is a plum pill.
 
-### Product tile (signature)
-- A 4:3 tile (1:1, 56px, in the list view) with a pale item tint, the product image centred, and an optional Sale badge in the top-left corner.
-- **The ribbon:** when claimed, an 18px vertical band at 68% and a horizontal band at 58% cross the tile, with a bow at the crossing. Reserved items use berry-ribbon with a berry-deep bow; bought items use berry-deep with a berry-knot bow. The product art dims to 45% opacity under it. In the list view the bands are 6px and there is no bow.
-- **Motion:** the vertical band draws down (380ms), then the horizontal band sweeps across (starting 160ms later), then the bow pops in with a slight overshoot (starting at 420ms). This is the only orchestrated animation in the system, and it is removed when reduced motion is requested.
+### Print frame (signature)
+- **Frame:** a white print with 8px padding on the top and sides and none at the bottom, plus a square photo.
+- **Photo:** the product image on its pale tint, an optional Sale badge in the top-left, and the date stamp ("’26 11 13") bottom-right on a translucent white chip.
+- **Caption:** store, title, price with three hearts (3 = Must have, 2 = Would love, 1 = Nice to have; the band name is the accessible label), occasion, then the fixed claim slot.
 
-### Priority meter
-Ten 4×12px bars with 2px gaps, filled in navy up to the priority value, followed by the band name (Must have, Would love, Nice to have). The list view shows the number instead of the band name.
+### The ribbon claim (signature motion)
+- **Bands:** a claimed photo gets a 16px vertical band at 64% and a horizontal band at 58%, with a bow where they cross.
+  - **Reserved:** tomato ribbon with a ribbon-deep bow.
+  - **Bought:** ribbon-deep with a ribbon-knot bow.
+  - The product drawing dims to 40% under the ribbon.
+- **List view:** the bands shrink to 5px and the bow is hidden.
+- **Motion (wrap):** the frame always starts unwrapped and animates into its claimed state; it is never redrawn already wrapped.
+  1. A soft white booth flash peaks at 70% opacity and fades over 600ms.
+  2. The vertical band draws down: 550ms, starting at 200ms, with an expo-out ease (cubic-bezier(.22,1,.36,1)).
+  3. The horizontal band sweeps across: starting at 400ms.
+  4. The bow settles in with a slight overshoot: 500ms, starting at 800ms.
+  5. The product drawing dims to 40% over 500ms.
+- **Motion (other changes):**
+  - Reserved to bought: the ribbon and bow re-colour over 400ms in place, with no re-wrap and no flash.
+  - Undo: the bow lifts first (200ms), then the bands retract with an ease-in (300ms).
+- All claim motion is removed when reduced motion is requested.
 
-### Inputs / Fields
-- **Style:** white surface, hairline border, 8px radius, 44px tall, 14px horizontal padding, with placeholder-colour hint text. The paste-a-link field pairs with a primary Add button.
-- **Focus:** the focus-blue outline.
-- **Error:** a plain-language toast saying what to do next (e.g. "That doesn't look like a link. Copy the address from your browser and try again.").
+### Inputs
+- **Paste-a-link:** a white 46px pill with an inset edge, hint text in the placeholder colour and a plum Add button.
+- **Errors:** shown as a plain-language toast that says what to do next.
 
 ### Navigation
-- **Sidebar:** 500-weight items with counts in slate; hover fills with quiet-fill; the selected Circle gets a white surface and an inset hairline.
-- **Member tabs:** 600-weight text in slate; the selected tab is navy with a 2px navy underline sitting on the hairline divider.
-- **Bottom nav (phones):** 12px 600-weight labels in slate; the current section is navy.
+- **Rail items:** 600-weight pills. Hover fills them blush; the active item is a plum pill with white text, and its counts turn pale pink.
+- **Bottom nav:** 12px labels in plum-soft; the current item is plum at 800.
 
 ### Notes and toasts
-- **Note:** white surface, hairline border, 8px radius, a 16px lock icon, and slate text with a navy bold lead-in. Used for privacy explanations.
-- **Toast:** navy fill, white 14px text, bottom-centred (raised above the bottom nav on phones). It rises 20px and fades in, then dismisses after 3.2s.
+- **Note:** sky-wash panel, sky-ink text with an 800-weight lead-in and a lock icon. Used for privacy explanations.
+- **Toast:** a plum pill with white small text, bottom-centred and raised above the bottom nav on phones. It slides up 16px, fades in and dismisses after 3.2s.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** keep berry for claims only, so a ribbon always means "someone is giving this".
-- **Do** show price in tabular figures and format it in the item's own currency, for the viewer's locale.
-- **Do** put store domain, title, price with priority, then occasion, in that order under every product tile.
-- **Do** separate surfaces with 1px hairlines and tonal fills.
-- **Do** keep visible 2px focus-blue focus rings on every interactive element.
+- **Do** keep tomato for claims only, so a ribbon always means "someone is giving this".
+- **Do** put every product in the same white print at a square ratio on its pale tint.
+- **Do** keep the claim slot a fixed height so claiming never moves anything.
+- **Do** use weight, not new sizes, when something needs more emphasis.
+- **Do** format prices in the item's own currency, with tabular figures, for the viewer's locale.
 
 ### Don't:
-- **Don't** render any claim colour, badge, count, or motion on a screen showing users their own items.
-- **Don't** add drop shadows to cards, tiles, or buttons.
-- **Don't** use all-caps labels, tracked eyebrows, monospace labels, or arrows appended to button text.
-- **Don't** wrap item metadata in bordered or shadowed cards; it sits on the tissue background.
-- **Don't** add a second display typeface or decorative motion beyond the ribbon wrap.
+- **Don't** render any ribbon, claim status, colour or motion on a screen showing users their own items.
+- **Don't** add stickers, mascots, confetti or more than one flourish per frame; cute stays clean.
+- **Don't** add a floating Add button or any tomato control.
+- **Don't** use drop shadows beyond the paper edge, or hard offset shadows.
+- **Don't** use all-caps labels, eyebrows, monospace, emoji icons or arrows appended to button text.

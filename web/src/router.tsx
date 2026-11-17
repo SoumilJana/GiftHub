@@ -8,7 +8,7 @@ const rootRoute = createRootRoute({
     <Page title="Page not found">
       <EmptyState title="This page doesn’t exist.">
         Check the address, or{' '}
-        <Link to="/" className="text-ink underline underline-offset-3">
+        <Link to="/" className="font-semibold text-plum underline underline-offset-3">
           go to your list
         </Link>
         .

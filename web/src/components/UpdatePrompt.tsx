@@ -12,7 +12,7 @@ export function UpdatePrompt() {
   return (
     <div
       role="status"
-      className="fixed inset-x-4 bottom-[84px] z-20 mx-auto flex max-w-md items-center justify-between gap-4 rounded-toast bg-ink px-4 py-3 text-sm text-white shell:bottom-6"
+      className="fixed inset-x-4 bottom-[84px] z-20 mx-auto flex max-w-md items-center justify-between gap-4 rounded-full bg-plum px-5 py-3 text-small font-semibold text-white shell:bottom-6"
     >
       <span>A new version of GiftHub is ready.</span>
       <span className="flex gap-3">

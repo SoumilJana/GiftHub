@@ -1,33 +1,165 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-16T00:00:00Z",
+  "generatedAt": "2026-11-17T00:00:00Z",
   "title": "Design System: GiftHub",
   "extensions": {
     "colorMeta": {
-      "navy-ink": { "role": "neutral", "displayName": "Navy Ink", "tonalRamp": ["#14162A", "#20233F", "#2E3258", "#454A75", "#666B91", "#8C90AE", "#B5B8CC", "#E0E2EC"] },
-      "tissue-paper": { "role": "neutral", "displayName": "Tissue Paper", "tonalRamp": ["#2A2C36", "#4A4D5C", "#6E7283", "#9599A8", "#BABDC9", "#D7D9E2", "#E6E8EF", "#F1F2F6"] },
-      "slate-muted": { "role": "neutral", "displayName": "Slate Muted", "tonalRamp": ["#262839", "#3B3E55", "#4D506B", "#5D6280", "#7A7F99", "#9A9EB3", "#C0C3D1", "#E4E5EC"] },
-      "hairline": { "role": "neutral", "displayName": "Hairline", "tonalRamp": ["#5F6273", "#7F8394", "#9DA1B1", "#B9BDCC", "#CDD0DB", "#DCDFE8", "#E8EAF0", "#F4F5F8"] },
-      "berry-ribbon": { "role": "primary", "displayName": "Berry Ribbon", "tonalRamp": ["#3D0418", "#5A0725", "#8C0F3D", "#B0174F", "#CF4A79", "#E487A6", "#F1C1D1", "#F8E4EB"] },
-      "sale-green": { "role": "secondary", "displayName": "Sale Green", "tonalRamp": ["#0A2E1F", "#124A33", "#1C7350", "#2E9469", "#5BB38D", "#94D0B4", "#C6E7D7", "#E2F2EA"] },
-      "focus-blue": { "role": "neutral", "displayName": "Focus Blue", "tonalRamp": ["#122057", "#1D3285", "#2B46B5", "#3B5BDB", "#6680E4", "#94A7EC", "#C3CEF5", "#E6EBFC"] }
+      "blush": {
+        "role": "neutral",
+        "displayName": "Booth Curtain Blush",
+        "tonalRamp": [
+          "#5C2333",
+          "#8A3A50",
+          "#B85A74",
+          "#DE87A0",
+          "#F4B2C5",
+          "#FFD3E0",
+          "#FFE4EC",
+          "#FFF3F6"
+        ]
+      },
+      "plum": {
+        "role": "neutral",
+        "displayName": "Plum Ink",
+        "tonalRamp": [
+          "#22102A",
+          "#3B1D3F",
+          "#552B5A",
+          "#74557A",
+          "#957899",
+          "#B9A2BC",
+          "#DACCDC",
+          "#F2EBF3"
+        ]
+      },
+      "print": {
+        "role": "neutral",
+        "displayName": "Print White",
+        "tonalRamp": [
+          "#6B5D66",
+          "#8D7F88",
+          "#B0A3AB",
+          "#CFC4CB",
+          "#E7DFE4",
+          "#F2CFDA",
+          "#FAF5F7",
+          "#FFFFFF"
+        ]
+      },
+      "ribbon": {
+        "role": "primary",
+        "displayName": "Ribbon Tomato",
+        "tonalRamp": [
+          "#5E120D",
+          "#A8231B",
+          "#D93A30",
+          "#FF5247",
+          "#FF7D74",
+          "#FFA9A3",
+          "#FFD3D0",
+          "#FFEDEC"
+        ]
+      },
+      "sky": {
+        "role": "secondary",
+        "displayName": "Booth Sky",
+        "tonalRamp": [
+          "#06294A",
+          "#0B4F8A",
+          "#2574C0",
+          "#4D9EE8",
+          "#7CC4FF",
+          "#A9D8FF",
+          "#E2F2FF",
+          "#F2F9FF"
+        ]
+      },
+      "stamp": {
+        "role": "tertiary",
+        "displayName": "Date Stamp Orange",
+        "tonalRamp": [
+          "#4A1D03",
+          "#7A3105",
+          "#A94407",
+          "#D9570A",
+          "#F2782E",
+          "#F8A26C",
+          "#FCCDAE",
+          "#FEEDE1"
+        ]
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "One page heading per screen, e.g. a member's list name." },
-      "title": { "displayName": "Title", "purpose": "Item titles." },
-      "body": { "displayName": "Body", "purpose": "Running text, notes, empty states; max 72ch." },
-      "label": { "displayName": "Label", "purpose": "Store, occasion, counts, meter band names; sentence case." },
-      "price": { "displayName": "Price", "purpose": "Prices in tabular figures." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "One page heading per screen."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text, the next-occasion line."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Item titles: body size at 600."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Store, occasion, chips, counts, claim status, toasts."
+      },
+      "price": {
+        "displayName": "Price",
+        "purpose": "Prices at 800 in tabular figures."
+      }
     },
-    "shadows": [],
+    "shadows": [
+      {
+        "name": "paper-edge",
+        "value": "0 1px 2px rgba(59,29,63,.08)",
+        "purpose": "A print frame resting on the blush ground."
+      },
+      {
+        "name": "nav-edge",
+        "value": "0 -1px 3px rgba(59,29,63,.06)",
+        "purpose": "Phone bottom nav sheet."
+      }
+    ],
     "motion": [
-      { "name": "ease-wrap", "value": "cubic-bezier(.2,.7,.2,1)", "purpose": "Ribbon bands drawing across a claimed tile (380ms; horizontal band delayed 160ms)." },
-      { "name": "ease-bow", "value": "cubic-bezier(.3,1.5,.5,1)", "purpose": "Bow pop with slight overshoot (320ms, 420ms delay)." },
-      { "name": "toast", "value": "opacity .2s, transform .2s", "purpose": "Toast rises 20px and fades in; dismisses after 3.2s." }
+      {
+        "name": "booth-flash",
+        "value": "600ms cubic-bezier(.25,.8,.25,1), peak opacity .7 at 18%",
+        "purpose": "Soft white flash over a photo the moment it is first claimed."
+      },
+      {
+        "name": "ribbon-wrap",
+        "value": "550ms cubic-bezier(.22,1,.36,1); vertical at 200ms, horizontal at 400ms",
+        "purpose": "Ribbon bands drawing across a claimed photo, always from the unwrapped state."
+      },
+      {
+        "name": "bow-settle",
+        "value": "500ms cubic-bezier(.34,1.56,.64,1) at 800ms",
+        "purpose": "Bow settling in with slight overshoot."
+      },
+      {
+        "name": "ribbon-recolour",
+        "value": "background-color/color 400ms",
+        "purpose": "Reserved to bought: ribbon deepens in place, no re-wrap."
+      },
+      {
+        "name": "ribbon-unwrap",
+        "value": "bow 200ms then bands 300ms cubic-bezier(.5,0,.75,0)",
+        "purpose": "Undo: bow lifts, bands retract."
+      },
+      {
+        "name": "toast",
+        "value": "opacity .2s, transform .25s cubic-bezier(.2,.8,.2,1)",
+        "purpose": "Toast slides up 16px; dismisses after 3.2s."
+      }
     ],
     "breakpoints": [
-      { "name": "phone-narrow", "value": "420px" },
-      { "name": "shell", "value": "900px" }
+      {
+        "name": "shell",
+        "value": "900px"
+      }
     ]
   },
   "components": [
@@ -35,25 +167,33 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The main action of a section, such as Add.",
-      "html": "<button class=\"ds-btn-primary\">Add</button>",
-      "css": ".ds-btn-primary{height:44px;padding:0 16px;border-radius:8px;border:1px solid #20233F;background:#20233F;color:#fff;font:600 15px 'Schibsted Grotesk',system-ui,sans-serif;cursor:pointer}.ds-btn-primary:hover{background:#2E3258}.ds-btn-primary:focus-visible{outline:2px solid #3B5BDB;outline-offset:2px}"
+      "description": "Main action of a section, such as Add or Reserve.",
+      "html": "<button class=\"ds-btn\">Reserve</button>",
+      "css": ".ds-btn{height:40px;padding:0 18px;border:0;border-radius:999px;background:#3B1D3F;color:#fff;font:600 15px 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;transition:background .15s}.ds-btn:hover{background:#552B5A}.ds-btn:focus-visible{outline:2px solid #3B1D3F;outline-offset:2px}"
     },
     {
-      "name": "Secondary Button",
+      "name": "Ghost Button",
       "kind": "button",
-      "refersTo": "button-secondary",
-      "description": "Per-item actions such as Reserve.",
-      "html": "<button class=\"ds-btn-secondary\">Reserve</button>",
-      "css": ".ds-btn-secondary{height:36px;padding:0 14px;border-radius:8px;border:1px solid #DCDFE8;background:#fff;color:#20233F;font:600 14px 'Schibsted Grotesk',system-ui,sans-serif;cursor:pointer}.ds-btn-secondary:hover{border-color:#B9BDCC}.ds-btn-secondary:focus-visible{outline:2px solid #3B5BDB;outline-offset:2px}"
+      "refersTo": "button-ghost",
+      "description": "Secondary per-item action, such as Mark received.",
+      "html": "<button class=\"ds-ghost\">Mark received</button>",
+      "css": ".ds-ghost{height:34px;padding:0 14px;border:0;border-radius:999px;background:#fff;color:#3B1D3F;box-shadow:inset 0 0 0 1.5px #F2CFDA;font:600 13px 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer}.ds-ghost:hover{box-shadow:inset 0 0 0 1.5px #74557A}.ds-ghost:focus-visible{outline:2px solid #3B1D3F;outline-offset:2px}"
     },
     {
       "name": "Paste-a-link Input",
       "kind": "input",
       "refersTo": "input-link",
       "description": "Quick-add field for product URLs.",
-      "html": "<input class=\"ds-input\" type=\"url\" placeholder=\"Paste a product link to add to your list\">",
-      "css": ".ds-input{height:44px;width:320px;padding:0 14px;border:1px solid #DCDFE8;border-radius:8px;background:#fff;color:#20233F;font:400 15px 'Schibsted Grotesk',system-ui,sans-serif}.ds-input::placeholder{color:#8A8FA8}.ds-input:focus-visible{outline:2px solid #3B5BDB;outline-offset:2px}"
+      "html": "<input class=\"ds-input\" type=\"url\" placeholder=\"Paste a link to add a wish\">",
+      "css": ".ds-input{height:46px;width:320px;padding:0 18px;border:0;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1.5px #F2CFDA;color:#3B1D3F;font:400 15px 'Bricolage Grotesque',system-ui,sans-serif}.ds-input::placeholder{color:#85688A}.ds-input:focus-visible{outline:2px solid #3B1D3F;outline-offset:2px}"
+    },
+    {
+      "name": "Member Tabs",
+      "kind": "nav",
+      "refersTo": "member-tab-selected",
+      "description": "One pill per Circle member.",
+      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab\" aria-selected=\"true\">Maya <span>7</span></button><button class=\"ds-tab\" aria-selected=\"false\">You <span>3</span></button></div>",
+      "css": ".ds-tabs{display:flex;gap:6px;padding:12px;background:#FFE4EC}.ds-tab{height:38px;padding:0 16px;border:0;border-radius:999px;background:transparent;color:#74557A;font:600 15px 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer}.ds-tab span{font-size:13px;margin-left:6px;opacity:.75}.ds-tab:hover{background:#FFD3E0}.ds-tab[aria-selected=true]{background:#3B1D3F;color:#fff}.ds-tab:focus-visible{outline:2px solid #3B1D3F;outline-offset:2px}"
     },
     {
       "name": "Occasion Chips",
@@ -61,60 +201,74 @@
       "refersTo": "chip",
       "description": "Single-select occasion filter.",
       "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"true\">All</button><button class=\"ds-chip\" aria-pressed=\"false\">Birthday</button><button class=\"ds-chip\" aria-pressed=\"false\">Anniversary</button></div>",
-      "css": ".ds-chips{display:flex;gap:6px}.ds-chip{height:34px;padding:0 13px;border-radius:999px;border:1px solid #DCDFE8;background:transparent;color:#20233F;font:500 14px 'Schibsted Grotesk',system-ui,sans-serif;cursor:pointer}.ds-chip[aria-pressed=true]{background:#20233F;border-color:#20233F;color:#fff}.ds-chip:hover{border-color:#B9BDCC}.ds-chip:focus-visible{outline:2px solid #3B5BDB;outline-offset:2px}"
+      "css": ".ds-chips{display:flex;gap:6px;padding:12px;background:#FFE4EC}.ds-chip{height:34px;padding:0 13px;border:0;border-radius:999px;background:transparent;box-shadow:inset 0 0 0 1.5px #F2CFDA;color:#3B1D3F;font:600 13px 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer}.ds-chip:hover{box-shadow:inset 0 0 0 1.5px #74557A}.ds-chip[aria-pressed=true]{background:#fff;box-shadow:inset 0 0 0 1.5px #3B1D3F}.ds-chip:focus-visible{outline:2px solid #3B1D3F;outline-offset:2px}"
     },
     {
-      "name": "Member Tabs",
-      "kind": "nav",
-      "description": "One tab per Circle member.",
-      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab\" aria-selected=\"true\">Maya <span>7</span></button><button class=\"ds-tab\" aria-selected=\"false\">You <span>3</span></button></div>",
-      "css": ".ds-tabs{display:flex;border-bottom:1px solid #DCDFE8}.ds-tab{position:relative;border:0;background:none;padding:10px 4px 12px;margin-right:20px;color:#5D6280;font:600 15px 'Schibsted Grotesk',system-ui,sans-serif;cursor:pointer}.ds-tab span{font-size:13px;margin-left:6px;color:#5D6280}.ds-tab[aria-selected=true]{color:#20233F}.ds-tab[aria-selected=true]::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:2px;background:#20233F}.ds-tab:focus-visible{outline:2px solid #3B5BDB;outline-offset:2px}"
-    },
-    {
-      "name": "Claimed Product Tile",
+      "name": "Claimed Print Frame",
       "kind": "custom",
-      "refersTo": "product-tile",
-      "description": "Signature component: a claimed item wrapped in the berry ribbon. Never shown to the item's owner.",
-      "html": "<div class=\"ds-tile\"><span class=\"ds-sale\">Sale</span><span class=\"ds-v\"></span><span class=\"ds-h\"></span><svg class=\"ds-bow\" viewBox=\"0 0 44 30\"><path d=\"M22 15C15 3 3 2 4 10s10 7 18 5c8 2 17 3 18-5S29 3 22 15z\" fill=\"currentColor\"/><path d=\"M22 15l-7 13M22 15l7 13\" stroke=\"currentColor\" stroke-width=\"5\" stroke-linecap=\"round\"/></svg></div>",
-      "css": ".ds-tile{position:relative;width:240px;aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:#F3E6DF}.ds-sale{position:absolute;left:10px;top:10px;background:#E2F2EA;color:#1C7350;font:700 12.5px 'Schibsted Grotesk',system-ui,sans-serif;padding:3px 8px;border-radius:6px}.ds-v{position:absolute;left:calc(68% - 9px);top:0;bottom:0;width:18px;background:#B0174F}.ds-h{position:absolute;top:calc(58% - 9px);left:0;right:0;height:18px;background:#B0174F}.ds-bow{position:absolute;left:68%;top:58%;width:44px;height:30px;transform:translate(-50%,-50%);color:#8C0F3D}"
+      "refersTo": "print-frame",
+      "description": "Signature: a product print with date stamp, wrapped in the ribbon once claimed. Never shown to the item's owner.",
+      "html": "<div class=\"ds-wrap\"><article class=\"ds-frame\"><div class=\"ds-photo\"><span class=\"ds-v\"></span><span class=\"ds-h\"></span><svg class=\"ds-bow\" viewBox=\"0 0 44 30\"><path d=\"M22 15C15 3 3 2 4 10s10 7 18 5c8 2 17 3 18-5S29 3 22 15z\" fill=\"currentColor\"/><path d=\"M22 15l-7 13M22 15l7 13\" stroke=\"currentColor\" stroke-width=\"5\" stroke-linecap=\"round\"/></svg><span class=\"ds-stamp\">’26 11 07</span></div><div class=\"ds-cap\"><span class=\"ds-store\">foliosociety.com</span><strong>The Left Hand of Darkness</strong><span class=\"ds-price\">£75.00</span><span class=\"ds-status\">Bought by you</span></div></article></div>",
+      "css": ".ds-wrap{padding:16px;background:#FFE4EC}.ds-frame{width:210px;background:#fff;border-radius:6px;padding:8px 8px 0;box-shadow:0 1px 2px rgba(59,29,63,.08);font:400 15px/1.3 'Bricolage Grotesque',system-ui,sans-serif;color:#3B1D3F}.ds-photo{position:relative;aspect-ratio:1;border-radius:3px;overflow:hidden;background:#FFF0E6}.ds-v{position:absolute;left:calc(64% - 8px);top:0;bottom:0;width:16px;background:#D93A30}.ds-h{position:absolute;top:calc(58% - 8px);left:0;right:0;height:16px;background:#D93A30}.ds-bow{position:absolute;left:64%;top:58%;width:42px;height:29px;transform:translate(-50%,-50%);color:#A8231B}.ds-stamp{position:absolute;right:6px;bottom:6px;padding:0 5px;border-radius:3px;background:rgba(255,255,255,.88);color:#D9570A;font-weight:800;font-size:12px}.ds-cap{display:flex;flex-direction:column;gap:4px;padding:10px 3px 12px}.ds-store{font-size:13px;color:#74557A}.ds-price{font-weight:800}.ds-status{font-size:13px;font-weight:800;color:#D93A30}"
     },
     {
-      "name": "Priority Meter",
+      "name": "Priority Hearts",
       "kind": "custom",
-      "description": "Ten-step priority bar with its band name.",
-      "html": "<span class=\"ds-prio\"><span class=\"ds-meter\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i></i></span>Must have</span>",
-      "css": ".ds-prio{display:inline-flex;align-items:center;gap:8px;color:#5D6280;font:500 13px 'Schibsted Grotesk',system-ui,sans-serif}.ds-meter{display:flex;gap:2px}.ds-meter i{width:4px;height:12px;border-radius:1px;background:#D3D6E2}.ds-meter i.on{background:#20233F}"
+      "description": "Three hearts for the priority band; the band name is the accessible label.",
+      "html": "<span class=\"ds-hearts\" role=\"img\" aria-label=\"Would love, priority 7 of 10\"><svg class=\"on\" viewBox=\"0 0 16 16\"><path d=\"M8 14S1.5 10 1.5 5.6A3.4 3.4 0 0 1 8 4a3.4 3.4 0 0 1 6.5 1.6C14.5 10 8 14 8 14z\" fill=\"currentColor\"/></svg><svg class=\"on\" viewBox=\"0 0 16 16\"><path d=\"M8 14S1.5 10 1.5 5.6A3.4 3.4 0 0 1 8 4a3.4 3.4 0 0 1 6.5 1.6C14.5 10 8 14 8 14z\" fill=\"currentColor\"/></svg><svg viewBox=\"0 0 16 16\"><path d=\"M8 14S1.5 10 1.5 5.6A3.4 3.4 0 0 1 8 4a3.4 3.4 0 0 1 6.5 1.6C14.5 10 8 14 8 14z\" fill=\"currentColor\"/></svg></span>",
+      "css": ".ds-hearts{display:inline-flex;gap:2px}.ds-hearts svg{width:13px;height:13px;color:#F3D3DD}.ds-hearts svg.on{color:#D93A30}"
     }
   ],
   "narrative": {
-    "northStar": "Tissue and Ribbon",
-    "overview": "GiftHub looks like the inside of a gift box: cool tissue-paper surfaces, navy ink for everything you read, and a single berry ribbon that only appears when someone has claimed a gift. The interface stays calm and plain, as the product voice does, so the ribbon is the one thing that feels like an event.\n\nDensity is moderate. Product imagery leads in the grid and steps back in the list, and controls are familiar and quiet so givers can scan a partner's list quickly on a phone. Depth comes from tone and hairlines, not shadows.\n\nThe system rejects the warm cream-and-terracotta look, black-with-neon accents, and the generic SaaS card kit (identical shadowed cards and gradient washes).",
+    "northStar": "Photo Booth Strip",
+    "overview": "Every wish is a frame in your partner's photo-booth strip. The app sits on a booth-curtain blush ground; each product is a glossy white print with a thick caption edge and a small orange date stamp in the photo's corner, the way a booth prints the day you visited. When a giver claims something, the booth flashes once and a tomato ribbon wraps the photo. That flash-and-wrap is the only orchestrated motion in the system.\n\nThe look is cute and fun, but kept clean and grown-up for couples: one decoration per frame at most, three type sizes with rank carried by weight, every product at one frame ratio on one white ground, and plain, calm copy (PRODUCT.md voice). Controls are familiar web controls: pills, tabs, a select, a toggle.\n\nThis system replaced \"Tissue and Ribbon\" on 2026-11-17. Merged forward from it: the ribbon-and-bow claim wrap, the rules that the ribbon colour means \"claimed\" and never appears on an owner's own items, sentence case, and no decorative shadows. It rejects childish sticker-book clutter, the generic white Pinterest masonry with heart buttons, and the warm cream-and-terracotta look.",
     "keyCharacteristics": [
-      "Cool, near-white tissue background with navy ink; no pure black anywhere.",
-      "Berry is reserved for claims: the ribbon, claim status text, and nothing else.",
-      "One typeface (Schibsted Grotesk) carries every role through weight and size alone.",
-      "Flat surfaces separated by hairlines and tonal fills.",
-      "Priority shown as a 10-step meter plus its band name, never as a lone number in the grid."
+      "Blush ground, white print frames, plum ink. No grey UI chrome and no pure black.",
+      "Tomato ribbon is reserved for claims; sky blue carries sale and selection; orange is only the date stamp.",
+      "Bricolage Grotesque for everything, at three sizes (display, body, small); weight carries rank.",
+      "Pills for every small control; prints keep sharp-ish 6px corners like real photo paper.",
+      "Claim changes happen in place: fixed claim slot, zero layout shift."
     ],
     "rules": [
-      { "name": "The Ribbon Is Earned Rule", "body": "Berry appears only where a claim exists. It is never used for decoration, brand flourishes, primary buttons, or links.", "section": "colors" },
-      { "name": "The Owner Never Sees Berry Rule", "body": "On any screen showing a user their own items, no berry renders, because a claim would be the only reason for it.", "section": "colors" },
-      { "name": "The Sentence Case Rule", "body": "No all-caps labels, no tracked-out eyebrows, and no monospace. Hierarchy comes from weight and size.", "section": "typography" },
-      { "name": "The Flat Box Rule", "body": "If something needs to stand out, change its fill or border, not its elevation.", "section": "elevation" }
+      {
+        "name": "The Ribbon Is Earned Rule",
+        "body": "Tomato appears only where a claim exists. It is never a brand flourish, a primary button, a floating action button, or a link colour.",
+        "section": "colors"
+      },
+      {
+        "name": "The Owner Never Sees The Ribbon Rule",
+        "body": "On any screen showing users their own items, no ribbon, claim status, claim colour or claim motion renders.",
+        "section": "colors"
+      },
+      {
+        "name": "The Three Sizes Rule",
+        "body": "Only display, body and small. Need more emphasis? Change the weight, not the size.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "No all-caps labels, no tracked eyebrows, no monospace.",
+        "section": "typography"
+      },
+      {
+        "name": "The Paper Edge Rule",
+        "body": "A shadow only ever says \"this is a piece of paper on the table\". No floating cards, no glows, no hard offset shadows.",
+        "section": "elevation"
+      }
     ],
     "dos": [
-      "Do keep berry for claims only, so a ribbon always means \"someone is giving this\".",
-      "Do show price in tabular figures and format it in the item's own currency, for the viewer's locale.",
-      "Do put store domain, title, price with priority, then occasion, in that order under every product tile.",
-      "Do separate surfaces with 1px hairlines and tonal fills.",
-      "Do keep visible 2px focus-blue focus rings on every interactive element."
+      "Do keep tomato for claims only, so a ribbon always means \"someone is giving this\".",
+      "Do put every product in the same white print at a square ratio on its pale tint.",
+      "Do keep the claim slot a fixed height so claiming never moves anything.",
+      "Do use weight, not new sizes, when something needs more emphasis.",
+      "Do format prices in the item's own currency, with tabular figures, for the viewer's locale."
     ],
     "donts": [
-      "Don't render any claim colour, badge, count, or motion on a screen showing users their own items.",
-      "Don't add drop shadows to cards, tiles, or buttons.",
-      "Don't use all-caps labels, tracked eyebrows, monospace labels, or arrows appended to button text.",
-      "Don't wrap item metadata in bordered or shadowed cards; it sits on the tissue background.",
-      "Don't add a second display typeface or decorative motion beyond the ribbon wrap."
+      "Don't render any ribbon, claim status, colour or motion on a screen showing users their own items.",
+      "Don't add stickers, mascots, confetti or more than one flourish per frame; cute stays clean.",
+      "Don't add a floating Add button or any tomato control.",
+      "Don't use drop shadows beyond the paper edge, or hard offset shadows.",
+      "Don't use all-caps labels, eyebrows, monospace, emoji icons or arrows appended to button text."
     ]
   }
 }
