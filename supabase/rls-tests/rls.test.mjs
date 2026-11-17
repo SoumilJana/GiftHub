@@ -50,4 +50,12 @@ expect('Maya sees claim after received', (await as(A, `select count(*)::int n fr
 await as(A, `delete from circle_members where user_id='${B}'`)
 expect('removed Sam loses items', (await as(B, `select count(*)::int n from items`))[0].n, 0)
 expect('removed Sam loses claims view', (await as(B, `select count(*)::int n from claims`))[0].n, 0)
+
+// Sign-up currency: detected currency from user metadata becomes the profile currency.
+await db.exec(`reset role; insert into auth.users (id, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-0000000000e1', '{"currency":"inr"}'),
+  ('00000000-0000-0000-0000-0000000000e2', '{"currency":"rupees"}'),
+  ('00000000-0000-0000-0000-0000000000e3', '{}');`)
+const cur = (await db.query(`select currency from profiles where id::text like '%0000000000e%' order by id`)).rows.map((r) => r.currency.trim())
+expect('signup currency from metadata, invalid falls back to USD', cur, ['INR', 'USD', 'USD'])
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); process.exit(fails ? 1 : 0)

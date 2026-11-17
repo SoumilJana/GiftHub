@@ -102,6 +102,8 @@ h1{font-size:var(--fs-display);line-height:1;letter-spacing:-.035em;font-weight:
 .frame{background:var(--print);border-radius:var(--r-print);padding:8px 8px 0;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(59,29,63,.08)}
 .photo{position:relative;aspect-ratio:1;border-radius:var(--r-photo);overflow:hidden;display:grid;place-items:center}
 .photo svg.art{width:60%;height:auto;color:var(--plum);opacity:.85;transition:opacity .3s}
+.photo img.shot{width:86%;height:86%;object-fit:contain;mix-blend-mode:multiply;opacity:1}
+.claimed img.shot{opacity:.55}
 .stamp{z-index:2;position:absolute;right:6px;bottom:6px;padding:0 5px;border-radius:3px;background:rgba(255,255,255,.88);font-weight:800;font-size:var(--fs-small);color:var(--stamp);font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .sale{position:absolute;left:7px;top:7px;background:var(--sky-wash);color:var(--sky-ink);font-size:var(--fs-small);font-weight:800;padding:2px 9px;border-radius:999px}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
@@ -125,7 +127,7 @@ h1{font-size:var(--fs-display);line-height:1;letter-spacing:-.035em;font-weight:
 
 .cap{padding:10px 3px 12px;display:flex;flex-direction:column;gap:4px;flex:1}
 .store{font-size:var(--fs-small);color:var(--plum-soft)}
-.title{font-weight:600;font-size:var(--fs-body);line-height:1.25;margin:0}
+.title{font-weight:600;font-size:var(--fs-body);line-height:1.25;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .title a{color:inherit;text-decoration:none}
 .title a:hover{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px}
@@ -291,7 +293,11 @@ h1{font-size:var(--fs-display);line-height:1;letter-spacing:-.035em;font-weight:
 </svg>
 
 <script>
-const fmt = (n, c) => new Intl.NumberFormat(undefined,{style:"currency",currency:c}).format(n);
+const fmt = (n, c) => new Intl.NumberFormat(undefined,{style:"currency",currency:c,minimumFractionDigits:Number.isInteger(n)?0:2,maximumFractionDigits:Number.isInteger(n)?0:2}).format(n);
+// Mirrors web/src/lib/currency.ts: a store's country domain sets the item currency; otherwise the user's own.
+const TLD_CURRENCY = {"in":"INR","co.uk":"GBP","uk":"GBP","de":"EUR","fr":"EUR","it":"EUR","es":"EUR","nl":"EUR","ie":"EUR","ca":"CAD","com.au":"AUD","co.jp":"JPY","ae":"AED","sg":"SGD","com.br":"BRL","com.mx":"MXN"};
+const currencyFromHost = h => { const p=h.split("."); return TLD_CURRENCY[p.slice(-2).join(".")] || TLD_CURRENCY[p.slice(-1)[0]] || null; };
+const USER_CURRENCY = Intl.DateTimeFormat().resolvedOptions().timeZone === "Asia/Kolkata" ? "INR" : "USD";
 const BAND = p => p>=9 ? "Must have" : p>=6 ? "Would love" : "Nice to have";
 const HEARTS = p => p>=9 ? 3 : p>=6 ? 2 : 1;
 const OCCASIONS = ["Birthday","Anniversary","Holiday","Valentine’s Day","Just because"];
@@ -310,6 +316,10 @@ const data = {
     {id:7,title:"Foldable travel hair dryer",store:"amazon.de",price:29.99,was:34.99,currency:"EUR",priority:3,occ:"Just because",tint:"#E3F4FF",art:"dryer",added:2,claim:null},
   ],
   you: [
+    // Real products the user added as test items (amazon.in, prices as listed on 2026-11-17).
+    {id:21,title:"WHOOP 5.0/MG screenless fitness, health and sleep wearable, 12-month membership",store:"amazon.in",url:"https://www.amazon.in/dp/B0DY2VVZWZ",img:"https://m.media-amazon.com/images/I/61ryxDMqRUL._SL1500_.jpg",price:21990,currency:"INR",priority:9,occ:"Birthday",tint:"#F4F1F6",added:0},
+    {id:22,title:"Philips TAS2400BK portable Bluetooth speaker, 32W, IPX4, black",store:"amazon.in",url:"https://www.amazon.in/dp/B0F8W13YV4",img:"https://m.media-amazon.com/images/I/7123zmkLYkL._SL1500_.jpg",price:1899,currency:"INR",priority:7,occ:"Just because",tint:"#F4F1F6",added:0},
+    {id:23,title:"Portronics Hold X Plus vacuum-lock magnetic phone stand, black",store:"amazon.in",url:"https://www.amazon.in/dp/B0HF8QJFKJ",img:"https://m.media-amazon.com/images/I/61SzwXLTBiL._SL1500_.jpg",price:599,currency:"INR",priority:5,occ:"Just because",tint:"#F4F1F6",added:0},
     {id:11,title:"Brass fountain pen, fine nib",store:"kaweco-pen.com",price:89,currency:"EUR",priority:9,occ:"Birthday",tint:"#FFF6DD",art:"pen",added:4,hidden:"Maya"},
     {id:12,title:"Small olive tree, 60 cm",store:"bloomandwild.com",price:55,currency:"GBP",priority:7,occ:"Anniversary",tint:"#E6F5EC",art:"plant",added:6},
     {id:13,title:"Pleated paper table lamp",store:"muji.com",price:45,currency:"EUR",priority:4,occ:"Just because",tint:"#E8EEFF",art:"lamp",added:2},
@@ -344,7 +354,7 @@ function photo(it){
   const c = state.who==="maya" && it.claim;
   const cls = c ? `claimed ${it.claim.state==="bought"||it.claim.other?"bought":""}` : "";
   return `<div class="photo ${cls}" style="background:${it.tint}" data-photo="${it.id}">
-    <svg class="art" viewBox="0 0 120 80" aria-hidden="true"><use href="#a-${it.art}"/></svg>
+    ${it.img ? `<img class="shot art" src="${it.img}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<svg class="art" viewBox="0 0 120 80" aria-hidden="true"><use href="#a-${it.art}"/></svg>`}
     ${it.was && state.view!=="list" ? `<span class="sale">Sale</span>`:""}
     <span class="stamp" aria-label="Added ${stampOf(it.added)}">${stampOf(it.added)}</span>
     <span class="ribbon" aria-hidden="true"><svg class="bow"><use href="#bow"/></svg></span>
@@ -385,7 +395,7 @@ function render(){
         ${photo(it)}
         <div class="cap">
           <span class="store">${it.store}</span>
-          <h3 class="title"><a href="#">${it.title}</a></h3>
+          <h3 class="title"><a href="${it.url||"#"}" target="_blank" rel="noopener">${it.title}</a></h3>
           <div class="row">${priceHTML(it)}${hearts(it.priority)}</div>
           <span class="occ">${it.occ}</span>
           ${claimUI(it)}
@@ -395,7 +405,7 @@ function render(){
     wrap.innerHTML = `<div class="list">${list.map(it=>`
       <article class="lrow">
         ${photo(it)}
-        <div class="cap"><span class="store">${it.store}</span><h3 class="title"><a href="#">${it.title}</a></h3></div>
+        <div class="cap"><span class="store">${it.store}</span><h3 class="title"><a href="${it.url||"#"}" target="_blank" rel="noopener">${it.title}</a></h3></div>
         <div>${priceHTML(it)}${it.was?`<div class="occ" style="color:var(--sky-ink);font-weight:800">On sale</div>`:""}</div>
         <div class="cell-prio">${hearts(it.priority)}</div>
         ${claimUI(it)}
@@ -457,7 +467,7 @@ $("#addForm").onsubmit=e=>{
   e.preventDefault(); const v=$("#url").value.trim();
   if(!v){ toast("Paste a link from any store to add it."); $("#url").focus(); return; }
   let host; try{ host=new URL(v).hostname.replace(/^www\./,""); }catch{ toast("That doesn’t look like a link. Copy the address from your browser and try again."); return; }
-  data.you.unshift({id:Date.now(),title:"Reading product details…",store:host,price:0,currency:"USD",priority:5,occ:"Just because",tint:"#F4EDF6",art:"lamp",added:0});
+  data.you.unshift({id:Date.now(),title:"Reading product details…",store:host,price:0,currency:currencyFromHost(host)||USER_CURRENCY,priority:5,occ:"Just because",tint:"#F4EDF6",art:"lamp",added:0});
   $("#url").value=""; state.who="you"; state.occ="All"; chips(); render();
   toast(`Added to your list from ${host}.`);
 };
