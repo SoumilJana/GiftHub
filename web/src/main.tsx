@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client'
 import { AuthProvider } from './components/AuthProvider'
 import { ToastProvider } from './components/ToastProvider'
 import './index.css'
+import { startAutoUpdate } from './lib/pwa'
 import { router } from './router'
 
 const queryClient = new QueryClient({
@@ -12,6 +13,8 @@ const queryClient = new QueryClient({
     queries: { staleTime: 30_000, refetchOnWindowFocus: true, retry: 1 },
   },
 })
+
+startAutoUpdate()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

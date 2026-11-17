@@ -2,7 +2,6 @@ import { Link, Outlet } from '@tanstack/react-router'
 import { useMyCircles, useProfile } from '../lib/queries'
 import { GiftMark } from './GiftMark'
 import { Avatar } from './ui'
-import { UpdatePrompt } from './UpdatePrompt'
 
 const sections = [
   { to: '/', label: 'My list' },
@@ -79,8 +78,6 @@ export function AppShell() {
           </Link>
         ))}
       </nav>
-
-      <UpdatePrompt />
     </div>
   )
 }
