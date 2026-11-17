@@ -1,7 +1,8 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { Redirect } from '../components/Redirect'
 import { useState, type FormEvent } from 'react'
-import { AuthFrame, GoogleMark } from '../components/AuthFrame'
+import { AuthFrame } from '../components/AuthFrame'
+import { GoogleButton } from '../components/GoogleButton'
 import { Button, Notice, TextField } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { detectUserCurrency } from '../lib/currency'
@@ -77,6 +78,17 @@ export function SignInPage() {
     else setInfo(`Check your inbox: we sent a sign-in link to ${email}.`)
   }
 
+  async function googleToken(token: string, nonce: string) {
+    setError(null)
+    setInfo(null)
+    setBusy('google')
+    const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token, nonce })
+    if (error) {
+      setBusy(null)
+      setError(friendlyError(error))
+    } else goNext()
+  }
+
   async function google() {
     setError(null)
     setBusy('google')
@@ -103,10 +115,7 @@ export function SignInPage() {
         </div>
       )}
 
-      <Button variant="ghost" className="w-full" busy={busy === 'google'} onClick={google}>
-        <GoogleMark />
-        Continue with Google
-      </Button>
+      <GoogleButton busy={busy === 'google'} onToken={googleToken} onFallback={google} />
 
       <div className="my-5 flex items-center gap-3 text-small text-plum-soft" aria-hidden="true">
         <span className="h-px flex-1 bg-blush-deep" />
