@@ -175,7 +175,7 @@ Product photos sit on pale per-item tints (around 92–96% lightness, e.g. #E8EE
 
 ## Layout
 
-The desktop shell is a 240px white rail with rounded right corners (22px) next to the blush main column, with padding clamp(16px, 3.4vw, 44px). The rail holds the wordmark, sections, Circles and the invite code. Below 900px the rail becomes a top bar (wordmark plus a Circle picker on a white pill) and a white bottom nav with rounded top corners (22px).
+The desktop shell is a 240px white rail with rounded right corners (22px) next to the blush main column, with padding clamp(16px, 3.4vw, 44px). The rail holds the wordmark, sections, Circles and the invite code. Below 900px the rail becomes a white top bar (wordmark and profile avatar, rounded bottom corners) and a white bottom nav with rounded top corners (22px).
 
 Main column order: heading with the next-occasion line, and the paste-a-link pill beside it (full width on phones); member pills; tools (occasion chips, then the "See it as Maya does" switch, sort and the Strip/List control); an optional note; then items. There is no floating Add button: it would duplicate the paste bar and break the ribbon rule.
 
@@ -240,7 +240,8 @@ Nearly flat. Depth comes from white prints on the blush ground. A print frame ha
 ### Navigation
 - **Rail items:** 600-weight pills. Hover fills them blush; the active item is a plum pill with white text, and its counts turn pale pink.
 - **Bottom nav:** 12px labels in plum-soft; the current item is plum at 800.
-- **Wordmark:** the gift mark plus "GiftHub" in plum at 800, -0.03em. 32px mark and 26px text in the phone top bar, 34px and 28px in the rail, 40px and 32px on signed-out screens. It is the only text outside the three sizes, so the name holds its own against the display heading.
+- **Phone top bar:** a white sheet with rounded bottom corners (22px) and a faint downward paper edge, mirroring the bottom nav. It holds the wordmark and the profile avatar. The bar is the app's frame; the page heading below it, on the blush ground, is the page's own name. Brand and page never sit as two stacked headings on the same ground.
+- **Wordmark:** the gift mark plus "GiftHub" in plum at 800, -0.03em. 28px mark and 22px text in the phone top bar, 34px and 28px in the rail, 40px and 32px on signed-out screens. It is the only text outside the three sizes; its white bar (or rail) carries the rank, not its size.
 
 ### Circles index
 - **Your Circles first:** one white panel card per Circle (14px corners, no shadow; hover adds an inset edge outline). A card holds the name at 800, a blush role pill for owners and admins, a chevron, overlapping member initials (up to four, then "+N") and a "With Maya and Sam" line. A single Circle gets one full-width card with larger initials; several sit two to a row from 640px.

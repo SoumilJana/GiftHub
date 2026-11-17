@@ -52,14 +52,14 @@ export function AppShell() {
         </Link>
       </aside>
 
-      <header className="flex items-center justify-between px-4 pt-5 shell:hidden">
+      <header className="flex items-center justify-between rounded-b-sheet bg-print px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 shadow-[0_1px_3px_rgba(59,29,63,0.06)] shell:hidden">
         <Wordmark small />
         <Link to="/profile" aria-label="Profile">
-          <Avatar name={name} size={32} />
+          <Avatar name={name} size={34} />
         </Link>
       </header>
 
-      <main className="min-w-0 px-4 pt-[18px] pb-28 shell:px-[clamp(16px,3.4vw,44px)] shell:pt-7">
+      <main className="min-w-0 px-4 pt-7 pb-28 shell:px-[clamp(16px,3.4vw,44px)] shell:pt-7">
         <Outlet />
       </main>
 
@@ -84,8 +84,8 @@ export function AppShell() {
 
 function Wordmark({ small = false }: { small?: boolean }) {
   return (
-    <Link to="/" className={`flex items-center gap-2.5 font-extrabold leading-none tracking-[-0.03em] ${small ? 'text-[26px]' : 'px-2 text-[28px]'}`}>
-      <GiftMark size={small ? 32 : 34} />
+    <Link to="/" className={`flex items-center font-extrabold leading-none tracking-[-0.03em] ${small ? 'gap-2 text-[22px]' : 'gap-2.5 px-2 text-[28px]'}`}>
+      <GiftMark size={small ? 28 : 34} />
       GiftHub
     </Link>
   )
