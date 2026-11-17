@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* Tokens from DESIGN.md ("Tissue and Ribbon"). DESIGN.md frontmatter is the source of truth. */
+@theme {
+  --font-sans: "Schibsted Grotesk", system-ui, sans-serif;
+
+  --color-tissue: #F1F2F6;
+  --color-surface: #FFFFFF;
+  --color-ink: #20233F;
+  --color-ink-hover: #2E3258;
+  --color-muted: #5D6280;
+  --color-placeholder: #8A8FA8;
+  --color-hairline: #DCDFE8;
+  --color-hairline-hover: #B9BDCC;
+  --color-quiet: #E6E8EF;
+  --color-meter-off: #D3D6E2;
+  --color-berry: #B0174F;
+  --color-berry-deep: #8C0F3D;
+  --color-berry-knot: #5A0725;
+  --color-berry-wash: #F8E4EB;
+  --color-sale: #1C7350;
+  --color-sale-wash: #E2F2EA;
+  --color-focus: #3B5BDB;
+
+  --radius-meter: 1px;
+  --radius-badge: 6px;
+  --radius-control: 8px;
+  --radius-toast: 10px;
+  --radius-tile: 12px;
+
+  --breakpoint-shell: 900px;
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-tissue text-ink font-sans antialiased;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+}
