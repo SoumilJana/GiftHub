@@ -10,7 +10,7 @@ Responsive web app installed as a PWA (360 px phones to desktop). A later Capaci
 
 ## Stack
 
-Decided in `Development Plan.md` §0: React + Vite + TypeScript SPA, TanStack Router, Tailwind CSS + shadcn/ui, TanStack Query + supabase-js, `vite-plugin-pwa`. Backend is Supabase (Postgres, Auth, RLS, Realtime, Edge Functions). Hosted on Cloudflare Pages at `gifthub.pages.dev`. No code exists yet.
+Decided in `Development Plan.md` §0: React + Vite + TypeScript SPA, TanStack Router, Tailwind CSS + shadcn/ui, TanStack Query + supabase-js, `vite-plugin-pwa`. Backend is Supabase (Postgres, Auth, RLS, Realtime, Edge Functions). Hosted on Cloudflare Workers (static assets) at `gifthub.skullsgrave810.workers.dev`.
 
 ## Users
 

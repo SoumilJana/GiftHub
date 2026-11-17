@@ -19,11 +19,11 @@ Companion to *Wishlist App Product Plan.md*. This document turns the concept int
 | UI | Tailwind CSS + shadcn/ui | Accessible components, mobile-first styling |
 | Data | TanStack Query + supabase-js | Caching, optimistic updates, realtime invalidation |
 | PWA | `vite-plugin-pwa` (Workbox) | Manifest, service worker, offline cache, update prompts |
-| Hosting | **Cloudflare Pages**, auto-deployed from GitHub | Free, unlimited bandwidth, commercial use allowed, preview URL per pull request |
+| Hosting | **Cloudflare Workers (static assets)**, auto-deployed from GitHub via Workers Builds; config in `web/wrangler.jsonc` | Free, unlimited bandwidth, commercial use allowed, preview URL per pull request |
 | Push | Web Push (VAPID) sent from a Supabase Edge Function | No third-party service |
 | Email | Resend (SMTP for Supabase Auth + notifications) | Free tier covers early stage |
 | Monitoring | Sentry + PostHog | Free tiers cover early stage |
-| Domain | `gifthub.pages.dev` (free Cloudflare subdomain) | No domain purchase |
+| Domain | `gifthub.skullsgrave810.workers.dev` (free Cloudflare subdomain) | No domain purchase |
 | Later Android app | **Capacitor** APK published on GitHub Releases | Reuses ~100% of the code; no Play Store fee |
 | Not used | Paid scraping APIs, app stores, paid domains, Chrome Web Store | All cost money |
 
@@ -82,11 +82,11 @@ Scope
 - Vite + React + TS strict, Tailwind, shadcn/ui, routing, layout shell (bottom nav on mobile, sidebar on desktop).
 - **Basic PWA:** web manifest, icons, theme colour, service worker caching the app shell → installable from the start.
 - GitHub Actions: typecheck, lint, unit tests, DB migration check on every PR.
-- Cloudflare Pages connected to GitHub: production deploy on `main`, preview URL on every PR.
+- Cloudflare Workers Builds connected to GitHub: production deploy on `main`, preview URL on every PR.
 - Sentry + PostHog wired in (with sampling so they stay within free quotas). Environment variables documented in `.env.example`.
 - Accounts created **without any payment method**. A `usage` admin page reading Supabase stats (DB size, MAU, function calls) so limits are visible early.
 
-Deliverables: empty app live at `gifthub.pages.dev`, installable on Android and desktop; schema v1 migrated.
+Deliverables: empty app live at `gifthub.skullsgrave810.workers.dev`, installable on Android and desktop; schema v1 migrated.
 
 Done when: merging to `main` deploys automatically, and the app installs to a phone home screen.
 

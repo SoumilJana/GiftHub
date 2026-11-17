@@ -30,7 +30,7 @@ How to build, launch and run GiftHub for **$0, permanently**: what's included, w
 | Push notifications | ✅ In | Web Push (VAPID) from Edge Function |
 | Price tracking + sale badges | ✅ In | pg_cron + Edge Function, with frequency limits |
 | Android app | ✅ Optional | Capacitor APK on GitHub Releases (+ F-Droid if open source) |
-| Custom domain | ❌ Out | Use `gifthub.pages.dev` |
+| Custom domain | ❌ Out | Use `gifthub.skullsgrave810.workers.dev` |
 | Google Play / Apple App Store | ❌ Out | $25 / $99 per year |
 | Chrome Web Store extension | ❌ Out | $5 fee → bookmarklet or GitHub-hosted extension instead |
 | Paid scraping/proxy services | ❌ Out | Manual entry for sites that block requests |
@@ -52,7 +52,7 @@ How to build, launch and run GiftHub for **$0, permanently**: what's included, w
 | Backups | Supabase Free | **None** |
 | Code, issues, project board | GitHub Free | Unlimited private repos |
 | CI + scheduled jobs | GitHub Actions | 2,000 min/month private repo — **unlimited if public** |
-| Web hosting | Cloudflare Pages | Unlimited bandwidth, 500 builds/month |
+| Web hosting | Cloudflare Workers static assets | Free, unlimited static asset requests; Workers Builds minutes are capped on the free plan |
 | Push | Web Push | No cost |
 | Email | Resend Free | **100/day**, 3,000/month |
 | Errors | Sentry Developer | ~5k errors/month |
@@ -142,7 +142,7 @@ The app monitors usage (admin `usage` page + a daily GitHub Actions check that o
 | 2 Wishlist Core | $0 | Quotas built here |
 | 3 Secretly Bought (MVP, private beta) | $0 | |
 | 4 Link Parsing | $0 | Some sites need manual entry |
-| 5 PWA & Quick-Add (public launch) | $0 | `gifthub.pages.dev` |
+| 5 PWA & Quick-Add (public launch) | $0 | `gifthub.skullsgrave810.workers.dev` |
 | 6 Price Tracking | $0 | Frequency limits + global cap |
 | 7 Growth | $0 | Firefox/Edge add-on stores, affiliate programs, Amazon API once eligible |
 | 8 Android APK | $0 | GitHub Releases / F-Droid |
