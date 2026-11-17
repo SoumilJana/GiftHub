@@ -144,7 +144,7 @@ The app monitors usage (admin `usage` page + a daily GitHub Actions check that o
 | 4 Link Parsing | $0 | Some sites need manual entry |
 | 5 PWA & Quick-Add (public launch) | $0 | `gifthub.grave07.workers.dev` |
 | 6 Price Tracking | $0 | Frequency limits + global cap |
-| 7 Growth | $0 | Firefox/Edge add-on stores, affiliate programs, Amazon API once eligible |
+| 7 Growth | $0 | Firefox/Edge add-on stores, affiliate programs, Amazon Creators API once eligible (10 sales in 30 days) |
 | 8 Android APK | $0 | GitHub Releases / F-Droid |
 
 **Total: $0 to build, $0 to launch, $0/month to run.**

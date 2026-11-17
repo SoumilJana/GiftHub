@@ -160,13 +160,51 @@ Scope
   4. Return title, image, price, currency, domain and a confidence score.
 - Adapters for the top retailers in your target region.
 - Fallback: low confidence or blocked → row in `parse_jobs`; a scheduled GitHub Actions job runs Playwright on the queue and fills the item in later.
-- No paid scraping service. Sites that still block requests use the manual form; Amazon's official product API can be added for free once the Associates account qualifies (Phase 7).
+- No paid scraping service. Sites that still block requests use the manual form; Amazon's official Creators API can be added for free once the Associates account qualifies (Phase 7).
 - Last resort: pre-filled manual form ("We couldn't read this page — fill in the gaps").
 - Abuse protection: per-user rate limit, block private IP ranges (SSRF), response-size cap.
 
 Deliverables: quick-add bar, parse preview card, editable fields before saving.
 
 Done when: ≥80% of a 100-URL test set from target retailers parses title + image + price correctly (instantly or via fallback).
+
+#### Research notes (17 Nov 2026), read before starting this phase
+
+**What store pages contain** (fetched from a home connection):
+
+| Store | Name / image / price | Source on the page |
+|---|---|---|
+| Flipkart | all three | JSON-LD `Product` + Open Graph |
+| Myntra | all three | JSON-LD `Product` + Open Graph |
+| Amazon.in | all three | No JSON-LD or Open Graph. Needs an adapter: `#productTitle`, `.a-price-whole`, `#landingImage` / `data-old-hires` |
+
+Not yet known: whether stores (Amazon especially) block requests from Cloudflare's or Supabase's data centres.
+
+**First step: blocking test.** Deploy a throwaway parser to both a Cloudflare Worker and a Supabase Edge Function. Run about 20 links (Amazon.in, Flipkart, Myntra, Nykaa, Ajio, Meesho, Croma, Tata CLiQ, Etsy, a Shopify shop) through each. Build on whichever is blocked less, then delete both.
+
+**Parser code: our own, open-source rules as reference.** JSON-LD `Product` → Open Graph (`og:*`, `product:price:*`) → meta and Twitter tags → per-store adapters → heuristics.
+- [metascraper](https://npmjs.com/package/metascraper) and `metascraper-amazon` (MIT, microlink): good rule sets for title and image; no evidence they extract price.
+- [product-info-fetcher](https://root.packagist.org/packages/givetwice/product-info-fetcher) (PHP): reference for price from JSON-LD and Open Graph.
+
+**Where to run it** ($0 either way):
+- **Cloudflare Worker:** the site is already hosted there. 100k requests a day free, and the built-in `HTMLRewriter` reads pages fast. Verify the Supabase sign-in token inside the Worker.
+- **Supabase Edge Function:** the original plan. Outbound traffic comes from shared, changing addresses that stores may block ([Supabase docs](https://supabase.com/docs/guides/troubleshooting/why-supabase-edge-functions-cannot-provide-static-egress-ips-for-whitelisting-3d78b0)).
+
+**Fallbacks when a store blocks the parser, in order:**
+1. **Cloudflare Browser Run** (formerly Browser Rendering): free plan has 10 browser-minutes a day and 3 concurrent browsers ([limits](https://developers.cloudflare.com/browser-rendering/limits/)). That is roughly 100–200 blocked links a day.
+2. **GitHub Actions + Playwright** on `parse_jobs`: slow (fills the item minutes later) but free.
+3. **Optional, needs a decision** (free tiers of paid services, which bends the "no scraping service" rule above): [ScrapingAnt](https://scrapingant.com/web-scraping-api), 10k credits a month with no card (browser rendering costs more credits per page); [ScraperAPI](https://docs.scraperapi.com/resources/faq/plans-and-billing), 1k credits a month.
+4. **Name and image only:** [Microlink](https://microlink.io/meta), 25 requests a day free. [LinkPreview.net](https://www.linkpreview.net), 60 an hour, but personal use only.
+5. The manual form, pre-filled with whatever was found.
+
+**Amazon-specific routes:**
+- **Share text (Phase 5):** sharing from the Amazon app includes the product name. Parse it from the share-target text even when the page can't be read.
+- **Android app (Phase 8):** `CapacitorHttp` sends `fetch` through native networking, which [skips CORS](https://github.com/ionic-team/capacitor/blob/main/core/http.md). The app can then read the page from the user's own phone and connection, the most reliable free route for Amazon.
+- **Creators API (Phase 7):** PA-API 5.0 was retired in 2026 and replaced by the [Creators API](https://affiliate-program.amazon.com/creatorsapi/docs/en-us/introduction), which uses OAuth 2.0 client credentials. Access needs **10 qualifying sales in the past 30 days, per marketplace** (Amazon.in counts separately), and can be lost if sales drop.
+
+**Ruled out:**
+- Self-hosted [Firecrawl](https://webscraping.ai/faq/firecrawl/is-firecrawl-open-source-and-can-i-self-host-it): needs a server with more than 4 GB of memory, has no anti-blocking layer, and is AGPL.
+- [FlareSolverr, Camoufox, curl-impersonate](https://scrapfly.io/blog/posts/best-anti-bot-bypass-tools): need an always-on server and frequent fixes as stores change their defences.
 
 ---
 
@@ -218,7 +256,7 @@ Scope
 - Occasion reminders (birthdays/anniversaries per member) with a "top picks" digest.
 - Group gifting / contribution pooling.
 - Browser extension for desktop quick-add, published free on **Firefox Add-ons** and **Microsoft Edge Add-ons**; Chrome users load it from GitHub Releases or keep using the bookmarklet (the Chrome Web Store charges $5).
-- Amazon Product Advertising API (free once Associates sales qualify) for reliable Amazon data.
+- Amazon Creators API (PA-API's 2026 successor; free once Associates has 10 qualifying sales in 30 days on that marketplace) for reliable Amazon data.
 - Optional revenue (doesn't affect the $0 cost rule): premium features like custom occasions or themes.
 - SEO landing pages, referral through invite links.
 
@@ -264,7 +302,7 @@ About 3.5 months part-time to public launch (~7–8 weeks full-time), at a total
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Retailers block scraping (esp. Amazon) | Parsing/price tracking fails | Layered parser, manual fallback, Amazon PA-API once eligible via Associates sales |
+| Retailers block scraping (esp. Amazon) | Parsing/price tracking fails | Layered parser, Browser Run and Actions fallbacks, share-text names, phone-side fetch in the APK, manual fallback, Amazon Creators API once eligible |
 | Claim data leaks to the owner | Destroys core value | RLS-only access, automated tests in CI, no client-side filtering |
 | iOS PWA limits (no share target, push only when installed) | Weaker iOS experience | Apple Shortcut quick-add, clear install guide, Phase 8 native wrapper if needed |
 | Invite code brute-forcing | Strangers join Circles | 31-char alphabet × 6 chars (~887M combos), rate limit, expiry, optional admin approval |
