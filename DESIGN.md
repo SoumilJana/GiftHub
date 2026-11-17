@@ -240,6 +240,11 @@ Nearly flat. Depth comes from white prints on the blush ground. A print frame ha
 ### Navigation
 - **Rail items:** 600-weight pills. Hover fills them blush; the active item is a plum pill with white text, and its counts turn pale pink.
 - **Bottom nav:** 12px labels in plum-soft; the current item is plum at 800.
+- **Wordmark:** the gift mark plus "GiftHub" in plum at 800, -0.03em. 32px mark and 26px text in the phone top bar, 34px and 28px in the rail, 40px and 32px on signed-out screens. It is the only text outside the three sizes, so the name holds its own against the display heading.
+
+### Circles index
+- **Your Circles first:** one white panel card per Circle (14px corners, no shadow; hover adds an inset edge outline). A card holds the name at 800, a blush role pill for owners and admins, a chevron, overlapping member initials (up to four, then "+N") and a "With Maya and Sam" line. A single Circle gets one full-width card with larger initials; several sit two to a row from 640px.
+- **Adding another:** below a hairline, "Add another Circle" with two chip toggles (Start a new Circle, Join with a code). Each reveals only its form and focuses its field. With no Circles, both forms show directly under the empty state.
 
 ### Notes and toasts
 - **Note:** sky-wash panel, sky-ink text with an 800-weight lead-in and a lock icon. Used for privacy explanations.

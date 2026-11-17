@@ -14,7 +14,8 @@ export type Circle = {
   created_at: string
 }
 
-export type MyCircle = Circle & { role: Role; memberCount: number }
+export type CirclePeek = { user_id: string; display_name: string }
+export type MyCircle = Circle & { role: Role; memberCount: number; members: CirclePeek[] }
 
 export type Member = { user_id: string; role: Role; joined_at: string; display_name: string; avatar_url: string | null }
 
@@ -67,7 +68,7 @@ export function useDeleteAccount() {
 
 // ---------------------------------------------------------------- circles
 
-type CircleRow = Circle & { circle_members: { count: number }[] }
+type CircleRow = Circle & { circle_members: { user_id: string; joined_at: string; profiles: { display_name: string } | null }[] }
 
 export function useMyCircles() {
   const { session } = useAuth()
@@ -79,7 +80,7 @@ export function useMyCircles() {
       const rows = must<{ role: Role; circles: CircleRow | null }[]>(
         await supabase
           .from('circle_members')
-          .select('role, circles(id, name, invite_code, invite_expires_at, created_at, circle_members(count))')
+          .select('role, circles(id, name, invite_code, invite_expires_at, created_at, circle_members(user_id, joined_at, profiles(display_name)))')
           .eq('user_id', uid!)
           .order('joined_at'),
       )
@@ -87,7 +88,10 @@ export function useMyCircles() {
         .filter((r) => r.circles)
         .map(({ role, circles }) => {
           const { circle_members, ...circle } = circles!
-          return { ...circle, role, memberCount: circle_members[0]?.count ?? 1 }
+          const members = [...circle_members]
+            .sort((a, b) => a.joined_at.localeCompare(b.joined_at))
+            .map((m) => ({ user_id: m.user_id, display_name: m.profiles?.display_name ?? 'Someone' }))
+          return { ...circle, role, memberCount: members.length || 1, members }
         })
     },
   })

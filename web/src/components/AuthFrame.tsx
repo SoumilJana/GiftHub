@@ -6,8 +6,8 @@ import { GiftMark } from './GiftMark'
 export function AuthFrame({ title, lead, children }: { title: string; lead?: ReactNode; children: ReactNode }) {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[440px] flex-col px-4 pt-6 pb-12">
-      <Link to="/" className="flex items-center gap-[9px] self-start text-[19px] font-extrabold tracking-[-0.02em]">
-        <GiftMark size={24} />
+      <Link to="/" className="flex items-center gap-3 self-start text-[32px] leading-none font-extrabold tracking-[-0.03em]">
+        <GiftMark size={40} />
         GiftHub
       </Link>
       <h1 className="mt-10 text-display leading-none font-extrabold tracking-[-0.035em]">{title}</h1>

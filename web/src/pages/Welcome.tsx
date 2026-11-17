@@ -60,7 +60,18 @@ function Welcome({ profile }: { profile: Profile }) {
 }
 
 /** Create a Circle or join one with a code. Used on Welcome and the Circles page. */
-export function StartCircle({ onDone, onSkip, compact = false }: { onDone: (circleId: string) => void; onSkip?: () => void; compact?: boolean }) {
+export function StartCircle({
+  onDone,
+  onSkip,
+  compact = false,
+  only,
+}: {
+  onDone: (circleId: string) => void
+  onSkip?: () => void
+  compact?: boolean
+  /** Show just one of the two forms. */
+  only?: 'create' | 'join'
+}) {
   const create = useCreateCircle()
   const join = useJoinCircle()
   const toast = useToast()
@@ -98,27 +109,31 @@ export function StartCircle({ onDone, onSkip, compact = false }: { onDone: (circ
   }
 
   const body = (
-    <div className="mt-6 grid max-w-[900px] gap-4 md:grid-cols-2">
+    <div className={`mt-6 grid gap-4 ${only ? 'max-w-[440px]' : 'max-w-[900px] md:grid-cols-2'}`}>
+      {only !== 'join' && (
       <Panel>
         <h2 className="font-extrabold">Start a Circle</h2>
         <p className="mt-1 text-small text-plum-soft">For you and a partner, or a group of friends or family.</p>
         <form onSubmit={doCreate} className="mt-4 flex flex-col gap-3" noValidate>
-          <TextField label="Circle name" placeholder="Maya & Sam" value={circleName} onChange={(e) => setCircleName(e.target.value)} error={createError} maxLength={60} />
+          <TextField label="Circle name" placeholder="Maya & Sam" value={circleName} onChange={(e) => setCircleName(e.target.value)} error={createError} maxLength={60} autoFocus={only === 'create'} />
           <Button type="submit" busy={create.isPending} className="self-start">
             Create Circle
           </Button>
         </form>
       </Panel>
+      )}
+      {only !== 'create' && (
       <Panel>
         <h2 className="font-extrabold">Join with a code</h2>
         <p className="mt-1 text-small text-plum-soft">Paste the code or link someone sent you.</p>
         <form onSubmit={doJoin} className="mt-4 flex flex-col gap-3" noValidate>
-          <TextField label="Invite code" placeholder="K7QX3M" autoCapitalize="characters" autoComplete="off" value={code} onChange={(e) => setCode(e.target.value)} error={joinError} />
+          <TextField label="Invite code" placeholder="K7QX3M" autoCapitalize="characters" autoComplete="off" value={code} onChange={(e) => setCode(e.target.value)} error={joinError} autoFocus={only === 'join'} />
           <Button type="submit" busy={join.isPending} className="self-start">
             Join Circle
           </Button>
         </form>
       </Panel>
+      )}
     </div>
   )
 
