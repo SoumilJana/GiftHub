@@ -344,7 +344,7 @@ const hearts = p => `<span class="hearts" role="img" aria-label="${BAND(p)}, pri
 
 function claimUI(it){
   if(state.who!=="maya") return `<div class="claim"><button class="btn ghost" data-act="received" data-id="${it.id}">Mark received</button></div>`;
-  if(it.claim?.other) return `<div class="claim"><span class="other">Claimed in Friday dinner crew</span></div>`;
+  if(it.claim?.other) return `<div class="claim"><span class="other">Already claimed</span></div>`;
   if(!it.claim) return `<div class="claim"><button class="btn" data-act="reserve" data-id="${it.id}">Reserve</button><button class="linkbtn" data-act="bought" data-id="${it.id}">I bought it</button></div>`;
   if(it.claim.state==="reserved") return `<div class="claim"><span class="status">Reserved by you</span><button class="linkbtn" data-act="bought" data-id="${it.id}">Mark bought</button><button class="linkbtn" data-act="undo" data-id="${it.id}">Undo</button></div>`;
   return `<div class="claim"><span class="status">Bought by you</span><button class="linkbtn" data-act="undo" data-id="${it.id}">Undo</button></div>`;

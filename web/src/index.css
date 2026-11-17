@@ -19,6 +19,11 @@
   --color-sky-wash: #E2F2FF;
   --color-sky-ink: #0B4F8A;
   --color-stamp: #D9570A;
+  --color-placeholder: #85688A;
+  /* Errors and destructive actions. Distinct from the ribbon, which only means "claimed". */
+  --color-alert: #B4235A;
+  --color-alert-deep: #8E1A46;
+  --color-alert-wash: #FFE0EA;
 
   --radius-photo: 3px;
   --radius-print: 6px;

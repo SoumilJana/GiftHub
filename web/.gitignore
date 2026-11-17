@@ -26,3 +26,6 @@ dist-ssr
 # wrangler
 .wrangler
 .dev.vars*
+
+# generated from ../design/circle-workspace.html
+public/demo.html

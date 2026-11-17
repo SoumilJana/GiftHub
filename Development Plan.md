@@ -23,7 +23,7 @@ Companion to *Wishlist App Product Plan.md*. This document turns the concept int
 | Push | Web Push (VAPID) sent from a Supabase Edge Function | No third-party service |
 | Email | Resend (SMTP for Supabase Auth + notifications) | Free tier covers early stage |
 | Monitoring | Sentry + PostHog | Free tiers cover early stage |
-| Domain | `gifthub.skullsgrave810.workers.dev` (free Cloudflare subdomain) | No domain purchase |
+| Domain | `gifthub.grave07.workers.dev` (free Cloudflare subdomain) | No domain purchase |
 | Later Android app | **Capacitor** APK published on GitHub Releases | Reuses ~100% of the code; no Play Store fee |
 | Not used | Paid scraping APIs, app stores, paid domains, Chrome Web Store | All cost money |
 
@@ -86,7 +86,7 @@ Scope
 - Sentry + PostHog wired in (with sampling so they stay within free quotas). Environment variables documented in `.env.example`.
 - Accounts created **without any payment method**. A `usage` admin page reading Supabase stats (DB size, MAU, function calls) so limits are visible early.
 
-Deliverables: empty app live at `gifthub.skullsgrave810.workers.dev`, installable on Android and desktop; schema v1 migrated.
+Deliverables: empty app live at `gifthub.grave07.workers.dev`, installable on Android and desktop; schema v1 migrated.
 
 Done when: merging to `main` deploys automatically, and the app installs to a phone home screen.
 

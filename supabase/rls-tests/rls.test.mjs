@@ -58,4 +58,45 @@ await db.exec(`reset role; insert into auth.users (id, raw_user_meta_data) value
   ('00000000-0000-0000-0000-0000000000e3', '{}');`)
 const cur = (await db.query(`select currency from profiles where id::text like '%0000000000e%' order by id`)).rows.map((r) => r.currency.trim())
 expect('signup currency from metadata, invalid falls back to USD', cur, ['INR', 'USD', 'USD'])
+
+// Each Circle is its own room (PRODUCT.md principle 6).
+// GF is in "Couple" with BF and in "Crew" with FRIEND. BF must learn nothing about Crew.
+const GF='00000000-0000-0000-0000-0000000000f1', BF='00000000-0000-0000-0000-0000000000f2', FR='00000000-0000-0000-0000-0000000000f3', OUT='00000000-0000-0000-0000-0000000000f4'
+const I1='22222222-2222-2222-2222-222222222221', I2='22222222-2222-2222-2222-222222222222', I3='22222222-2222-2222-2222-222222222223'
+await db.exec(`reset role; insert into auth.users (id) values ('${GF}'),('${BF}'),('${FR}'),('${OUT}');`)
+const couple = (await as(GF, `select * from create_circle('Couple')`))[0]
+const crew = (await as(GF, `select * from create_circle('Crew')`))[0]
+await as(BF, `select join_circle('${couple.invite_code}')`)
+await as(FR, `select join_circle('${crew.invite_code}')`)
+await as(GF, `insert into items (id, owner_id, title) values ('${I1}','${GF}','Couple only'),('${I2}','${GF}','Crew only'),('${I3}','${GF}','Both')`)
+await as(GF, `insert into item_circles values ('${I1}','${couple.id}'),('${I2}','${crew.id}'),('${I3}','${couple.id}'),('${I3}','${crew.id}')`)
+await as(FR, `insert into claims (item_id, claimed_by) values ('${I3}','${FR}')`)
+expect('BF sees only Couple', (await as(BF, `select name from circles order by name`)).map((r) => r.name), ['Couple'])
+expect('BF sees GF in one Circle only', (await as(BF, `select count(*)::int n from circle_members where user_id='${GF}'`))[0].n, 1)
+expect('BF cannot see Crew members', (await as(BF, `select count(*)::int n from circle_members where circle_id='${crew.id}'`))[0].n, 0)
+expect('BF cannot read FRIEND profile', (await as(BF, `select count(*)::int n from profiles where id='${FR}'`))[0].n, 0)
+expect('BF sees Couple items, not Crew-only', (await as(BF, `select title from items where owner_id='${GF}' order by title`)).map((r) => r.title), ['Both', 'Couple only'])
+expect('BF sees only Couple sharing of a shared item', (await as(BF, `select count(*)::int n from item_circles where item_id='${I3}'`))[0].n, 1)
+expect('BF still sees the item is claimed', (await as(BF, `select count(*)::int n from claims where item_id='${I3}'`))[0].n, 1)
+expect('GF still sees no claim', (await as(GF, `select count(*)::int n from claims`))[0].n, 0)
+
+// Ownership and roles.
+err=''; try { await as(BF, `select transfer_ownership('${couple.id}','${BF}')`) } catch (e) { err = e.message }
+expect('non-owner cannot transfer', /Only the Circle owner/.test(err), true)
+await as(GF, `select transfer_ownership('${couple.id}','${BF}')`)
+expect('transfer makes BF owner, GF admin', (await as(BF, `select role::text r from circle_members where circle_id='${couple.id}' order by user_id`)).map((r) => r.r), ['admin', 'owner'])
+await as(BF, `select set_member_role('${couple.id}','${GF}','member')`)
+expect('owner sets GF to member', (await as(BF, `select role::text r from circle_members where circle_id='${couple.id}' and user_id='${GF}'`))[0].r, 'member')
+err=''; try { await as(GF, `delete from circle_members where circle_id='${couple.id}' and user_id='${BF}'`) } catch (e) { err = e.message }
+expect('member cannot remove owner', (await as(BF, `select count(*)::int n from circle_members where circle_id='${couple.id}'`))[0].n, 2)
+
+// Account deletion: owned Circles pass on, empty ones go, other Circles survive.
+await as(OUT, `select * from create_circle('Solo')`)
+await as(OUT, `select delete_account()`)
+expect('deleted user\'s empty Circle is gone', (await db.query(`reset role; select count(*)::int n from circles where name='Solo'`).catch(async () => { await db.exec('reset role'); return db.query(`select count(*)::int n from circles where name='Solo'`) })).rows[0].n, 0)
+await as(GF, `select delete_account()`)
+await db.exec('reset role')
+expect('Crew passes to FRIEND', (await db.query(`select role::text r from circle_members where circle_id='${crew.id}'`)).rows.map((r) => r.r), ['owner'])
+expect('Couple survives with BF', (await db.query(`select count(*)::int n from circle_members where circle_id='${couple.id}'`)).rows[0].n, 1)
+expect('GF items and profile are gone', (await db.query(`select (select count(*)::int from items where owner_id='${GF}') + (select count(*)::int from profiles where id='${GF}') n`)).rows[0].n, 0)
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); process.exit(fails ? 1 : 0)

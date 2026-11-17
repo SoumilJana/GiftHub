@@ -10,7 +10,7 @@ Responsive web app installed as a PWA (360 px phones to desktop). A later Capaci
 
 ## Stack
 
-Decided in `Development Plan.md` §0: React + Vite + TypeScript SPA, TanStack Router, Tailwind CSS + shadcn/ui, TanStack Query + supabase-js, `vite-plugin-pwa`. Backend is Supabase (Postgres, Auth, RLS, Realtime, Edge Functions). Hosted on Cloudflare Workers (static assets) at `gifthub.skullsgrave810.workers.dev`.
+Decided in `Development Plan.md` §0: React + Vite + TypeScript SPA, TanStack Router, Tailwind CSS + shadcn/ui, TanStack Query + supabase-js, `vite-plugin-pwa`. Backend is Supabase (Postgres, Auth, RLS, Realtime, Edge Functions). Hosted on Cloudflare Workers (static assets) at `gifthub.grave07.workers.dev`.
 
 ## Users
 
@@ -47,7 +47,8 @@ GiftHub is a private, shared wishlist for people who buy gifts for each other. M
 - Product images load directly from retailer servers; user uploads are resized to ≤100 KB WebP.
 - **Global from day one:** multi-currency (per-profile preferred currency), no single home market or retailer set.
 - Terminology: *Circle* (group), *Secretly Bought*, *Reserved*, *Bought*, *Received*, *invite code*.
-- Undecided (`Development Plan.md` §6): admin approval for joiners; hiding an item from one member inside a Circle; whether other members see *who* claimed or only "Claimed"; affiliate-only vs freemium; public repo.
+- Joining: a valid, unexpired invite code or `/join/<code>` link adds the person straight away; no owner approval (decided 2026-11-17).
+- Undecided (`Development Plan.md` §6): hiding an item from one member inside a Circle; whether other members see *who* claimed or only "Claimed"; affiliate-only vs freemium; public repo.
 
 ## Brand Commitments
 
@@ -66,6 +67,7 @@ GiftHub is a private, shared wishlist for people who buy gifts for each other. M
 3. **Adding a wish should take seconds.** Share-to-save and paste-to-parse are the main path; manual entry is a graceful fallback, not a punishment.
 4. **Honest about limits.** Free-tier quotas, parse failures, and offline states are explained plainly, never hidden or dressed up.
 5. **Works on any store, in any currency.** No feature assumes one country or retailer.
+6. **Each Circle is its own room.** Nobody can tell which other Circles a member belongs to: not their names, count, members, or which other Circles an item is shared with. A partner must never learn from GiftHub that the other is in another group. Claims made from another Circle show only as "Already claimed", never the Circle or the claimer. Enforced by RLS, like the surprise rule.
 
 ## Accessibility & Inclusion
 

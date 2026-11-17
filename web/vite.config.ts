@@ -30,6 +30,8 @@ export default defineConfig({
         // App shell only. API calls to Supabase always go to the network.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallback: '/index.html',
+        // The design prototype is its own page, not an app route.
+        navigateFallbackDenylist: [/^\/demo/],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
