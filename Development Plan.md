@@ -192,7 +192,7 @@ Done when: a bought gift with a past give date prompts the giver; their Yes prom
 
 ---
 
-### Phase 3.6 — Couple and Group Circles (planned 18 Nov 2026, not started)
+### Phase 3.6 — Couple and Group Circles (built 18 Nov 2026; migration not yet applied live)
 **Goal:** a Circle for two feels like a shared space for a couple; a group Circle stays a coordination tool. Same privacy rules for both.
 
 Today there is no difference: every Circle is a group of up to 20, and a "couple" is just a Circle with two members.

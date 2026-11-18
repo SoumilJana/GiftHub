@@ -6,9 +6,15 @@ export type Role = 'owner' | 'admin' | 'member'
 
 export type Profile = { id: string; display_name: string; avatar_url: string | null; currency: string }
 
+export type CircleKind = 'couple' | 'group'
+
 export type Circle = {
   id: string
-  name: string
+  /** Null for a couple Circle that uses the automatic name ("You and Maya"). */
+  name: string | null
+  kind: CircleKind
+  /** False until an older Circle of two or fewer has answered "Is this just the two of you?". */
+  kind_confirmed: boolean
   invite_code: string
   invite_expires_at: string | null
   created_at: string
@@ -80,7 +86,7 @@ export function useMyCircles() {
       const rows = must<{ role: Role; circles: CircleRow | null }[]>(
         await supabase
           .from('circle_members')
-          .select('role, circles(id, name, invite_code, invite_expires_at, created_at, circle_members(user_id, joined_at, profiles(display_name)))')
+          .select('role, circles(id, name, kind, kind_confirmed, invite_code, invite_expires_at, created_at, circle_members(user_id, joined_at, profiles(display_name)))')
           .eq('user_id', uid!)
           .order('joined_at'),
       )
@@ -103,7 +109,7 @@ export function useCircle(circleId: string | undefined) {
     enabled: !!circleId,
     queryFn: async (): Promise<{ circle: Circle; members: Member[] } | null> => {
       const [c, m] = await Promise.all([
-        supabase.from('circles').select('id, name, invite_code, invite_expires_at, created_at').eq('id', circleId!).maybeSingle(),
+        supabase.from('circles').select('id, name, kind, kind_confirmed, invite_code, invite_expires_at, created_at').eq('id', circleId!).maybeSingle(),
         supabase
           .from('circle_members')
           .select('user_id, role, joined_at, profiles(display_name, avatar_url)')
@@ -139,7 +145,15 @@ function useCircleMutation<TVars, TResult = void>(fn: (vars: TVars) => Promise<T
 }
 
 export const useCreateCircle = () =>
-  useCircleMutation(async (name: string) => must<Circle>(await supabase.rpc('create_circle', { p_name: name })))
+  useCircleMutation(async ({ name, kind }: { name: string | null; kind: CircleKind }) =>
+    must<Circle>(await supabase.rpc('create_circle', { p_name: name, p_kind: kind })),
+  )
+
+/** Answer "Is this just the two of you?", or switch a Circle between couple and group. */
+export const useSetCircleKind = () =>
+  useCircleMutation(async ({ id, kind }: { id: string; kind: CircleKind }) =>
+    must<Circle>(await supabase.rpc('set_circle_kind', { p_circle_id: id, p_kind: kind })),
+  )
 
 /** Resolves to the joined Circle, or null when the code doesn't match an open Circle. */
 export const useJoinCircle = () =>
@@ -149,7 +163,7 @@ export const useJoinCircle = () =>
   })
 
 export const useRenameCircle = () =>
-  useCircleMutation(async ({ id, name }: { id: string; name: string }) => {
+  useCircleMutation(async ({ id, name }: { id: string; name: string | null }) => {
     must(await supabase.from('circles').update({ name }).eq('id', id))
   })
 
@@ -187,3 +201,33 @@ export const roleLabel: Record<Role, string> = { owner: 'Owner', admin: 'Admin',
 export function isCodeExpired(expiresAt: string | null, now: Date = new Date()): boolean {
   return expiresAt !== null && new Date(expiresAt) < now
 }
+
+const firstName = (name: string) => name.trim().split(/\s+/)[0] || name
+
+/**
+ * What to call a Circle. A couple Circle without its own name is "You and Maya",
+ * from each partner's side; before the partner joins it's "Your couple Circle".
+ */
+export function circleTitle(
+  circle: Pick<Circle, 'name' | 'kind'>,
+  people: { user_id: string; display_name: string }[] = [],
+  myId?: string,
+): string {
+  if (circle.name) return circle.name
+  const partner = people.find((p) => p.user_id !== myId && p.display_name.trim())
+  return partner ? `You and ${firstName(partner.display_name)}` : 'Your couple Circle'
+}
+
+/** A Circle inside a sentence: its name, or the partner's first name for an unnamed couple Circle. */
+export function circleRef(
+  circle: Pick<Circle, 'name' | 'kind'>,
+  people: { user_id: string; display_name: string }[] = [],
+  myId?: string,
+): string {
+  if (circle.name) return circle.name
+  const partner = people.find((p) => p.user_id !== myId && p.display_name.trim())
+  return partner ? firstName(partner.display_name) : 'your partner'
+}
+
+/** The other person in a couple Circle, if they've joined. */
+export const partnerOf = <T extends { user_id: string }>(people: T[], myId?: string) => people.find((p) => p.user_id !== myId)

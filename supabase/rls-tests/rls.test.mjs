@@ -183,4 +183,34 @@ await as(H1, `update items set status='active' where id='${HI}'`)
 await as(H2, `select claim_item('${HI}','reserved')`)
 expect('going back to reserved resets the hand-off', (await as(H2, `select give_on from circle_claims('${fam.id}')`))[0].give_on, null)
 
+// Phase 3.6: couple and group Circles. Kai and Lee are a couple; Max and Nia start as a pair group.
+const K1='00000000-0000-0000-0000-0000000000b1', K2='00000000-0000-0000-0000-0000000000b2', K3='00000000-0000-0000-0000-0000000000b3', K4='00000000-0000-0000-0000-0000000000b4'
+await db.exec(`reset role; insert into auth.users (id) values ('${K1}'),('${K2}'),('${K3}'),('${K4}'); update profiles set display_name='Kai Park' where id='${K1}'; update profiles set display_name='Lee' where id='${K2}';`)
+const c1 = (await as(K1, `select * from create_circle(null, 'couple')`))[0]
+expect('a couple Circle needs no name', [c1.name, c1.kind, c1.kind_confirmed], [null, 'couple', true])
+expect('a second couple Circle is refused', await fails_with(K1, `select * from create_circle(null, 'couple')`, /already in a couple/), 'refused')
+expect('a group still needs a name', await fails_with(K1, `select * from create_circle('  ', 'group')`, /Give your Circle a name/), 'refused')
+const pair = (await as(K3, `select * from create_circle('Pair')`))[0]
+await as(K4, `select join_circle('${pair.invite_code}')`)
+expect('a group member cannot change the kind', await fails_with(K4, `select * from set_circle_kind('${pair.id}', 'couple')`, /Only the Circle owner/), 'refused')
+await as(K3, `select * from set_circle_kind('${pair.id}', 'couple')`)
+expect('a group of two can become a couple', (await as(K3, `select kind::text k from circles where id='${pair.id}'`))[0].k, 'couple')
+expect('someone in a couple cannot join another couple', await fails_with(K3, `select join_circle('${c1.invite_code}')`, /already in a couple/), 'refused')
+await as(K2, `select join_circle('${c1.invite_code}')`)
+expect('a couple Circle closes at two people', await fails_with(H3, `select join_circle('${c1.invite_code}')`, /already has two people/), 'refused')
+await as(K2, `update circles set name='Us' where id='${c1.id}'`)
+expect('either partner can rename', (await as(K1, `select name from circles where id='${c1.id}'`))[0].name, 'Us')
+await as(K2, `update circles set name=null where id='${c1.id}'`)
+expect('clearing the name goes back to automatic', (await as(K1, `select name from circles where id='${c1.id}'`))[0].name, null)
+expect('the kind cannot be changed directly', await fails_with(K2, `update circles set kind='group' where id='${c1.id}'`, /permission denied/), 'refused')
+const solo = (await as(K1, `select * from create_circle('Solo two')`))[0]
+expect('someone in a couple cannot make a second one', await fails_with(K1, `select * from set_circle_kind('${solo.id}', 'couple')`, /already in a couple/), 'refused')
+expect('a group cannot lose its name', await fails_with(K1, `update circles set name=null where id='${solo.id}'`, /circles_name_check/), 'refused')
+expect('three people cannot be a couple', await fails_with(H1, `select * from set_circle_kind('${fam.id}', 'couple')`, /has more/), 'refused')
+await as(K2, `select * from set_circle_kind('${c1.id}', 'group')`)
+expect('an unnamed couple becoming a group is named after them', (await as(K1, `select name, kind::text k from circles where id='${c1.id}'`))[0], { name: 'Kai & Lee', k: 'group' })
+expect('a group member cannot delete it', (await as(K2, `delete from circles where id='${c1.id}'`), (await as(K1, `select count(*)::int n from circles where id='${c1.id}'`))[0].n), 1)
+await as(K4, `delete from circles where id='${pair.id}'`)
+expect('either partner can delete a couple Circle', (await as(K3, `select count(*)::int n from circles where id='${pair.id}'`))[0].n, 0)
+
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); process.exit(fails ? 1 : 0)

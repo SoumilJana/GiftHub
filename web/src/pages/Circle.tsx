@@ -11,7 +11,7 @@ import { friendlyError } from '../lib/errors'
 import { inviteLink } from '../lib/invite'
 import { dayLabel, useCircleClaims, useClaimSignals, useSetClaim, type Claim, type ClaimStatus } from '../lib/claims'
 import { useCircleItems, useMyItems, useShareMyItems } from '../lib/items'
-import { isCodeExpired, roleLabel, useCircle, useMyCircles, useProfile, type Circle } from '../lib/queries'
+import { circleTitle, isCodeExpired, roleLabel, useCircle, useMyCircles, useProfile, useSetCircleKind, type Circle, type Member } from '../lib/queries'
 import { useToast } from '../lib/toast'
 import { applyFilter, defaultFilter, type Item, type ListFilter } from '../lib/wishlist'
 
@@ -56,6 +56,13 @@ export function CirclePage() {
   const { circle, members } = q.data
   const me = members.find((m) => m.user_id === uid)
   const others = members.filter((m) => m.user_id !== uid)
+  const couple = circle.kind === 'couple'
+  const partner = couple ? others[0] : undefined
+  const title = circleTitle(circle, members, uid)
+  // Who your wishes are shared with, in a sentence: "Maya" in a couple Circle, else the Circle's name.
+  const sharedWith = couple ? (partner ? firstName(partner.display_name) : 'your partner') : title
+  // Older Circles of two or fewer are asked once whether they're a couple.
+  const askKind = !couple && !circle.kind_confirmed && members.length <= 2 && me?.role === 'owner'
   const tabs = [...others, ...(me ? [me] : [])]
   const selected = tabs.find((m) => m.user_id === who) ?? tabs[0]
   const isMe = selected?.user_id === uid
@@ -75,7 +82,7 @@ export function CirclePage() {
     const wasBought = claims.data?.[item.id]?.status === 'bought'
     try {
       await setClaim.mutateAsync({ itemId: item.id, status })
-      toast(status === 'reserved' ? `Reserved. ${owner} won’t see this.` : status === 'bought' ? `Marked bought. ${owner} won’t see this.` : 'Claim removed.')
+      toast(status === 'reserved' ? `${couple ? 'Noted' : 'Reserved'}. ${owner} won’t see this.` : status === 'bought' ? `Marked bought. ${owner} won’t see this.` : 'Claim removed.')
       // Just bought: ask when it'll be given, so GiftHub can check in afterwards.
       if (status === 'bought' && !wasBought) setDating(item)
     } catch (err) {
@@ -84,7 +91,20 @@ export function CirclePage() {
   }
 
   return (
-    <Page title={circle.name} lead={others.length ? `With ${others.map((m) => m.display_name).join(', ')}.` : 'Just you so far. Invite someone below.'}>
+    <Page
+      title={title}
+      kicker={couple && <CouplePair me={me} partner={partner} />}
+      lead={
+        couple
+          ? partner
+            ? `Just the two of you. ${firstName(partner.display_name)} sees the wishes you share here, and you see theirs.`
+            : 'Just you so far. Share the code below with your partner.'
+          : others.length
+            ? `With ${others.map((m) => m.display_name).join(', ')}.`
+            : 'Just you so far. Invite someone below.'
+      }
+    >
+      {askKind && <AskKind circle={circle} />}
       <div className="mt-4">
         <Link
           to="/circles/$circleId/settings"
@@ -97,7 +117,15 @@ export function CirclePage() {
 
       {selected && (
         <section aria-label="Lists" className="mt-6">
-          <div role="tablist" aria-label="Whose list" className="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
+          <div
+            role="tablist"
+            aria-label="Whose list"
+            className={
+              couple
+                ? 'inline-flex gap-1 rounded-full bg-print p-1 shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
+                : '-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0'
+            }
+          >
             {tabs.map((m) => (
               <button
                 key={m.user_id}
@@ -108,9 +136,9 @@ export function CirclePage() {
                   setWho(m.user_id)
                   clearFilters()
                 }}
-                className="h-[38px] shrink-0 rounded-full px-4 font-semibold text-plum-soft hover:bg-blush-deep aria-selected:bg-plum aria-selected:text-white"
+                className={`${couple ? 'h-[34px]' : 'h-[38px]'} shrink-0 rounded-full px-4 font-semibold text-plum-soft hover:bg-blush-deep aria-selected:bg-plum aria-selected:text-white`}
               >
-                {m.user_id === uid ? 'Your list' : firstName(m.display_name)}
+                {m.user_id === uid ? 'Your list' : couple ? `${firstName(m.display_name)}’s list` : firstName(m.display_name)}
                 <span className="ml-1.5 opacity-75">{listFor(m.user_id).length}</span>
               </button>
             ))}
@@ -120,7 +148,7 @@ export function CirclePage() {
             {isMe && notHere > 0 && (
               <div className="mt-4 flex flex-wrap items-center gap-3 rounded-panel bg-print px-4 py-3">
                 <p className="text-small text-plum-soft">
-                  {notHere === 1 ? '1 of your wishes isn’t' : `${notHere} of your wishes aren’t`} shared with {circle.name}.
+                  {notHere === 1 ? '1 of your wishes isn’t' : `${notHere} of your wishes aren’t`} shared with {sharedWith}.
                 </p>
                 <Button
                   variant="ghost"
@@ -148,7 +176,7 @@ export function CirclePage() {
               </div>
             ) : all.length === 0 ? (
               <EmptyState
-                title={isMe ? `You haven’t shared any wishes with ${circle.name} yet.` : `${firstName(selected.display_name)} hasn’t shared any wishes here yet.`}
+                title={isMe ? `You haven’t shared any wishes with ${sharedWith} yet.` : `${firstName(selected.display_name)} hasn’t shared any wishes here yet.`}
               >
                 {isMe ? (
                   <>
@@ -158,12 +186,12 @@ export function CirclePage() {
                     and it will show up here.
                   </>
                 ) : (
-                  'When they add some and share them with this Circle, they’ll show up here.'
+                  `When they add some and share them with ${couple ? 'you' : 'this Circle'}, they’ll show up here.`
                 )}
               </EmptyState>
             ) : (
               <>
-                <ListTools items={all} filter={filter} onFilter={setFilter} view={view} onView={setView} />
+                <ListTools items={all} filter={filter} onFilter={setFilter} view={view} onView={setView} couple={couple} />
                 {shown.length ? (
                   <ItemsView
                     items={shown}
@@ -179,6 +207,7 @@ export function CirclePage() {
                         <ClaimSlot
                           claim={claims.data?.[item.id] ?? null}
                           loading={claims.isPending}
+                          couple={couple}
                           onClaim={(status) => claim(item, status)}
                           onDate={() => setDating(item)}
                         />
@@ -199,6 +228,13 @@ export function CirclePage() {
         </section>
       )}
 
+      {couple ? (
+        !partner && (
+          <div className="mt-10 max-w-[440px]">
+            <InvitePanel circle={circle} couple />
+          </div>
+        )
+      ) : (
       <div className="mt-10 grid max-w-[900px] gap-4 md:grid-cols-[1fr_1fr]">
         <InvitePanel circle={circle} />
         <Panel>
@@ -219,6 +255,7 @@ export function CirclePage() {
           </ul>
         </Panel>
       </div>
+      )}
 
       {viewing && (
         <ViewItemSheet
@@ -250,9 +287,12 @@ function ClaimSlot({
   loading,
   onClaim,
   onDate,
+  couple = false,
 }: {
   claim: Claim | null
   loading: boolean
+  /** A couple plans gifts rather than reserving them. */
+  couple?: boolean
   onClaim: (status: ClaimStatus | null) => void
   onDate: () => void
 }) {
@@ -262,7 +302,7 @@ function ClaimSlot({
     return (
       <>
         <Button className="h-[34px]! px-3.5! text-small" onClick={() => onClaim('reserved')}>
-          Reserve
+          {couple ? 'Plan to get' : 'Reserve'}
         </Button>
         <Button variant="text" onClick={() => onClaim('bought')}>
           I bought it
@@ -271,7 +311,7 @@ function ClaimSlot({
     )
   return (
     <>
-      <span className="text-small font-extrabold text-ribbon-deep">{claim.status === 'reserved' ? 'Reserved by you' : 'Bought by you'}</span>
+      <span className="text-small font-extrabold text-ribbon-deep">{claim.status === 'reserved' ? (couple ? 'Planning to get this' : 'Reserved by you') : 'Bought by you'}</span>
       {claim.status === 'reserved' ? (
         <Button variant="text" onClick={() => onClaim('bought')}>
           Mark bought
@@ -288,16 +328,16 @@ function ClaimSlot({
   )
 }
 
-function InvitePanel({ circle }: { circle: Circle }) {
+function InvitePanel({ circle, couple = false }: { circle: Circle; couple?: boolean }) {
   const toast = useToast()
   const link = inviteLink(circle.invite_code)
   const expired = isCodeExpired(circle.invite_expires_at)
 
   async function share() {
-    const text = `Join “${circle.name}” on GiftHub. Code: ${circle.invite_code}`
+    const text = circle.name ? `Join “${circle.name}” on GiftHub. Code: ${circle.invite_code}` : `Join my couple Circle on GiftHub. Code: ${circle.invite_code}`
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Join my Circle on GiftHub', text, url: link })
+        await navigator.share({ title: couple ? 'Join my couple Circle on GiftHub' : 'Join my Circle on GiftHub', text, url: link })
         return
       } catch (err) {
         if ((err as DOMException).name === 'AbortError') return
@@ -313,8 +353,10 @@ function InvitePanel({ circle }: { circle: Circle }) {
 
   return (
     <Panel>
-      <h2 className="font-extrabold">Invite people</h2>
-      <p className="mt-1 text-small text-plum-soft">Anyone with this code or link joins straight away.</p>
+      <h2 className="font-extrabold">{couple ? 'Invite your partner' : 'Invite people'}</h2>
+      <p className="mt-1 text-small text-plum-soft">
+        {couple ? 'The first person to use this code joins, then it closes.' : 'Anyone with this code or link joins straight away.'}
+      </p>
       <p className="mt-4 text-[32px] leading-none font-extrabold tracking-[0.12em] tabular-nums" aria-label={`Invite code ${circle.invite_code.split('').join(' ')}`}>
         {circle.invite_code}
       </p>
@@ -332,5 +374,55 @@ function InvitePanel({ circle }: { circle: Circle }) {
       </div>
       <p className="mt-3 truncate text-small text-plum-soft select-all">{link}</p>
     </Panel>
+  )
+}
+
+/** Two overlapping faces above a couple Circle's title. */
+function CouplePair({ me, partner }: { me?: Member; partner?: Member }) {
+  return (
+    <div className="mb-3 flex" aria-hidden="true">
+      <span className="rounded-full ring-3 ring-blush">
+        <Avatar name={me?.display_name || 'You'} size={40} />
+      </span>
+      <span className="-ml-2.5 rounded-full ring-3 ring-blush">
+        {partner ? (
+          <Avatar name={partner.display_name} size={40} />
+        ) : (
+          <span className="grid size-10 place-items-center rounded-full border-[1.5px] border-dashed border-edge bg-print font-extrabold text-plum-soft">?</span>
+        )}
+      </span>
+    </div>
+  )
+}
+
+/** Asked once, to the owner of an older Circle of two or fewer. */
+function AskKind({ circle }: { circle: Circle }) {
+  const setKind = useSetCircleKind()
+  const toast = useToast()
+  const [choice, setChoice] = useState<'couple' | 'group' | null>(null)
+  async function answer(kind: 'couple' | 'group') {
+    setChoice(kind)
+    try {
+      await setKind.mutateAsync({ id: circle.id, kind })
+      toast(kind === 'couple' ? 'It’s a couple Circle now.' : 'Kept as a group.')
+    } catch (err) {
+      toast(friendlyError(err))
+    }
+  }
+  return (
+    <div className="mt-5 flex max-w-[720px] flex-wrap items-center gap-x-4 gap-y-2.5 rounded-panel bg-print px-4 py-3.5">
+      <p className="min-w-0 flex-[1_1_260px]">
+        <strong className="font-extrabold">Is this Circle just the two of you?</strong>{' '}
+        <span className="text-plum-soft">A couple Circle stays at two people and is set up for gifts between you.</span>
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button className="h-[34px]! px-3.5! text-small" busy={setKind.isPending && choice === 'couple'} disabled={setKind.isPending} onClick={() => answer('couple')}>
+          Yes, make it a couple Circle
+        </Button>
+        <Button variant="text" disabled={setKind.isPending} onClick={() => answer('group')}>
+          No, keep it a group
+        </Button>
+      </div>
+    </div>
   )
 }

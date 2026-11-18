@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } fro
 import type { Claim } from '../lib/claims'
 import type { ViewMode } from '../lib/view'
 import { formatPrice, priorityBand, type PriorityBand } from '../lib/format'
-import { dateStamp, heartCount, occasionLabel, OCCASIONS, SORTS, storeOf, tintFor, usedOccasions, type Item, type ListFilter, type SortKey } from '../lib/wishlist'
+import { dateStamp, heartCount, occasionLabel, SORTS, storeOf, tintFor, usedOccasions, type Item, type ListFilter, type SortKey } from '../lib/wishlist'
 
 export function Hearts({ priority, className = '' }: { priority: number; className?: string }) {
   const on = heartCount(priority)
@@ -222,14 +222,17 @@ export function ListTools({
   onFilter,
   view,
   onView,
+  couple = false,
 }: {
   items: Item[]
   filter: ListFilter
   onFilter: (f: ListFilter) => void
   view: ViewMode
   onView: (v: ViewMode) => void
+  /** In a couple Circle, Anniversary and Valentine's Day come first. */
+  couple?: boolean
 }) {
-  const occasions = usedOccasions(items)
+  const occasions = usedOccasions(items, couple)
   const set = (patch: Partial<ListFilter>) => onFilter({ ...filter, ...patch })
   return (
     <div className="mt-4 mb-[22px] flex flex-wrap items-center gap-x-5 gap-y-3">
@@ -238,9 +241,9 @@ export function ListTools({
           <button type="button" className={chip} aria-pressed={filter.occasion === null} onClick={() => set({ occasion: null })}>
             All
           </button>
-          {OCCASIONS.filter((o) => occasions.includes(o.value)).map((o) => (
-            <button key={o.value} type="button" className={chip} aria-pressed={filter.occasion === o.value} onClick={() => set({ occasion: o.value })}>
-              {o.label}
+          {occasions.map((o) => (
+            <button key={o} type="button" className={chip} aria-pressed={filter.occasion === o} onClick={() => set({ occasion: o })}>
+              {occasionLabel(o)}
             </button>
           ))}
         </div>

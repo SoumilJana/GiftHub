@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
 
-export function Page({ title, lead, children }: { title: string; lead?: ReactNode; children?: ReactNode }) {
+export function Page({ title, lead, kicker, children }: { title: string; lead?: ReactNode; kicker?: ReactNode; children?: ReactNode }) {
   return (
     <>
+      {kicker}
       <h1 className="text-display leading-none font-extrabold tracking-[-0.035em]">{title}</h1>
       {lead && <p className="mt-2 max-w-[72ch] text-plum-soft">{lead}</p>}
       {children}

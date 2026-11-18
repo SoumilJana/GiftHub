@@ -7,7 +7,8 @@ import { EmptyState } from '../components/Page'
 import { Button, LockIcon, Notice, Spinner } from '../components/ui'
 import { friendlyError } from '../lib/errors'
 import { useMyItems } from '../lib/items'
-import { useMyCircles, useProfile } from '../lib/queries'
+import { useUserId } from '../lib/auth'
+import { circleRef, useMyCircles, useProfile } from '../lib/queries'
 import { useToast } from '../lib/toast'
 import { applyFilter, defaultFilter, normalizeUrl, type Item, type ListFilter } from '../lib/wishlist'
 
@@ -16,6 +17,7 @@ type Editing = { item: Item | null; url: string | null } | null
 export function MyListPage() {
   const items = useMyItems()
   const circles = useMyCircles()
+  const uid = useUserId()
   const profile = useProfile()
   const [filter, setFilter] = useState<ListFilter>(defaultFilter)
   const [view, setView] = useStoredView()
@@ -25,7 +27,7 @@ export function MyListPage() {
   const myCircles = circles.data ?? []
   const all = items.data ?? []
   const shown = applyFilter(all, filter)
-  const circleNames = myCircles.map((c) => c.name)
+  const circleNames = myCircles.map((c) => circleRef(c, c.members, uid))
 
   return (
     <>

@@ -1,5 +1,6 @@
 import { Link, Outlet } from '@tanstack/react-router'
-import { useMyCircles, useProfile } from '../lib/queries'
+import { useUserId } from '../lib/auth'
+import { circleTitle, useMyCircles, useProfile } from '../lib/queries'
 import { GiftMark } from './GiftMark'
 import { Avatar } from './ui'
 
@@ -16,6 +17,7 @@ const railLink =
 
 export function AppShell() {
   const circles = useMyCircles()
+  const uid = useUserId()
   const profile = useProfile()
   const name = profile.data?.display_name ?? ''
 
@@ -40,7 +42,7 @@ export function AppShell() {
             </h2>
             {circles.data.map((c) => (
               <Link key={c.id} to="/circles/$circleId" params={{ circleId: c.id }} className={railLink}>
-                <span className="truncate">{c.name}</span>
+                <span className="truncate">{circleTitle(c, c.members, uid)}</span>
                 <span className="text-small opacity-75">{c.memberCount}</span>
               </Link>
             ))}

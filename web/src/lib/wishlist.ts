@@ -67,10 +67,12 @@ export function applyFilter(items: Item[], f: ListFilter): Item[] {
   return out.sort(cmp[f.sort])
 }
 
-/** Occasions used by at least one item, in the standard order. */
-export function usedOccasions(items: Item[]): Occasion[] {
+const COUPLE_ORDER: Occasion[] = ['anniversary', 'valentines_day', 'birthday', 'holiday', 'just_because']
+
+/** Occasions used by at least one item, in the standard order (a couple's own days first in a couple Circle). */
+export function usedOccasions(items: Item[], couple = false): Occasion[] {
   const used = new Set(items.flatMap((i) => i.occasions))
-  return OCCASIONS.map((o) => o.value).filter((o) => used.has(o))
+  return (couple ? COUPLE_ORDER : OCCASIONS.map((o) => o.value)).filter((o) => used.has(o))
 }
 
 /** 3 hearts = Must have, 2 = Would love, 1 = Nice to have. */

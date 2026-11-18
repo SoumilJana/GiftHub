@@ -31,7 +31,7 @@ export function JoinPage() {
           setError('That code doesn’t match an open Circle. Check it with the person who sent it.')
           return
         }
-        toast(`You joined ${circle.name}.`)
+        toast(circle.name ? `You joined ${circle.name}.` : 'You joined their couple Circle.')
         navigate({ to: '/circles/$circleId', params: { circleId: circle.id }, replace: true })
       })
       .catch((err) => {

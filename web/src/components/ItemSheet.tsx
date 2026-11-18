@@ -6,7 +6,7 @@ import { priorityBand } from '../lib/format'
 import { useMarkReceived } from '../lib/claims'
 import { useDeleteItem, useSaveItem, type ItemDraft } from '../lib/items'
 import { isUploadedPhoto, removePhoto, uploadPhoto } from '../lib/photo'
-import type { MyCircle } from '../lib/queries'
+import { circleTitle, type MyCircle } from '../lib/queries'
 import { useToast } from '../lib/toast'
 import { normalizeUrl, occasionLabel, OCCASIONS, storeOf, titleFromUrl, type Item, type Occasion } from '../lib/wishlist'
 import { Hearts, Photo, Price } from './ItemViews'
@@ -262,7 +262,7 @@ export function EditItemSheet({
             <div className="flex flex-wrap gap-1.5">
               {circles.map((c) => (
                 <button key={c.id} type="button" className={chip} aria-pressed={circleIds.includes(c.id)} onClick={() => setCircleIds((x) => toggle(x, c.id))}>
-                  {c.name}
+                  {circleTitle(c, c.members, uid)}
                 </button>
               ))}
             </div>

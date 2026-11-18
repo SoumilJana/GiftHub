@@ -5,7 +5,9 @@ import { Avatar, Button, ConfirmButton, Notice, Panel, SelectField, Spinner, Tex
 import { useUserId } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
 import {
+  circleTitle,
   useCircle,
+  useSetCircleKind,
   useDeleteCircle,
   useRegenerateCode,
   useRemoveMember,
@@ -39,6 +41,7 @@ export function CircleSettingsPage() {
   const setRole = useSetRole()
   const transfer = useTransferOwnership()
   const del = useDeleteCircle()
+  const setKind = useSetCircleKind()
 
   const [error, setError] = useState<string | null>(null)
 
@@ -49,6 +52,12 @@ export function CircleSettingsPage() {
   const myRole = members.find((m) => m.user_id === uid)?.role ?? 'member'
   const canManage = myRole === 'owner' || myRole === 'admin'
   const others = members.filter((m) => m.user_id !== uid)
+  const couple = circle.kind === 'couple'
+  const partner = couple ? others[0] : undefined
+  const partnerFirst = partner ? partner.display_name.trim().split(/\s+/)[0] : 'your partner'
+  const title = circleTitle(circle, members, uid)
+  // In a couple Circle both partners are equal.
+  const canEdit = canManage || couple
 
   const run = async (fn: () => Promise<unknown>, done: string) => {
     setError(null)
@@ -62,9 +71,13 @@ export function CircleSettingsPage() {
 
   async function saveName(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const name = String(new FormData(e.currentTarget).get('name') ?? '')
-    if (!name.trim()) return setError('Give your Circle a name.')
-    await run(() => rename.mutateAsync({ id: circle.id, name: name.trim() }), 'Circle renamed.')
+    const name = String(new FormData(e.currentTarget).get('name') ?? '').trim()
+    if (!name && !couple) return setError('Give your Circle a name.')
+    if (name === (circle.name ?? '')) return
+    await run(
+      () => rename.mutateAsync({ id: circle.id, name: name || null }),
+      name ? 'Circle renamed.' : `Name cleared. You’ll each see “You and” the other’s name.`,
+    )
   }
 
   function expiryChange(value: string) {
@@ -73,13 +86,13 @@ export function CircleSettingsPage() {
   }
 
   return (
-    <Page title="Circle settings" lead={circle.name}>
+    <Page title="Circle settings" lead={couple ? `${title} · Couple Circle` : title}>
       <Link
         to="/circles/$circleId"
         params={{ circleId: circle.id }}
         className="mt-3 inline-block text-small font-semibold text-plum-soft underline underline-offset-3 hover:text-plum"
       >
-        Back to {circle.name}
+        Back to {title}
       </Link>
 
       {error && (
@@ -89,10 +102,18 @@ export function CircleSettingsPage() {
       )}
 
       <div className="mt-6 flex max-w-[640px] flex-col gap-4">
-        {canManage && (
+        {canEdit && (
           <Panel>
             <form onSubmit={saveName} className="flex flex-col gap-3" noValidate>
-              <TextField key={circle.name} label="Circle name" name="name" defaultValue={circle.name} maxLength={60} />
+              <TextField
+                key={circle.name ?? ''}
+                label={couple ? 'Name (optional)' : 'Circle name'}
+                name="name"
+                defaultValue={circle.name ?? ''}
+                placeholder={couple ? 'Automatic' : undefined}
+                hint={couple ? `Leave it empty and you’ll see “You and ${partnerFirst}”.` : undefined}
+                maxLength={60}
+              />
               <Button type="submit" busy={rename.isPending} className="self-start">
                 Save name
               </Button>
@@ -100,7 +121,7 @@ export function CircleSettingsPage() {
           </Panel>
         )}
 
-        {canManage && (
+        {(couple ? !partner : canManage) && (
           <Panel>
             <h2 className="font-extrabold">Invite code</h2>
             <p className="mt-1 text-small text-plum-soft">
@@ -134,6 +155,7 @@ export function CircleSettingsPage() {
           </Panel>
         )}
 
+        {!couple && (
         <Panel>
           <h2 className="font-extrabold">Members</h2>
           <ul className="mt-3 flex flex-col">
@@ -150,15 +172,66 @@ export function CircleSettingsPage() {
             ))}
           </ul>
         </Panel>
+        )}
+
+        {(couple || (canManage && members.length <= 2)) && (
+          <Panel>
+            <h2 className="font-extrabold">{couple ? 'Make it a group' : 'Make it a couple Circle'}</h2>
+            <p className="mt-1 mb-4 text-small text-plum-soft">
+              {couple
+                ? 'For when you want to add family or friends. It can only go back to a couple Circle while it has two people.'
+                : 'For just the two of you. It stays at two people and is set up for gifts between you.'}
+            </p>
+            <ConfirmButton
+              label={couple ? 'Make it a group' : 'Make it a couple Circle'}
+              question={couple ? 'Anyone with the code will be able to join.' : 'Only two people can be in it.'}
+              confirmLabel={couple ? 'Make it a group' : 'Make it a couple Circle'}
+              busy={setKind.isPending}
+              onConfirm={() =>
+                run(() => setKind.mutateAsync({ id: circle.id, kind: couple ? 'group' : 'couple' }), couple ? 'It’s a group now.' : 'It’s a couple Circle now.')
+              }
+            />
+          </Panel>
+        )}
+
+        {couple && partner && (
+          <Panel>
+            <h2 className="font-extrabold">Leave this Circle</h2>
+            <p className="mt-1 mb-4 text-small text-plum-soft">You’ll stop seeing {partnerFirst}’s list here, and they’ll stop seeing yours. They keep the Circle.</p>
+            <ConfirmButton
+              label="Leave Circle"
+              question="Leave this Circle?"
+              confirmLabel="Leave"
+              variant="danger"
+              busy={remove.isPending || transfer.isPending}
+              onConfirm={async () => {
+                setError(null)
+                try {
+                  // The Circle stays with your partner, so hand it over first.
+                  if (myRole === 'owner') await transfer.mutateAsync({ circleId: circle.id, userId: partner.user_id })
+                  await remove.mutateAsync({ circleId: circle.id, userId: uid })
+                  toast(`You left ${title}.`)
+                  navigate({ to: '/circles', replace: true })
+                } catch (err) {
+                  setError(friendlyError(err))
+                }
+              }}
+            />
+          </Panel>
+        )}
 
         <Panel>
-          {myRole === 'owner' ? (
+          {myRole === 'owner' || couple ? (
             <>
               <h2 className="font-extrabold">Delete this Circle</h2>
               <p className="mt-1 mb-4 text-small text-plum-soft">
-                {others.length
-                  ? 'Everyone is removed from it. To leave but keep it going, make someone else the owner first.'
-                  : 'It’s just you in this Circle.'}
+                {couple
+                  ? partner
+                    ? `It’s gone for both of you. Your wishes stay on your lists.`
+                    : 'It’s just you in this Circle.'
+                  : others.length
+                    ? 'Everyone is removed from it. To leave but keep it going, make someone else the owner first.'
+                    : 'It’s just you in this Circle.'}
               </p>
               <ConfirmButton
                 label="Delete Circle"
@@ -170,7 +243,7 @@ export function CircleSettingsPage() {
                   setError(null)
                   try {
                     await del.mutateAsync(circle.id)
-                    toast(`${circle.name} was deleted.`)
+                    toast(`${title} was deleted.`)
                     navigate({ to: '/circles', replace: true })
                   } catch (err) {
                     setError(friendlyError(err))
@@ -192,7 +265,7 @@ export function CircleSettingsPage() {
                   setError(null)
                   try {
                     await remove.mutateAsync({ circleId: circle.id, userId: uid })
-                    toast(`You left ${circle.name}.`)
+                    toast(`You left ${title}.`)
                     navigate({ to: '/circles', replace: true })
                   } catch (err) {
                     setError(friendlyError(err))

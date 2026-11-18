@@ -4,7 +4,7 @@ import { EmptyState, Page } from '../components/Page'
 import { Avatar, LockIcon, Notice, Spinner } from '../components/ui'
 import { useUserId } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
-import { roleLabel, useMyCircles, type MyCircle } from '../lib/queries'
+import { circleTitle, roleLabel, useMyCircles, type MyCircle } from '../lib/queries'
 import { StartCircle } from './Welcome'
 
 const MAX_FACES = 4
@@ -18,10 +18,14 @@ function withNames(names: string[]) {
 }
 
 function CircleCard({ circle, uid, featured }: { circle: MyCircle; uid: string | undefined; featured: boolean }) {
+  const couple = circle.kind === 'couple'
   const others = circle.members.filter((m) => m.user_id !== uid)
-  const faces = others.slice(0, MAX_FACES)
-  const extra = others.length - faces.length
-  const role = circle.role === 'member' ? null : roleLabel[circle.role]
+  const me = circle.members.find((m) => m.user_id === uid)
+  // A couple Circle shows both faces; a group shows the other people.
+  const faces = couple ? [...(me ? [me] : []), ...others] : others.slice(0, MAX_FACES)
+  const extra = couple ? 0 : others.length - faces.length
+  // Both partners are equal, so a couple Circle shows no role.
+  const tag = couple ? 'Couple' : circle.role === 'member' ? null : roleLabel[circle.role]
 
   const size = featured ? 40 : 34
 
@@ -33,14 +37,14 @@ function CircleCard({ circle, uid, featured }: { circle: MyCircle; uid: string |
         className="group flex h-full flex-col rounded-panel bg-print p-5 transition-shadow hover:shadow-[inset_0_0_0_1.5px_var(--color-edge)]"
       >
         <span className="flex items-center gap-3">
-          <span className="min-w-0 flex-1 font-extrabold break-words">{circle.name}</span>
-          {role && <span className="shrink-0 rounded-full bg-blush px-2.5 py-0.5 text-small text-plum-soft">{role}</span>}
+          <span className="min-w-0 flex-1 font-extrabold break-words">{circleTitle(circle, circle.members, uid)}</span>
+          {tag && <span className="shrink-0 rounded-full bg-blush px-2.5 py-0.5 text-small text-plum-soft">{tag}</span>}
           <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" className="shrink-0 text-plum-soft transition-transform group-hover:translate-x-0.5 group-hover:text-plum">
             <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
 
-        {faces.length > 0 && (
+        {(couple ? others.length > 0 : faces.length > 0) && (
           <span className="mt-4 flex -space-x-2">
             {faces.map((m) => (
               <span key={m.user_id} className="flex rounded-full ring-2 ring-print">
@@ -59,8 +63,14 @@ function CircleCard({ circle, uid, featured }: { circle: MyCircle; uid: string |
           </span>
         )}
 
-        <span className={`text-plum-soft ${faces.length ? 'mt-3' : 'mt-1.5'}`}>
-          {others.length ? `With ${withNames(others.map((m) => m.display_name))}` : 'Just you so far. Open it to invite someone.'}
+        <span className={`text-plum-soft ${others.length ? 'mt-3' : 'mt-1.5'}`}>
+          {couple
+            ? others.length
+              ? 'Just the two of you'
+              : 'Waiting for your partner. Open it to share the code.'
+            : others.length
+              ? `With ${withNames(others.map((m) => m.display_name))}`
+              : 'Just you so far. Open it to invite someone.'}
         </span>
       </Link>
     </li>
