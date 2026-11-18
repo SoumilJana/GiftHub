@@ -155,7 +155,7 @@ Product photos sit on pale per-item tints (around 92–96% lightness, e.g. #E8EE
 ### Named Rules
 **The Ribbon Is Earned Rule.** Tomato appears only where a claim exists. It is never a brand flourish, a primary button, a floating action button, or a link colour.
 
-**The Owner Never Sees The Ribbon Rule.** On any screen showing users their own items, no ribbon, claim status, claim colour or claim motion renders.
+**The Owner Never Sees The Ribbon Rule.** On any screen showing users their own active wishes, no ribbon, claim status, claim colour or claim motion renders. The one exception is Received: once a wish is marked received the surprise is over, so a claimed gift wears its ribbon there (tomato if it was reserved, deep if bought), wrapping in as the page opens, without the flash.
 
 ## Typography
 
@@ -267,7 +267,7 @@ Nearly flat. Depth comes from white prints on the blush ground. A print frame ha
 - **Do** format prices in the item's own currency, with tabular figures, for the viewer's locale.
 
 ### Don't:
-- **Don't** render any ribbon, claim status, colour or motion on a screen showing users their own items.
+- **Don't** render any ribbon, claim status, colour or motion on a screen showing users their own active wishes. Received is the only exception.
 - **Don't** add stickers, mascots, confetti or more than one flourish per frame; cute stays clean.
 - **Don't** add a floating Add button or any tomato control.
 - **Don't** use drop shadows beyond the paper edge, or hard offset shadows.

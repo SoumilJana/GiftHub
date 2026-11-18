@@ -48,6 +48,8 @@ export function ReceivedPage() {
       <ItemsView
         items={items}
         view={view}
+        // The surprise is over here, so the gift wears its ribbon: tomato if it was reserved, deep red if bought.
+        claims={Object.fromEntries(Object.entries(givers).map(([id, g]) => [id, { status: g.status, mine: true }]))}
         slot={(item) => (
           <>
             <span className="text-small text-plum-soft">{fromLine(givers[item.id])}</span>
