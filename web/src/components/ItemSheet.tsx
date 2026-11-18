@@ -2,7 +2,7 @@ import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type Form
 import { useUserId } from '../lib/auth'
 import { currencyForNewItem, currencyOptions } from '../lib/currency'
 import { friendlyError } from '../lib/errors'
-import { sheetExit } from '../lib/motion'
+import { celebrate, flyHome, sheetExit } from '../lib/motion'
 import { priorityBand } from '../lib/format'
 import { useMarkReceived } from '../lib/claims'
 import { useDeleteItem, useSaveItem, type ItemDraft } from '../lib/items'
@@ -152,6 +152,7 @@ export function EditItemSheet({
       // Clean up uploads that ended up unused, and the old upload if it was replaced.
       uploaded.filter((u) => u !== img).forEach((u) => removePhoto(u))
       if (item?.image_url && item.image_url !== img && isUploadedPhoto(item.image_url)) removePhoto(item.image_url)
+      if (!item) celebrate('wish-saved')
       toast(item ? 'Saved.' : circleIds.length ? 'Added to your list.' : 'Added. Only you can see it.')
       onClose()
     } catch (err) {
@@ -210,7 +211,7 @@ export function EditItemSheet({
             <span>How much do you want it?</span>
             <span className="flex items-center gap-2 text-plum-soft">
               {priorityBand(priority)}
-              <Hearts priority={priority} />
+              <Hearts priority={priority} pop />
             </span>
           </label>
           <input
@@ -308,6 +309,7 @@ export function EditItemSheet({
               busy={received.isPending}
               onConfirm={async () => {
                 try {
+                  flyHome(item.id)
                   const giver = await received.mutateAsync(item.id)
                   const who = giver?.name.split(/\s+/)[0]
                   toast(

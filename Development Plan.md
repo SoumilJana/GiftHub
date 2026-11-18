@@ -220,7 +220,7 @@ Decisions (18 Nov 2026)
 
 ---
 
-### Phase 3.7 — Navigation and Motion (planned 18 Nov 2026, not started)
+### Phase 3.7 — Navigation and Motion (built 18 Nov 2026)
 **Goal:** on a phone, your partner's list is one tap away, and the app moves like a photo booth: prints slide out, sheets rise, and a few small gift moments make it fun without clutter. No database changes and no new libraries.
 
 Decided with the user (18 Nov 2026): icons with labels in the bottom bar, a Circle switcher in the phone top bar, and "a few playful moments" of motion.

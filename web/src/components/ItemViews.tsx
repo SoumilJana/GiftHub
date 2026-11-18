@@ -1,16 +1,17 @@
 import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import type { Claim } from '../lib/claims'
-import { useListMotion } from '../lib/motion'
+import { useHeartPop, useListMotion } from '../lib/motion'
 import type { ViewMode } from '../lib/view'
 import { SlidingPill } from './SlidingPill'
 import { formatPrice, priorityBand, type PriorityBand } from '../lib/format'
 import { dateStamp, heartCount, occasionLabel, SORTS, storeOf, tintFor, usedOccasions, type Item, type ListFilter, type SortKey } from '../lib/wishlist'
 
-export function Hearts({ priority, className = '' }: { priority: number; className?: string }) {
+export function Hearts({ priority, className = '', pop = false }: { priority: number; className?: string; /** Pop as they fill (the priority picker). */ pop?: boolean }) {
   const on = heartCount(priority)
   const band = priorityBand(priority)
+  const ref = useHeartPop(pop ? on : 0)
   return (
-    <span role="img" aria-label={`${band}, priority ${priority} of 10`} title={band} className={`flex items-center gap-0.5 ${className}`}>
+    <span ref={ref} role="img" aria-label={`${band}, priority ${priority} of 10`} title={band} className={`flex items-center gap-0.5 ${className}`}>
       {[1, 2, 3].map((i) => (
         <svg key={i} viewBox="0 0 16 16" aria-hidden="true" className={`size-[13px] ${i <= on ? 'text-ribbon-deep' : 'text-heart-off'}`}>
           <path d="M8 14S1.5 10 1.5 5.6A3.4 3.4 0 0 1 8 4a3.4 3.4 0 0 1 6.5 1.6C14.5 10 8 14 8 14z" fill="currentColor" />

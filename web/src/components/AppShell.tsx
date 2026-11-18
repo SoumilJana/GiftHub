@@ -39,7 +39,9 @@ export function AppShell() {
           <SlidingPill active={ACTIVE} watch={path} />
           {sections.map((s) => (
             <Link key={s.to} to={s.to} activeOptions={{ exact: s.to === '/' }} className={railSection}>
-              {s.icon}
+              <span className="flex" data-fly-target={s.to === '/received' ? 'received' : undefined}>
+                {s.icon}
+              </span>
               {s.label}
             </Link>
           ))}
@@ -79,7 +81,9 @@ export function AppShell() {
         <SlidingPill active={ACTIVE} target=".nav-icon" watch={path} />
         {[...sections, { to: '/profile' as const, label: 'Profile', icon: <ProfileFace name={name} /> }].map((s) => (
           <Link key={s.to} to={s.to} activeOptions={{ exact: s.to === '/' }} className={bottomLink}>
-            <span className={s.to === '/profile' ? 'nav-icon w-[30px]!' : 'nav-icon'}>{s.icon}</span>
+            <span className={s.to === '/profile' ? 'nav-icon w-[30px]!' : 'nav-icon'} data-fly-target={s.to === '/received' ? 'received' : undefined}>
+              {s.icon}
+            </span>
             {s.label}
           </Link>
         ))}

@@ -114,7 +114,7 @@ components:
 
 **Creative North Star: "Photo Booth Strip"**
 
-Every wish is a frame in your partner's photo-booth strip. The app sits on a booth-curtain blush ground; each product is a glossy white print with a thick caption edge and a small orange date stamp in the photo's corner, the way a booth prints the day you visited. When a giver claims something, the booth flashes once and a tomato ribbon wraps the photo. That flash-and-wrap is the only orchestrated motion in the system.
+Every wish is a frame in your partner's photo-booth strip. The app sits on a booth-curtain blush ground; each product is a glossy white print with a thick caption edge and a small orange date stamp in the photo's corner, the way a booth prints the day you visited. When a giver claims something, the booth flashes once and a tomato ribbon wraps the photo. That flash-and-wrap is the one big moment. Everything else moves like paper in a booth: sheets rise, prints slide out, and a few small gift moments (see Motion) stay short and run once.
 
 The look is cute and fun, but kept clean and grown-up for couples: one decoration per frame at most, three type sizes with rank carried by weight, every product at one frame ratio on one white ground, and plain, calm copy (PRODUCT.md voice). Controls are familiar web controls: pills, tabs, a select, a toggle.
 
@@ -231,16 +231,17 @@ Nearly flat. Depth comes from white prints on the blush ground. A print frame ha
 - **Motion (other changes):**
   - Reserved to bought: the ribbon and bow re-colour over 400ms in place, with no re-wrap and no flash.
   - Undo: the bow lifts first (200ms), then the bands retract with an ease-in (300ms).
-- All claim motion is removed when reduced motion is requested.
+- In calm mode the ribbon fades in and out in place, with no drawing and no flash.
 
 ### Inputs
 - **Paste-a-link:** a white 46px pill with an inset edge, hint text in the placeholder colour and a plum Add button.
 - **Errors:** shown as a plain-language toast that says what to do next.
 
 ### Navigation
-- **Rail items:** 600-weight pills. Hover fills them blush; the active item is a plum pill with white text, and its counts turn pale pink.
-- **Bottom nav:** 12px labels in plum-soft; the current item is plum at 800.
-- **Phone top bar:** a white sheet with rounded bottom corners (22px) and a faint downward paper edge, mirroring the bottom nav. It holds the wordmark and the profile avatar. The bar is the app's frame; the page heading below it, on the blush ground, is the page's own name. Brand and page never sit as two stacked headings on the same ground.
+- **Icons:** My list is a gift tag, Circles two overlapping rings, Received an open gift box; 22px line drawings with 2px rounded strokes, like the gift placeholders. Profile is your initials avatar.
+- **Rail items:** 600-weight pills with the icon before the label. Hover fills them blush. One plum pill slides behind the current section (white text); Circle links below use a plain plum fill, and their counts turn pale pink.
+- **Bottom nav:** icon above a 12px 600-weight label, plum-soft; the current item turns plum (colour only, so nothing shifts). A plum pill sits behind the current icon and slides between items. On Profile it shrinks into a 2px plum ring around the avatar, with a white gap.
+- **Phone top bar:** a white sheet with rounded bottom corners (22px) and a faint downward paper edge, mirroring the bottom nav. It holds the wordmark and the **Circle switcher**: a white pill with the other person's face, the Circle's title ("You and Maya") and a chevron. It shows the Circle you're in, or the one you opened last on this device; tapping it opens a sheet of your Circles. With no Circles it reads "Start a Circle". The bar is the app's frame; the page heading below it, on the blush ground, is the page's own name. Brand and page never sit as two stacked headings on the same ground.
 - **Wordmark:** the gift mark plus "GiftHub" in plum at 800, -0.03em. 28px mark and 22px text in the phone top bar, 34px and 28px in the rail, 40px and 32px on signed-out screens. It is the only text outside the three sizes; its white bar (or rail) carries the rank, not its size.
 
 ### Reading pages (Help, Privacy, Terms, Cookies)
@@ -255,7 +256,27 @@ Nearly flat. Depth comes from white prints on the blush ground. A print frame ha
 
 ### Notes and toasts
 - **Note:** sky-wash panel, sky-ink text with an 800-weight lead-in and a lock icon. Used for privacy explanations.
-- **Toast:** a plum pill with white small text, bottom-centred and raised above the bottom nav on phones. It slides up 16px, fades in and dismisses after 3.2s.
+- **Toast:** a plum pill with white small text, bottom-centred and raised above the bottom nav on phones, sized to its text (one line unless it's wider than the screen). It slides up 16px, fades in and dismisses after 3.2s.
+
+## Motion
+
+Motion explains what changed, and a few small moments make giving feel like giving. All of it lives in `web/src/index.css` and `web/src/lib/motion.ts`, with shared timings (`--dur-fast` 150ms, `--dur` 250ms, `--dur-slow` 320ms) and easing (`--ease-out` cubic-bezier(.22,1,.36,1)). Only transform, opacity and clip-path animate.
+
+- **Sheets** rise from the bottom on phones (fade and settle from 640px), 320ms; they leave faster (200ms) however they're closed.
+- **Sliding pills:** the bottom bar, rail, Circle tabs and Strip/List switch share one plum pill that slides to the current item (250ms).
+- **A new wish prints:** once any sheet has gone, the new frame is revealed top to bottom with a small drop (750ms); the page scrolls to it first if it's off screen. Other frames glide to make room.
+- **Removing a wish:** the frame fades and shrinks where it was (220ms) and the rest glide into the gap. Switching to a different list just fades in (150ms).
+- **Playful moments** (each once per action, never blocking a tap):
+  - Hearts pop as they fill in the priority picker, and dip as they empty.
+  - The logo's bow hops when a new wish is saved.
+  - Mark received: the frame flies in an arc into the Received tab, and the box icon bounces.
+  - Answered hand-off cards fold away.
+- **Calm mode** (the device asks for reduced motion, or Fewer animations is on in Profile): no sliding, printing, flying, flash or hops. Fades and colour changes stay, so every state change still shows.
+
+### Named Rules
+**The One Big Moment Rule.** The ribbon wrap is the only orchestrated sequence. Everything else is short, single-element and tied to a gift action. No confetti, mascots or sound.
+
+**The Owner Never Sees Claim Motion Rule.** No moment above may hint at a claim on the owner's own active wishes.
 
 ## Do's and Don'ts
 

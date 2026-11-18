@@ -127,8 +127,8 @@ function pageBox(el: HTMLElement): Box {
  * - Many changed at once (another person's list, a filter): the list just fades in.
  * Calm mode keeps the fades and drops the movement.
  */
-export function useListMotion(ids: string[]) {
-  const ref = useRef<HTMLUListElement>(null)
+export function useListMotion<T extends HTMLElement = HTMLUListElement>(ids: string[], exit: 'shrink' | 'fold' = 'shrink') {
+  const ref = useRef<T>(null)
   const before = useRef(new Map<string, { el: HTMLElement; box: Box }>())
   const key = ids.join(',')
 
@@ -158,14 +158,20 @@ export function useListMotion(ids: string[]) {
       ghost.setAttribute('aria-hidden', 'true')
       ghost.style.cssText += `;position:absolute;margin:0;left:${box.left}px;top:${box.top}px;width:${box.width}px;height:${box.height}px;pointer-events:none;z-index:5`
       document.body.append(ghost)
+      if (!calm && takeFly(id)) {
+        flyToReceived(ghost, box)
+        continue
+      }
+      const frames = calm
+        ? [{ opacity: 1 }, { opacity: 0 }]
+        : exit === 'fold'
+          ? [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'perspective(600px) rotateX(-70deg) scaleY(.6)' }]
+          : [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.9)' }]
+      ghost.style.transformOrigin = 'top center'
       ghost
-        .animate(calm ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.9)' }], {
-          duration: 220,
-          easing: 'cubic-bezier(.5, 0, .75, 0)',
-          fill: 'forwards',
-        })
+        .animate(frames, { duration: exit === 'fold' ? 300 : 220, easing: 'cubic-bezier(.5, 0, .75, 0)', fill: 'forwards' })
         .finished.finally(() => ghost.remove())
-      window.setTimeout(() => ghost.remove(), 400)
+      window.setTimeout(() => ghost.remove(), 500)
     }
 
     for (const [id, { el, box }] of now) {
@@ -204,5 +210,100 @@ export function useListMotion(ids: string[]) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the set or order of wishes changes
   }, [key])
 
+  return ref
+}
+
+// ---------------------------------------------------------------- playful moments
+// Each one is small, runs once per action, never blocks a tap, and is skipped in calm mode.
+
+/** Tell the app something happened, for the moments that react to it (e.g. the logo's bow hops). */
+export function celebrate(what: 'wish-saved') {
+  if (!isCalm()) window.dispatchEvent(new CustomEvent('gifthub:celebrate', { detail: what }))
+}
+
+export function useCelebrate(what: 'wish-saved', run: () => void) {
+  const latest = useRef(run)
+  useLayoutEffect(() => {
+    latest.current = run
+  })
+  useLayoutEffect(() => {
+    const on = (e: Event) => (e as CustomEvent).detail === what && latest.current()
+    window.addEventListener('gifthub:celebrate', on)
+    return () => window.removeEventListener('gifthub:celebrate', on)
+  }, [what])
+}
+
+const flying = new Map<string, number>()
+
+/** Call just before marking a wish received: when it leaves the list, it flies to the Received tab. */
+export function flyHome(itemId: string) {
+  flying.set(itemId, performance.now() + 6000)
+}
+
+function takeFly(id: string) {
+  const until = flying.get(id)
+  flying.delete(id)
+  return !!until && until > performance.now()
+}
+
+/** The Received tab icon that's on screen (bottom bar on phones, rail on desktop). */
+function receivedTarget() {
+  return [...document.querySelectorAll<HTMLElement>('[data-fly-target="received"]')].find((el) => el.getBoundingClientRect().width > 0)
+}
+
+function flyToReceived(ghost: HTMLElement, box: Box) {
+  ghost.style.zIndex = '40'
+  afterSheets().then(() => {
+    const target = receivedTarget()
+    if (!target) {
+      ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: 'forwards' }).finished.finally(() => ghost.remove())
+      return
+    }
+    const t = target.getBoundingClientRect()
+    const dx = t.left + t.width / 2 + window.scrollX - (box.left + box.width / 2)
+    const dy = t.top + t.height / 2 + window.scrollY - (box.top + box.height / 2)
+    const end = Math.max(0.08, 26 / box.width)
+    // An arc: up and over, shrinking into the box icon.
+    ghost
+      .animate(
+        [
+          { transform: 'none', opacity: 1, borderRadius: '6px' },
+          { transform: `translate(${dx * 0.35}px, ${dy * 0.35 - 70}px) scale(.55) rotate(-6deg)`, opacity: 1, offset: 0.45 },
+          { transform: `translate(${dx}px, ${dy}px) scale(${end}) rotate(4deg)`, opacity: 0.3, borderRadius: '40px' },
+        ],
+        { duration: 720, easing: 'cubic-bezier(.45, 0, .25, 1)', fill: 'forwards' },
+      )
+      .finished.then(() => {
+        ghost.remove()
+        target.animate(
+          [{ transform: 'none' }, { transform: 'translateY(-5px) scale(1.15)' }, { transform: 'translateY(1px) scale(.97)' }, { transform: 'none' }],
+          { duration: 420, easing: 'ease-out' },
+        )
+      }, () => ghost.remove())
+    window.setTimeout(() => ghost.remove(), 1200)
+  })
+}
+
+/** Hearts pop as they fill (and dip as they empty) when choosing how much you want something. */
+export function useHeartPop(on: number) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const prev = useRef(on)
+  useLayoutEffect(() => {
+    const was = prev.current
+    prev.current = on
+    if (was === on || isCalm() || !ref.current) return
+    const hearts = [...ref.current.querySelectorAll('svg')]
+    if (on > was) {
+      hearts.slice(was, on).forEach((h, i) =>
+        h.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.45)' }, { transform: 'scale(1)' }], {
+          duration: 320,
+          delay: i * 60,
+          easing: 'cubic-bezier(.34, 1.56, .64, 1)',
+        }),
+      )
+    } else {
+      hearts.slice(on, was).forEach((h) => h.animate([{ transform: 'scale(.7)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'ease-out' }))
+    }
+  }, [on])
   return ref
 }

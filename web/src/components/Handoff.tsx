@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { dayLabel, localDate, useDismissPrompt, useDueGifts, useMarkGiven, useMarkReceived, useReceivedPrompts, useSetGiveDate, type DueGift, type ReceivedPrompt } from '../lib/claims'
 import { friendlyError } from '../lib/errors'
+import { flyHome, useListMotion } from '../lib/motion'
 import { useToast } from '../lib/toast'
 import { Sheet } from './ItemSheet'
 import { Button, Notice, TextField } from './ui'
@@ -76,10 +77,16 @@ export function HandoffPrompts() {
   const due = useDueGifts()
   const prompts = useReceivedPrompts()
   const cards = [...(prompts.data ?? []).map((p) => ({ kind: 'got' as const, p })), ...(due.data ?? []).map((g) => ({ kind: 'gave' as const, g }))]
-  if (!cards.length) return null
+  const keyOf = (c: (typeof cards)[number]) => (c.kind === 'got' ? `got-${c.p.id}` : `gave-${c.g.itemId}`)
+  // Answered cards fold away instead of vanishing.
+  const list = useListMotion<HTMLElement>(cards.map(keyOf), 'fold')
   return (
-    <section aria-label="Gifts to check on" className="mt-5 flex max-w-[720px] flex-col gap-2.5">
-      {cards.map((c) => (c.kind === 'got' ? <GotCard key={c.p.id} prompt={c.p} /> : <GaveCard key={c.g.itemId} gift={c.g} />))}
+    <section ref={list} aria-label={cards.length ? 'Gifts to check on' : undefined} className={`flex max-w-[720px] flex-col gap-2.5 ${cards.length ? 'mt-5' : ''}`}>
+      {cards.map((c) => (
+        <div key={keyOf(c)} data-id={keyOf(c)}>
+          {c.kind === 'got' ? <GotCard prompt={c.p} /> : <GaveCard gift={c.g} />}
+        </div>
+      ))}
     </section>
   )
 }
@@ -103,6 +110,7 @@ function GotCard({ prompt }: { prompt: ReceivedPrompt }) {
           busy={received.isPending}
           onClick={async () => {
             try {
+              flyHome(prompt.itemId)
               await received.mutateAsync(prompt.itemId)
               toast(`Moved to Received. ${who} gave you this.`)
             } catch (err) {
