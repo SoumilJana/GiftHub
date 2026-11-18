@@ -99,7 +99,7 @@ expect('BF cannot see Crew members', (await as(BF, `select count(*)::int n from 
 expect('BF cannot read FRIEND profile', (await as(BF, `select count(*)::int n from profiles where id='${FR}'`))[0].n, 0)
 expect('BF sees Couple items, not Crew-only', (await as(BF, `select title from items where owner_id='${GF}' order by title`)).map((r) => r.title), ['Both', 'Couple only'])
 expect('BF sees only Couple sharing of a shared item', (await as(BF, `select count(*)::int n from item_circles where item_id='${I3}'`))[0].n, 1)
-expect('BF sees "Already claimed", not who or from where', await as(BF, `select * from circle_claims('${couple.id}')`), [{ item_id: I3, status: 'reserved', mine: false }])
+expect('BF sees "Already claimed", not who or from where', await as(BF, `select * from circle_claims('${couple.id}')`), [{ item_id: I3, status: 'reserved', mine: false, give_on: null }])
 expect('BF cannot take over FRIEND’s claim', await fails_with(BF, `select claim_item('${I3}','bought')`, /already claimed/), 'refused')
 expect('BF cannot undo FRIEND’s claim', (await as(BF, `select unclaim_item('${I3}')`), (await as(FR, `select count(*)::int n from circle_claims('${crew.id}')`))[0].n), 1)
 expect('BF cannot read Crew claims', (await as(BF, `select count(*)::int n from circle_claims('${crew.id}')`))[0].n, 0)
@@ -152,5 +152,35 @@ err=''; try { await as(P1, `insert into storage.objects (bucket_id, name) values
 expect('11th photo is refused', /row-level security/.test(err), true)
 err=''; try { await as(P2, `insert into storage.objects (bucket_id, name) values ('item-photos', '${P1}/x.webp')`) } catch (e) { err = e.message }
 expect('cannot upload into someone else\'s folder', /row-level security/.test(err), true)
+
+// Phase 3.5: gift hand-off. H1 owns the wish, H2 gives it, H3 is another giver.
+const H1='00000000-0000-0000-0000-0000000000a1', H2='00000000-0000-0000-0000-0000000000a2', H3='00000000-0000-0000-0000-0000000000a3', HI='33333333-3333-3333-3333-333333333331'
+await db.exec(`reset role; insert into auth.users (id) values ('${H1}'),('${H2}'),('${H3}'); update profiles set display_name='Ana' where id='${H2}';`)
+const fam = (await as(H1, `select * from create_circle('Family')`))[0]
+await as(H2, `select join_circle('${fam.invite_code}')`); await as(H3, `select join_circle('${fam.invite_code}')`)
+await as(H1, `insert into items (id, owner_id, title) values ('${HI}','${H1}','Headphones')`)
+await as(H1, `insert into item_circles values ('${HI}','${fam.id}')`)
+await as(H2, `select claim_item('${HI}','bought')`)
+await as(H2, `select set_give_date('${HI}', current_date - 2)`)
+expect('giver sees their give date', (await as(H2, `select give_on is not null d from circle_claims('${fam.id}')`))[0].d, true)
+expect('other giver never sees the give date', (await as(H3, `select give_on from circle_claims('${fam.id}')`))[0].give_on, null)
+expect('other giver cannot set the date', await fails_with(H3, `select set_give_date('${HI}', current_date)`, /isn’t yours/), 'refused')
+expect('giver is reminded once the date has passed', (await as(H2, `select title, owner_name from my_due_gifts(current_date)`)), [{ title: 'Headphones', owner_name: '' }])
+expect('a date in the future is not due', (await as(H2, `select set_give_date('${HI}', current_date + 3)`), (await as(H2, `select count(*)::int n from my_due_gifts(current_date)`))[0].n), 0)
+expect('a faked far-future "today" is clamped', (await as(H2, `select count(*)::int n from my_due_gifts(current_date + 30)`))[0].n, 0)
+expect('receiver has no prompt and no notification before the hand-off', (await as(H1, `select (select count(*)::int from received_prompts()) + (select count(*)::int from notifications) n`))[0].n, 0)
+expect('receiver cannot see due gifts', (await as(H1, `select count(*)::int n from my_due_gifts(current_date + 1)`))[0].n, 0)
+expect('other giver cannot mark it given', await fails_with(H3, `select mark_given('${HI}')`, /isn’t yours/), 'refused')
+await as(H2, `select mark_given('${HI}')`)
+expect('receiver is asked after the hand-off, with the giver named', await as(H1, `select title, giver_name from received_prompts()`), [{ title: 'Headphones', giver_name: 'Ana' }])
+expect('given gifts are no longer due', (await as(H2, `select count(*)::int n from my_due_gifts(current_date + 1)`))[0].n, 0)
+expect('other giver gets no prompt', (await as(H3, `select (select count(*)::int from received_prompts()) + (select count(*)::int from notifications) n`))[0].n, 0)
+const pid = (await as(H1, `select id from received_prompts()`))[0].id
+expect('others cannot dismiss the prompt', (await as(H3, `select dismiss_prompt('${pid}')`), (await as(H1, `select count(*)::int n from received_prompts()`))[0].n), 1)
+await as(H1, `select * from mark_received('${HI}')`)
+expect('Mark received clears the prompt', (await as(H1, `select count(*)::int n from received_prompts()`))[0].n, 0)
+await as(H1, `update items set status='active' where id='${HI}'`)
+await as(H2, `select claim_item('${HI}','reserved')`)
+expect('going back to reserved resets the hand-off', (await as(H2, `select give_on from circle_claims('${fam.id}')`))[0].give_on, null)
 
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); process.exit(fails ? 1 : 0)

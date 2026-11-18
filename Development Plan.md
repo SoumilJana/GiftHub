@@ -132,7 +132,7 @@ Done when: a user can add 20 items and tag them, and a Circle member sees exactl
 
 ---
 
-### Phase 2.5 — Help, Legal and Bug Reports (2–3 days, in progress 17 Nov 2026)
+### Phase 2.5 — Help, Legal and Bug Reports (2–3 days, live 18 Nov 2026)
 **Goal:** the pages a public app needs, plus a way for people to report problems. Required before Google's branding approval, which asks for a privacy policy and home page address.
 
 Scope
@@ -168,6 +168,55 @@ Deliverables: claim buttons, claimed badges, received archive.
 Done when: RLS tests pass, and with the owner signed in on a second device, nothing changes on their screen — and no claim data appears in their network traffic — while others claim.
 
 **→ Private beta** with 5–10 couples/friend groups on the live web app.
+
+---
+
+### Phase 3.5 — Gift Hand-off (3–4 days, built 18 Nov 2026; goes live with migration `20261121000000_gift_handoff.sql`)
+**Goal:** a bought gift ends up in Received without anyone having to remember to mark it.
+
+Flow
+1. When a giver marks a gift **Bought**, GiftHub asks "When will you give it?" with a date, or "Not sure yet". The giver can change the date later from the claim slot.
+2. From the day after that date, the giver sees "Did you give Maya the headphones?": **Yes, I gave it** or **Not yet** (pick a new date).
+3. On **Yes**, the receiver sees "Did you get the headphones? Sam marked it as given.": **Yes, mark received** (the normal Mark received, revealing the giver) or **Not yet** (the prompt goes away).
+
+Privacy
+- The give date sits on the claim and is returned only to the claimer. Other givers and the owner never see it.
+- The receiver hears nothing until the giver says the gift was handed over, so the surprise is already over. The giver's prompt asks the question plainly ("Did you give Maya the headphones?"), so a single tap on Yes is the confirmation.
+- Database checks cover all of this, including that the owner has no prompt or date before the giver's Yes.
+
+Delivery
+- **Now (free):** prompt cards at the top of Your list, shown when the app is opened. The giver's "is it due?" check uses the device's local date.
+- **Phase 5:** the same prompts also arrive as Web Push notifications, sent by a daily scheduled Edge Function. Email waits until there is an own domain (Resend's free sender only reaches the account owner).
+
+Done when: a bought gift with a past give date prompts the giver; their Yes prompts the receiver; the receiver's Yes moves it to Received with the giver's name; nothing reaches the receiver earlier.
+
+---
+
+### Phase 3.6 — Couple and Group Circles (planned 18 Nov 2026, not started)
+**Goal:** a Circle for two feels like a shared space for a couple; a group Circle stays a coordination tool. Same privacy rules for both.
+
+Today there is no difference: every Circle is a group of up to 20, and a "couple" is just a Circle with two members.
+
+Proposed design
+- **An explicit kind, chosen when starting a Circle:** "Just the two of us" or "A group". Stored with `kind_confirmed` so older Circles can be asked once. Stored as `circles.kind` (`couple` | `group`). Counting members isn't reliable, since every group starts with two.
+  - A couple Circle holds exactly 2 people. Once the partner joins, the invite code closes and the invite panel disappears.
+  - It can become a group later (to add family) from Circle settings. A group with 2 members or fewer can become a couple.
+- **Couple Circle, how it looks:**
+  - The title is "You and Maya" unless the couple has renamed it, with two overlapping avatars.
+  - No member tabs: it opens on the partner's list, with a "Your list" switch.
+  - No Members or roles panel: both are equal. Settings keep rename (or return to the automatic name), leave and delete, and either partner can delete it.
+  - The anniversary and Valentine's Day occasions come first in the chips.
+  - Copy speaks to one person: "Maya won't see this", "Hand it over".
+- **Couple Circle, how it works:**
+  - Nobody else is in the Circle to coordinate with, so a claim is a private plan. "Reserve" reads as "Planning to get this". A claim made in another Circle still shows "Already claimed".
+  - Gift hand-off (3.5) is the main way gifts reach Received.
+- **Group Circle, how it looks and works:** as today. Member tabs, the Members panel with roles, invite code and Circle name. Later candidates: a "Who's left to buy for" overview, birthday occasion first.
+- **Circles index:** couple Circles show as a single card with two avatars and "You and Maya". Groups show "With Maya, Sam and 3 others".
+
+Decisions (18 Nov 2026)
+1. **One couple Circle per person.** Starting or joining a second is refused with a plain message; groups are unlimited (within the 10-Circle quota).
+2. **Name:** a couple Circle is called "You and Maya" automatically (each partner sees their own "You and …"). Either partner can set their own name for it in Circle settings, which both then see; clearing it returns to the automatic name.
+3. **Existing two-person Circles are asked once:** the first time the owner opens one, a card asks "Is this Circle just the two of you?" with **Yes, make it a couple Circle** or **No, keep it a group**. The answer is stored, so it never asks again. A Circle with more than two members is never asked.
 
 ---
 
@@ -242,7 +291,7 @@ Scope
   - Desktop: bookmarklet ("Add to GiftHub" in the bookmarks bar).
   - iOS: an Apple Shortcut that appears in the Share menu and posts the URL with a personal quick-add token (iOS doesn't support PWA share targets).
   - Edge Function `quick-add` accepting the token.
-- **Web Push:** subscribe flow, VAPID keys, sending from an Edge Function. Events: new item in a Circle, claim activity (non-owners only), upcoming occasion. iOS supports this only for apps installed to the home screen (16.4+).
+- **Web Push:** subscribe flow, VAPID keys, sending from an Edge Function. Events: new item in a Circle, claim activity (non-owners only), upcoming occasion, and the gift hand-off prompts from Phase 3.5 (sent by a daily scheduled Edge Function). iOS supports this only for apps installed to the home screen (16.4+).
 - Notification centre in-app + email digest fallback.
 - Launch basics: landing page, privacy policy, terms, Open Graph preview images for invite links, Lighthouse PWA/performance pass.
 

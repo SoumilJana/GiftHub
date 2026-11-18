@@ -1,5 +1,6 @@
 import { Link, useParams } from '@tanstack/react-router'
 import { useState } from 'react'
+import { GiveDateSheet } from '../components/Handoff'
 import { EditItemSheet, ViewItemSheet } from '../components/ItemSheet'
 import { ItemsView, ListTools } from '../components/ItemViews'
 import { useStoredView } from '../lib/view'
@@ -8,7 +9,7 @@ import { Avatar, Button, Notice, Panel, Spinner } from '../components/ui'
 import { useUserId } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
 import { inviteLink } from '../lib/invite'
-import { useCircleClaims, useClaimSignals, useSetClaim, type Claim, type ClaimStatus } from '../lib/claims'
+import { dayLabel, useCircleClaims, useClaimSignals, useSetClaim, type Claim, type ClaimStatus } from '../lib/claims'
 import { useCircleItems, useMyItems, useShareMyItems } from '../lib/items'
 import { isCodeExpired, roleLabel, useCircle, useMyCircles, useProfile, type Circle } from '../lib/queries'
 import { useToast } from '../lib/toast'
@@ -34,6 +35,7 @@ export function CirclePage() {
   const [view, setView] = useStoredView()
   const [viewing, setViewing] = useState<Item | null>(null)
   const [editing, setEditing] = useState<{ item: Item | null } | null>(null)
+  const [dating, setDating] = useState<Item | null>(null)
 
   if (q.isPending) return <Spinner />
   if (q.error) return <Notice tone="alert">{friendlyError(q.error)}</Notice>
@@ -70,9 +72,12 @@ export function CirclePage() {
 
   async function claim(item: Item, status: ClaimStatus | null) {
     const owner = firstName(members.find((m) => m.user_id === item.owner_id)?.display_name ?? '') || 'They'
+    const wasBought = claims.data?.[item.id]?.status === 'bought'
     try {
       await setClaim.mutateAsync({ itemId: item.id, status })
       toast(status === 'reserved' ? `Reserved. ${owner} won’t see this.` : status === 'bought' ? `Marked bought. ${owner} won’t see this.` : 'Claim removed.')
+      // Just bought: ask when it'll be given, so GiftHub can check in afterwards.
+      if (status === 'bought' && !wasBought) setDating(item)
     } catch (err) {
       toast(friendlyError(err))
     }
@@ -171,7 +176,12 @@ export function CirclePage() {
                           Edit
                         </Button>
                       ) : (
-                        <ClaimSlot claim={claims.data?.[item.id] ?? null} loading={claims.isPending} onClaim={(status) => claim(item, status)} />
+                        <ClaimSlot
+                          claim={claims.data?.[item.id] ?? null}
+                          loading={claims.isPending}
+                          onClaim={(status) => claim(item, status)}
+                          onDate={() => setDating(item)}
+                        />
                       )
                     }
                   />
@@ -217,6 +227,16 @@ export function CirclePage() {
           onClose={() => setViewing(null)}
         />
       )}
+      {dating && (
+        <GiveDateSheet
+          itemId={dating.id}
+          title={dating.title}
+          ownerName={members.find((m) => m.user_id === dating.owner_id)?.display_name ?? 'them'}
+          current={claims.data?.[dating.id]?.giveOn ?? null}
+          circleId={circle.id}
+          onClose={() => setDating(null)}
+        />
+      )}
       {editing && (
         <EditItemSheet item={editing.item} circles={circles.data ?? []} userCurrency={profile.data?.currency?.trim() || 'USD'} onClose={() => setEditing(null)} />
       )}
@@ -225,7 +245,17 @@ export function CirclePage() {
 }
 
 /** The fixed-height claim slot on someone else's wish. */
-function ClaimSlot({ claim, loading, onClaim }: { claim: Claim | null; loading: boolean; onClaim: (status: ClaimStatus | null) => void }) {
+function ClaimSlot({
+  claim,
+  loading,
+  onClaim,
+  onDate,
+}: {
+  claim: Claim | null
+  loading: boolean
+  onClaim: (status: ClaimStatus | null) => void
+  onDate: () => void
+}) {
   if (loading) return null
   if (claim && !claim.mine) return <span className="text-small font-semibold text-plum-soft">Already claimed</span>
   if (!claim)
@@ -242,9 +272,13 @@ function ClaimSlot({ claim, loading, onClaim }: { claim: Claim | null; loading: 
   return (
     <>
       <span className="text-small font-extrabold text-ribbon-deep">{claim.status === 'reserved' ? 'Reserved by you' : 'Bought by you'}</span>
-      {claim.status === 'reserved' && (
+      {claim.status === 'reserved' ? (
         <Button variant="text" onClick={() => onClaim('bought')}>
           Mark bought
+        </Button>
+      ) : (
+        <Button variant="text" onClick={onDate}>
+          {claim.giveOn ? `Giving ${dayLabel(claim.giveOn, 'short')}` : 'Add date'}
         </Button>
       )}
       <Button variant="text" onClick={() => onClaim(null)}>

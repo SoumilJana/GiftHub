@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { HandoffPrompts } from '../components/Handoff'
 import { EditItemSheet } from '../components/ItemSheet'
 import { ItemsView, ListTools } from '../components/ItemViews'
 import { useDismissed, useStoredView } from '../lib/view'
@@ -37,6 +38,8 @@ export function MyListPage() {
         </div>
         <AddBar onAdd={(url) => setEditing({ item: null, url })} />
       </div>
+
+      <HandoffPrompts />
 
       {all.length > 0 && !privacySeen && (
         <div className="mt-5">

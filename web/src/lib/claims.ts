@@ -6,8 +6,11 @@ import { supabase } from './supabase'
 
 export type ClaimStatus = 'reserved' | 'bought'
 
-/** A claim as a giver sees it: the state, and whether it's yours. Never who else claimed it. */
-export type Claim = { status: ClaimStatus; mine: boolean }
+/**
+ * A claim as a giver sees it: the state, and whether it's yours. Never who else
+ * claimed it. `giveOn` (YYYY-MM-DD) is the day you plan to give it, set only on your own claims.
+ */
+export type Claim = { status: ClaimStatus; mine: boolean; giveOn?: string | null }
 export type ClaimMap = Record<string, Claim>
 
 const claimsKey = (circleId: string) => ['claims', circleId] as const
@@ -24,7 +27,9 @@ export function useCircleClaims(circleId: string | undefined) {
       const { data, error } = await supabase.rpc('circle_claims', { p_circle_id: circleId })
       if (error) throw error
       const map: ClaimMap = {}
-      for (const r of data as { item_id: string; status: ClaimStatus; mine: boolean }[]) map[r.item_id] = { status: r.status, mine: r.mine }
+      for (const r of data as { item_id: string; status: ClaimStatus; mine: boolean; give_on: string | null }[]) {
+        map[r.item_id] = { status: r.status, mine: r.mine, giveOn: r.give_on }
+      }
       return map
     },
   })
@@ -69,7 +74,7 @@ export function useSetClaim(circleId: string) {
       const before = qc.getQueryData<ClaimMap>(key)
       qc.setQueryData<ClaimMap>(key, (old = {}) => {
         const next = { ...old }
-        if (status) next[itemId] = { status, mine: true }
+        if (status) next[itemId] = { status, mine: true, giveOn: status === 'bought' ? (old[itemId]?.giveOn ?? null) : null }
         else delete next[itemId]
         return next
       })
@@ -94,7 +99,10 @@ export function useMarkReceived() {
       const row = (data as { giver_name: string | null; claim_status: ClaimStatus }[])[0]
       return row ? { name: row.giver_name || 'Someone', status: row.claim_status } : null
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['items'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['items'] })
+      qc.invalidateQueries({ queryKey: ['handoff'] })
+    },
   })
 }
 
@@ -133,5 +141,106 @@ export function useReturnToList() {
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items'] }),
+  })
+}
+
+// ---------------------------------------------------------------- hand-off
+
+/** Today on this device, as YYYY-MM-DD. */
+export function localDate(d: Date = new Date()): string {
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
+/** "24 November" (or "24 Nov") from YYYY-MM-DD, read as a local date. */
+export function dayLabel(iso: string, month: 'long' | 'short' = 'long'): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { day: 'numeric', month })
+}
+
+/** The giver picks (or clears) the day they'll give a gift. */
+export function useSetGiveDate(circleId?: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ itemId, giveOn }: { itemId: string; giveOn: string | null }) => {
+      const { error } = await supabase.rpc('set_give_date', { p_item_id: itemId, p_give_on: giveOn })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      if (circleId) qc.invalidateQueries({ queryKey: claimsKey(circleId) })
+      else qc.invalidateQueries({ queryKey: ['claims'] })
+      qc.invalidateQueries({ queryKey: ['handoff'] })
+    },
+  })
+}
+
+export type DueGift = { itemId: string; title: string; ownerName: string; giveOn: string }
+
+/** Gifts you bought whose give date has passed: "Did you give it?" */
+export function useDueGifts() {
+  const { session } = useAuth()
+  const uid = session?.user.id
+  const today = localDate()
+  return useQuery({
+    queryKey: ['handoff', 'due', uid ?? 'none', today],
+    enabled: !!uid,
+    queryFn: async (): Promise<DueGift[]> => {
+      const { data, error } = await supabase.rpc('my_due_gifts', { p_today: today })
+      if (error) throw error
+      return (data as { item_id: string; title: string; owner_name: string | null; give_on: string }[]).map((r) => ({
+        itemId: r.item_id,
+        title: r.title,
+        ownerName: r.owner_name || 'them',
+        giveOn: r.give_on,
+      }))
+    },
+  })
+}
+
+/** The giver confirms the hand-off; the receiver is then asked if they got it. */
+export function useMarkGiven() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (itemId: string) => {
+      const { error } = await supabase.rpc('mark_given', { p_item_id: itemId })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['handoff'] })
+      qc.invalidateQueries({ queryKey: ['claims'] })
+    },
+  })
+}
+
+export type ReceivedPrompt = { id: string; itemId: string; title: string; giverName: string }
+
+/** "Did you get it?" questions about your own wishes, after a giver said they handed it over. */
+export function useReceivedPrompts() {
+  const { session } = useAuth()
+  const uid = session?.user.id
+  return useQuery({
+    queryKey: ['handoff', 'prompts', uid ?? 'none'],
+    enabled: !!uid,
+    queryFn: async (): Promise<ReceivedPrompt[]> => {
+      const { data, error } = await supabase.rpc('received_prompts')
+      if (error) throw error
+      return (data as { id: string; item_id: string; title: string; giver_name: string | null }[]).map((r) => ({
+        id: r.id,
+        itemId: r.item_id,
+        title: r.title,
+        giverName: r.giver_name || 'Someone',
+      }))
+    },
+  })
+}
+
+export function useDismissPrompt() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc('dismiss_prompt', { p_id: id })
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['handoff'] }),
   })
 }

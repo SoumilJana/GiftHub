@@ -49,6 +49,15 @@ const groups: { id: string; title: string; items: QA[] }[] = [
         a: <p>Other givers see only “Already claimed”, never who claimed it. Only you see “Reserved by you” or “Bought by you”, and you can undo it.</p>,
       },
       {
+        q: 'What happens after I mark a gift bought?',
+        a: (
+          <p>
+            GiftHub asks when you’ll give it. The day after that date, it asks whether you did. When you say yes, the person you gave it to is asked
+            to mark it received. The date is never shown to them, and they hear nothing until you say you’ve given it.
+          </p>
+        ),
+      },
+      {
         q: 'How do I see who gave me a gift?',
         a: <p>Once you have it, open the wish on Your list and choose Mark received. It moves to Received, with the name of whoever bought it.</p>,
       },
