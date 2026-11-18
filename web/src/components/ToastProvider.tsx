@@ -19,6 +19,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={show}>
       {children}
       <div
+        data-motion-move
         role="status"
         aria-live="polite"
         className={`pointer-events-none fixed bottom-[88px] left-1/2 z-30 max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-full bg-plum px-[18px] py-3 text-small font-semibold text-white transition-[opacity,transform] duration-200 ease-out shell:bottom-6 ${

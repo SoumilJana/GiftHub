@@ -51,9 +51,51 @@
     outline-offset: 2px;
     border-radius: 3px;
   }
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* Motion (DESIGN.md "Motion"). Every animation in the app lives in this file or lib/motion.ts.
+   Calm mode (<html data-motion="calm">: the device asks for reduced motion, or "Fewer animations"
+   is on in Profile) removes movement but keeps fades and colour changes, so state changes still show. */
+:root {
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-in: cubic-bezier(.5, 0, .75, 0);
+  --dur-fast: 150ms;
+  --dur: 250ms;
+  --dur-slow: 320ms;
+}
+
+@layer components {
+  /* Sheets rise from the bottom on phones; on wider screens they fade and settle. */
+  dialog[open] { animation: sheet-in var(--dur-slow) var(--ease-out); }
+  dialog[open]::backdrop { animation: fade-in var(--dur-slow) var(--ease-out); }
+  @keyframes sheet-in { from { transform: translateY(100%); } }
+  @media (min-width: 640px) {
+    @keyframes sheet-in { from { opacity: 0; transform: translateY(12px) scale(.97); } }
   }
+  @keyframes fade-in { from { opacity: 0; } }
+
+  /* A sliding plum pill behind the current tab (components/SlidingPill.tsx). */
+  .sliding-pill {
+    position: absolute; left: 0; top: 0; pointer-events: none; border-radius: 999px; background: var(--color-plum);
+    transform: translate(var(--pill-x), var(--pill-y)); width: var(--pill-w); height: var(--pill-h);
+  }
+  .sliding-pill[data-ready] {
+    transition: transform var(--dur) var(--ease-out), width var(--dur) var(--ease-out), height var(--dur) var(--ease-out), opacity var(--dur-fast);
+  }
+}
+
+/* Calm mode. */
+:root[data-motion="calm"] {
+  dialog[open] { animation-name: fade-in; }
+  .sliding-pill[data-ready] { transition: opacity var(--dur); }
+  .booth-flash.go { animation: none; }
+  /* The ribbon fades in and out in place instead of drawing. */
+  .ribbon { opacity: 0; transition: opacity .4s; }
+  [data-wrap] .ribbon { opacity: 1; }
+  .ribbon::before, .ribbon::after, .ribbon .bow, [data-wrap] .ribbon::before, [data-wrap] .ribbon::after, [data-wrap] .ribbon .bow {
+    transition-property: background-color, color; transition-delay: 0s;
+  }
+  [data-motion-move] { transition-property: opacity, color, background-color !important; }
 }
 
 /* Pill dropdowns: our own chevron with room around it, instead of the browser's arrow pressed against the edge. */

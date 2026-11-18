@@ -1,7 +1,8 @@
-import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useUserId } from '../lib/auth'
 import { currencyForNewItem, currencyOptions } from '../lib/currency'
 import { friendlyError } from '../lib/errors'
+import { sheetExit } from '../lib/motion'
 import { priorityBand } from '../lib/format'
 import { useMarkReceived } from '../lib/claims'
 import { useDeleteItem, useSaveItem, type ItemDraft } from '../lib/items'
@@ -22,6 +23,15 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
       d.showModal()
       // showModal moves focus to the first control; send it to the field marked for it instead.
       d.querySelector<HTMLElement>('[data-autofocus]')?.focus()
+    }
+  }, [])
+  // Leaving: play the exit on a copy, since React removes the real one straight away.
+  // (Skipped in the first moments, so development's double mount doesn't flash a copy.)
+  useLayoutEffect(() => {
+    const d = ref.current
+    const opened = performance.now()
+    return () => {
+      if (d && performance.now() - opened > 120) sheetExit(d)
     }
   }, [])
   return (

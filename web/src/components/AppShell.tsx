@@ -1,25 +1,31 @@
-import { Link, Outlet } from '@tanstack/react-router'
+import { Link, Outlet, useRouterState } from '@tanstack/react-router'
+import type { ReactNode } from 'react'
 import { useUserId } from '../lib/auth'
 import { circleTitle, useMyCircles, useProfile } from '../lib/queries'
 import { GiftMark } from './GiftMark'
+import { CirclesIcon, ListIcon, ReceivedIcon } from './NavIcons'
+import { SlidingPill } from './SlidingPill'
 import { Avatar } from './ui'
 
-const sections = [
-  { to: '/', label: 'My list' },
-  { to: '/circles', label: 'Circles' },
-  { to: '/received', label: 'Received' },
-] as const
-
-const phoneSections = [...sections, { to: '/profile', label: 'Profile' }] as const
+const sections: { to: '/' | '/circles' | '/received'; label: string; icon: ReactNode }[] = [
+  { to: '/', label: 'My list', icon: <ListIcon /> },
+  { to: '/circles', label: 'Circles', icon: <CirclesIcon /> },
+  { to: '/received', label: 'Received', icon: <ReceivedIcon /> },
+]
 
 const railLink =
   'flex items-center justify-between gap-2 rounded-full px-2.5 py-[9px] font-semibold hover:bg-blush data-[status=active]:bg-plum data-[status=active]:text-white'
+// Section links: the plum pill slides behind the current one, so they don't fill themselves.
+const railSection =
+  'relative flex items-center gap-2.5 rounded-full px-2.5 py-[9px] font-semibold transition-colors duration-200 hover:bg-blush data-[status=active]:text-white data-[status=active]:hover:bg-transparent'
+const ACTIVE = '[data-status="active"]'
 
 export function AppShell() {
   const circles = useMyCircles()
   const uid = useUserId()
   const profile = useProfile()
   const name = profile.data?.display_name ?? ''
+  const path = useRouterState({ select: (s) => s.location.pathname })
 
   return (
     <div className="min-h-dvh shell:grid shell:grid-cols-[240px_1fr]">
@@ -28,9 +34,11 @@ export function AppShell() {
         className="sticky top-0 hidden h-dvh flex-col gap-6 overflow-y-auto rounded-r-sheet bg-print px-3.5 py-[22px] shell:flex"
       >
         <Wordmark />
-        <nav aria-label="Sections" className="flex flex-col gap-0.5">
+        <nav aria-label="Sections" className="relative flex flex-col gap-0.5">
+          <SlidingPill active={ACTIVE} watch={path} />
           {sections.map((s) => (
-            <Link key={s.to} to={s.to} activeOptions={{ exact: s.to === '/' }} className={railLink}>
+            <Link key={s.to} to={s.to} activeOptions={{ exact: s.to === '/' }} className={railSection}>
+              {s.icon}
               {s.label}
             </Link>
           ))}
@@ -67,15 +75,12 @@ export function AppShell() {
 
       <nav
         aria-label="Sections"
-        className="fixed inset-x-0 bottom-0 z-10 flex rounded-t-sheet bg-print pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_3px_rgba(59,29,63,0.06)] shell:hidden"
+        className="fixed inset-x-0 bottom-0 z-10 flex rounded-t-sheet bg-print px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_3px_rgba(59,29,63,0.06)] shell:hidden"
       >
-        {phoneSections.map((s) => (
-          <Link
-            key={s.to}
-            to={s.to}
-            activeOptions={{ exact: s.to === '/' }}
-            className="flex-1 pt-3.5 pb-4 text-center text-small font-semibold text-plum-soft data-[status=active]:font-extrabold data-[status=active]:text-plum"
-          >
+        <SlidingPill active={ACTIVE} target=".nav-icon" watch={path} />
+        {[...sections, { to: '/profile' as const, label: 'Profile', icon: <Avatar name={name} size={24} /> }].map((s) => (
+          <Link key={s.to} to={s.to} activeOptions={{ exact: s.to === '/' }} className={bottomLink}>
+            <span className="nav-icon">{s.icon}</span>
             {s.label}
           </Link>
         ))}
@@ -83,6 +88,9 @@ export function AppShell() {
     </div>
   )
 }
+
+const bottomLink =
+  'group relative flex flex-1 flex-col items-center gap-0.5 pt-2 pb-2.5 text-[12px] leading-4 font-semibold text-plum-soft transition-colors duration-200 data-[status=active]:text-plum [&_.nav-icon]:grid [&_.nav-icon]:h-[30px] [&_.nav-icon]:w-14 [&_.nav-icon]:place-items-center [&_.nav-icon]:rounded-full [&_.nav-icon]:transition-colors [&_.nav-icon]:duration-200 data-[status=active]:[&_.nav-icon]:text-white'
 
 function Wordmark({ small = false }: { small?: boolean }) {
   return (

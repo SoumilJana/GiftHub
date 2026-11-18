@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
 import { BugReportSheet } from '../components/BugReport'
 import { CurrencySelect } from '../components/CurrencySelect'
 import { InfoLinks } from '../components/InfoFrame'
@@ -7,6 +7,7 @@ import { Page } from '../components/Page'
 import { Button, ConfirmButton, Notice, Panel, Spinner, TextField } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
+import { setFewerAnimations, useCalmMotion } from '../lib/motion'
 import { useDeleteAccount, useProfile, useUpdateProfile, type Profile } from '../lib/queries'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../lib/toast'
@@ -60,6 +61,8 @@ function ProfileForm({ profile }: { profile: Profile }) {
           </form>
         </Panel>
 
+        <MotionPanel />
+
         <Panel>
           <h2 className="font-extrabold">Help and legal</h2>
           <p className="mt-1 mb-4 text-small text-plum-soft">Answers to common questions, or tell us when something goes wrong.</p>
@@ -103,5 +106,42 @@ function ProfileForm({ profile }: { profile: Profile }) {
       </div>
       {reporting && <BugReportSheet onClose={() => setReporting(false)} />}
     </Page>
+  )
+}
+
+/** "Fewer animations": the calm version, also used when the device asks for reduced motion. */
+function MotionPanel() {
+  const [calm, forced] = useCalmMotion()
+  const id = useId()
+  return (
+    <Panel>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 id={id} className="font-extrabold">
+            Fewer animations
+          </h2>
+          <p className="mt-1 text-small text-plum-soft">
+            {forced
+              ? 'On, because your device asks for less motion. Change it in your device settings.'
+              : 'Turns off sliding and flying. Fades stay, so you can still see what changed.'}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={calm}
+          aria-labelledby={id}
+          disabled={forced}
+          onClick={() => setFewerAnimations(!calm)}
+          className="relative mt-0.5 h-[26px] w-[44px] shrink-0 rounded-full bg-print shadow-[inset_0_0_0_1.5px_var(--color-edge)] transition-colors duration-150 aria-checked:bg-plum aria-checked:shadow-none disabled:opacity-60"
+        >
+          <span
+            aria-hidden="true"
+            data-motion-move
+            className={`absolute top-[3px] left-[3px] size-5 rounded-full shadow-[0_1px_2px_rgba(59,29,63,0.2)] transition-[transform,background-color] duration-200 ease-[var(--ease-out)] ${calm ? 'translate-x-[18px] bg-print' : 'bg-plum-soft'}`}
+          />
+        </button>
+      </div>
+    </Panel>
   )
 }

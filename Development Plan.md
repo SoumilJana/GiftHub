@@ -220,6 +220,62 @@ Decisions (18 Nov 2026)
 
 ---
 
+### Phase 3.7 — Navigation and Motion (planned 18 Nov 2026, not started)
+**Goal:** on a phone, your partner's list is one tap away, and the app moves like a photo booth: prints slide out, sheets rise, and a few small gift moments make it fun without clutter. No database changes and no new libraries.
+
+Decided with the user (18 Nov 2026): icons with labels in the bottom bar, a Circle switcher in the phone top bar, and "a few playful moments" of motion.
+
+**Phone top bar**
+- Left: the wordmark, as today. Right: a **Circle switcher** pill in place of the avatar (Profile already has a tab).
+  - It shows the current Circle: two small faces and "You and Maya" for a couple, overlapping faces and the name for a group, then a chevron. Long names truncate.
+  - The current Circle is the one you're in, or else the one you opened last on this device.
+  - Tapping it opens a sheet listing your Circles (faces, name, "Couple" tag), plus "Start or join a Circle". Choosing one goes straight to it.
+  - With no Circles, the pill reads "Start a Circle" and goes to the Circles page.
+  - It only ever lists your own Circles to you, so it respects "each Circle is its own room".
+
+**Bottom bar (phone) and rail (desktop)**
+- Four items, each a 22px line icon above its 12px label, drawn like the gift placeholders (rounded 2px strokes):
+  - My list: a tag. Circles: two overlapping rings. Received: an open gift box. Profile: your initials avatar, replacing the one removed from the top bar.
+- The current item gets a plum pill behind its icon (icon turns white). The pill **slides** to the new item when you switch, instead of jumping.
+- Labels stay the same weight (only the colour changes), so nothing shifts sideways when you switch.
+- The desktop rail gets the same icons beside its labels, and its plum pill slides between items the same way.
+
+**Motion: smooth basics**
+- **Sheets** (add, edit, view a wish, give date, Circle switcher) rise from the bottom on phones and fade and scale in on desktop, over about 300ms. They close faster, in about 200ms. The backdrop fades.
+- **Sliding pills:** the "Maya's list / Your list" switch, group member tabs and the Strip/List switch all slide their plum pill like the bottom bar.
+- **Changing lists:** switching member tab or filter cross-fades the strip (about 150ms) instead of popping.
+- **A new wish prints:** after you save a wish, its frame slides out of a slot at the top of the strip, revealed top to bottom like a booth print (about 450ms). The frames after it ease along to make room.
+- **Removing a wish** (delete, Mark received, Put back on my list): the frame fades and shrinks, and the frames after it close the gap smoothly.
+- **Help answers** open and close smoothly where the browser supports it; elsewhere they open instantly, as today.
+
+**Motion: playful moments** (each one short, run once per action, never blocks a tap)
+- **Hearts pop:** setting how much you want something fills the hearts left to right, with a small pop on the last one.
+- **The lid lifts:** when a wish is saved, the gift logo in the top bar or rail lifts its lid and drops it back, as if the wish went in.
+- **Off to Received:** when you mark a wish received, its frame shrinks and flies to the Received tab, and the box icon there bounces once.
+- **Hand-off cards:** "Yes, I gave it" and "Yes, mark received" fold their card away instead of it vanishing.
+- The ribbon wrap stays the one big moment. No confetti, mascots or sound.
+
+**Rules**
+- Never show claim motion to the owner of an active wish. Received stays the only exception, as now.
+- Reduced motion: today it turns off every transition. Change it so movement is removed (no sliding, flying or printing) but fades and colour changes stay, so you still see what changed.
+- **"Fewer animations" toggle in Profile** (added 18 Nov 2026): gives the same calm version as the phone's reduce-motion setting, without changing phone settings. It's stored on the device, and it's on automatically when the phone asks for reduced motion.
+- Every animation is separate and lives in one place (`index.css`, plus one small helper for moves that need JavaScript), with shared timing and easing settings. Removing or retuning one never touches features: every screen works the same with all motion removed.
+- Use CSS transitions and keyframes, plus the browser's built-in animation API for the "fly to Received" and gap-closing moves. No animation library.
+- Animate only `transform`, `opacity` and `clip-path`, so it stays smooth on cheap Android phones.
+
+**Build order, reviewed in steps** (the user sees each checkpoint before the next part starts)
+1. Motion tokens, the reduced-motion fix, the "Fewer animations" toggle, and sheets.
+2. Bottom bar and rail icons with the sliding pill.
+   - **Review A:** sheets, bars and the toggle.
+3. Top bar Circle switcher and its sheet.
+4. List continuity: sliding switches, cross-fade, a new wish prints, removals close the gap.
+   - **Review B:** switcher and list motion.
+5. Playful moments, each one kept or dropped on its own.
+   - **Review C.**
+6. Check at 360px and desktop, with reduced motion on, and keep the Lighthouse accessibility score at 90 or above. Then update DESIGN.md (Navigation and Motion sections).
+
+---
+
 ### Phase 4 — Automated Link Parsing (2–3 weeks)
 **Goal:** paste a URL and get a clean product card in ~3 s for most stores.
 
