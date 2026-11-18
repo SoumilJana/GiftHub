@@ -5,6 +5,7 @@ import { EditItemSheet, ViewItemSheet } from '../components/ItemSheet'
 import { ItemsView, ListTools } from '../components/ItemViews'
 import { useStoredView } from '../lib/view'
 import { EmptyState, Page } from '../components/Page'
+import { SlidingPill } from '../components/SlidingPill'
 import { Avatar, Button, Notice, Panel, Spinner } from '../components/ui'
 import { useUserId } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
@@ -122,10 +123,11 @@ export function CirclePage() {
             aria-label="Whose list"
             className={
               couple
-                ? 'inline-flex gap-1 rounded-full bg-print p-1 shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
-                : '-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0'
+                ? 'relative inline-flex gap-1 rounded-full bg-print p-1 shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
+                : 'relative -mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0'
             }
           >
+            <SlidingPill active='[aria-selected="true"]' watch={selected.user_id} />
             {tabs.map((m) => (
               <button
                 key={m.user_id}
@@ -136,7 +138,7 @@ export function CirclePage() {
                   setWho(m.user_id)
                   clearFilters()
                 }}
-                className={`${couple ? 'h-[34px]' : 'h-[38px]'} shrink-0 rounded-full px-4 font-semibold text-plum-soft hover:bg-blush-deep aria-selected:bg-plum aria-selected:text-white`}
+                className={`${couple ? 'h-[34px]' : 'h-[38px]'} relative shrink-0 rounded-full px-4 font-semibold text-plum-soft transition-colors duration-200 hover:bg-blush-deep aria-selected:text-white aria-selected:hover:bg-transparent`}
               >
                 {m.user_id === uid ? 'Your list' : couple ? `${firstName(m.display_name)}’s list` : firstName(m.display_name)}
                 <span className="ml-1.5 opacity-75">{listFor(m.user_id).length}</span>

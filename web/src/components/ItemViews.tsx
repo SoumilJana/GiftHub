@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import type { Claim } from '../lib/claims'
+import { useListMotion } from '../lib/motion'
 import type { ViewMode } from '../lib/view'
+import { SlidingPill } from './SlidingPill'
 import { formatPrice, priorityBand, type PriorityBand } from '../lib/format'
 import { dateStamp, heartCount, occasionLabel, SORTS, storeOf, tintFor, usedOccasions, type Item, type ListFilter, type SortKey } from '../lib/wishlist'
 
@@ -166,10 +168,11 @@ function OpenPhoto({ item, size, claims, onOpen }: { item: Item; size: 'frame' |
 
 /** Strip view: one white print per wish. `slot` fills the fixed-height action area. */
 export function ItemStrip({ items, slot, claims, onOpen }: ViewProps) {
+  const list = useListMotion(items.map((i) => i.id))
   return (
-    <ul className="grid grid-cols-2 gap-x-3 gap-y-3.5 sm:grid-cols-[repeat(auto-fill,minmax(204px,1fr))] sm:gap-x-[18px] sm:gap-y-[22px]">
+    <ul ref={list} className="grid grid-cols-2 gap-x-3 gap-y-3.5 sm:grid-cols-[repeat(auto-fill,minmax(204px,1fr))] sm:gap-x-[18px] sm:gap-y-[22px]">
       {items.map((item) => (
-        <li key={item.id} className="flex min-w-0 flex-col rounded-print bg-print px-[7px] pt-[7px] shadow-[0_1px_2px_rgba(59,29,63,.08)] sm:px-2 sm:pt-2">
+        <li key={item.id} data-id={item.id} className="flex min-w-0 flex-col rounded-print bg-print px-[7px] pt-[7px] shadow-[0_1px_2px_rgba(59,29,63,.08)] sm:px-2 sm:pt-2">
           <OpenPhoto item={item} size="frame" claims={claims} onOpen={onOpen} />
           <div className="flex flex-1 flex-col gap-1 px-[3px] pt-2.5 pb-3">
             <span className="truncate text-small text-plum-soft">{store(item)}</span>
@@ -189,11 +192,13 @@ export function ItemStrip({ items, slot, claims, onOpen }: ViewProps) {
 
 /** List view: dense rows in one white panel. */
 export function ItemList({ items, slot, claims, onOpen }: ViewProps) {
+  const list = useListMotion(items.map((i) => i.id))
   return (
-    <ul className="rounded-panel bg-print px-3 py-0.5 sm:px-3.5 sm:py-1">
+    <ul ref={list} className="rounded-panel bg-print px-3 py-0.5 sm:px-3.5 sm:py-1">
       {items.map((item) => (
         <li
           key={item.id}
+          data-id={item.id}
           className="grid grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 border-b border-blush py-2 last:border-b-0 md:grid-cols-[48px_minmax(0,1fr)_110px_70px_268px]"
         >
           <OpenPhoto item={item} size="thumb" claims={claims} onOpen={onOpen} />
@@ -282,20 +287,28 @@ export function ListTools({
             set({ maxPrice: v === '' || Number.isNaN(Number(v)) ? null : Number(v) })
           }}
         />
-        <div role="group" aria-label="View" className="grid grid-cols-2 rounded-full bg-print p-[3px] shadow-[inset_0_0_0_1.5px_var(--color-edge)] sm:inline-grid">
-          {(['strip', 'list'] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              aria-pressed={view === v}
-              onClick={() => onView(v)}
-              className="h-7 rounded-full px-3 text-small font-semibold text-plum-soft hover:text-plum aria-pressed:bg-plum aria-pressed:text-white"
-            >
-              {v === 'strip' ? 'Strip' : 'List'}
-            </button>
-          ))}
-        </div>
+        <ViewSwitch view={view} onView={onView} className="sm:inline-grid" />
       </div>
+    </div>
+  )
+}
+
+/** Strip or List, with the plum pill sliding between them. */
+export function ViewSwitch({ view, onView, className = '' }: { view: ViewMode; onView: (v: ViewMode) => void; className?: string }) {
+  return (
+    <div role="group" aria-label="View" className={`relative grid grid-cols-2 rounded-full bg-print p-[3px] shadow-[inset_0_0_0_1.5px_var(--color-edge)] ${className}`}>
+      <SlidingPill active='[aria-pressed="true"]' watch={view} />
+      {(['strip', 'list'] as const).map((v) => (
+        <button
+          key={v}
+          type="button"
+          aria-pressed={view === v}
+          onClick={() => onView(v)}
+          className="relative h-7 rounded-full px-3 text-small font-semibold text-plum-soft transition-colors duration-200 hover:text-plum aria-pressed:text-white"
+        >
+          {v === 'strip' ? 'Strip' : 'List'}
+        </button>
+      ))}
     </div>
   )
 }
