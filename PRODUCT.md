@@ -48,7 +48,8 @@ GiftHub is a private, shared wishlist for people who buy gifts for each other. M
 - **Global from day one:** multi-currency (per-profile preferred currency), no single home market or retailer set.
 - Terminology: *Circle* (group), *Secretly Bought*, *Reserved*, *Bought*, *Received*, *invite code*.
 - Joining: a valid, unexpired invite code or `/join/<code>` link adds the person straight away; no owner approval (decided 2026-11-17).
-- Undecided (`Development Plan.md` §6): hiding an item from one member inside a Circle; whether other members see *who* claimed or only "Claimed"; affiliate-only vs freemium; public repo.
+- Decided 18 Nov 2026: other givers see only "Already claimed", never who claimed it, in the same Circle or another. Only the claimer sees "Reserved by you" or "Bought by you".
+- Undecided (`Development Plan.md` §6): hiding an item from one member inside a Circle; affiliate-only vs freemium; public repo.
 
 ## Brand Commitments
 

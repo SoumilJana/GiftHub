@@ -8,6 +8,7 @@ import { Avatar, Button, Notice, Panel, Spinner } from '../components/ui'
 import { useUserId } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
 import { inviteLink } from '../lib/invite'
+import { useCircleClaims, useClaimSignals, useSetClaim, type Claim, type ClaimStatus } from '../lib/claims'
 import { useCircleItems, useMyItems, useShareMyItems } from '../lib/items'
 import { isCodeExpired, roleLabel, useCircle, useMyCircles, useProfile, type Circle } from '../lib/queries'
 import { useToast } from '../lib/toast'
@@ -24,6 +25,9 @@ export function CirclePage() {
   const circles = useMyCircles()
   const profile = useProfile()
   const share = useShareMyItems()
+  const claims = useCircleClaims(circleId)
+  const setClaim = useSetClaim(circleId ?? 'none')
+  useClaimSignals(circleId)
   const toast = useToast()
   const [who, setWho] = useState<string | null>(null)
   const [filter, setFilter] = useState<ListFilter>(defaultFilter)
@@ -63,6 +67,16 @@ export function CirclePage() {
   const loading = isMe ? mine.isPending : circleItems.isPending
   const loadError = isMe ? mine.error : circleItems.error
   const clearFilters = () => setFilter((f) => ({ ...defaultFilter, sort: f.sort }))
+
+  async function claim(item: Item, status: ClaimStatus | null) {
+    const owner = firstName(members.find((m) => m.user_id === item.owner_id)?.display_name ?? '') || 'They'
+    try {
+      await setClaim.mutateAsync({ itemId: item.id, status })
+      toast(status === 'reserved' ? `Reserved. ${owner} won’t see this.` : status === 'bought' ? `Marked bought. ${owner} won’t see this.` : 'Claim removed.')
+    } catch (err) {
+      toast(friendlyError(err))
+    }
+  }
 
   return (
     <Page title={circle.name} lead={others.length ? `With ${others.map((m) => m.display_name).join(', ')}.` : 'Just you so far. Invite someone below.'}>
@@ -149,15 +163,15 @@ export function CirclePage() {
                   <ItemsView
                     items={shown}
                     view={view}
+                    claims={isMe ? undefined : (claims.data ?? {})}
+                    onOpen={isMe ? undefined : setViewing}
                     slot={(item) =>
                       isMe ? (
                         <Button variant="ghost" className="h-[34px]! px-3.5! text-small" onClick={() => setEditing({ item })}>
                           Edit
                         </Button>
                       ) : (
-                        <Button variant="text" onClick={() => setViewing(item)}>
-                          Details
-                        </Button>
+                        <ClaimSlot claim={claims.data?.[item.id] ?? null} loading={claims.isPending} onClaim={(status) => claim(item, status)} />
                       )
                     }
                   />
@@ -207,6 +221,36 @@ export function CirclePage() {
         <EditItemSheet item={editing.item} circles={circles.data ?? []} userCurrency={profile.data?.currency?.trim() || 'USD'} onClose={() => setEditing(null)} />
       )}
     </Page>
+  )
+}
+
+/** The fixed-height claim slot on someone else's wish. */
+function ClaimSlot({ claim, loading, onClaim }: { claim: Claim | null; loading: boolean; onClaim: (status: ClaimStatus | null) => void }) {
+  if (loading) return null
+  if (claim && !claim.mine) return <span className="text-small font-semibold text-plum-soft">Already claimed</span>
+  if (!claim)
+    return (
+      <>
+        <Button className="h-[34px]! px-3.5! text-small" onClick={() => onClaim('reserved')}>
+          Reserve
+        </Button>
+        <Button variant="text" onClick={() => onClaim('bought')}>
+          I bought it
+        </Button>
+      </>
+    )
+  return (
+    <>
+      <span className="text-small font-extrabold text-ribbon-deep">{claim.status === 'reserved' ? 'Reserved by you' : 'Bought by you'}</span>
+      {claim.status === 'reserved' && (
+        <Button variant="text" onClick={() => onClaim('bought')}>
+          Mark bought
+        </Button>
+      )}
+      <Button variant="text" onClick={() => onClaim(null)}>
+        Undo
+      </Button>
+    </>
   )
 }
 

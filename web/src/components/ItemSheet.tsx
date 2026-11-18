@@ -3,6 +3,7 @@ import { useUserId } from '../lib/auth'
 import { currencyForNewItem, currencyOptions } from '../lib/currency'
 import { friendlyError } from '../lib/errors'
 import { priorityBand } from '../lib/format'
+import { useMarkReceived } from '../lib/claims'
 import { useDeleteItem, useSaveItem, type ItemDraft } from '../lib/items'
 import { isUploadedPhoto, removePhoto, uploadPhoto } from '../lib/photo'
 import type { MyCircle } from '../lib/queries'
@@ -67,6 +68,7 @@ export function EditItemSheet({
   const toast = useToast()
   const save = useSaveItem()
   const del = useDeleteItem()
+  const received = useMarkReceived()
   const currencies = useMemo(() => currencyOptions(), [])
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -289,6 +291,33 @@ export function EditItemSheet({
 
         {item && (
           <div className="mt-2 border-t border-blush pt-4">
+            <ConfirmButton
+              label="Mark received"
+              question="Only once you have it: this shows you who gave it."
+              confirmLabel="Mark received"
+              busy={received.isPending}
+              onConfirm={async () => {
+                try {
+                  const giver = await received.mutateAsync(item.id)
+                  const who = giver?.name.split(/\s+/)[0]
+                  toast(
+                    !giver
+                      ? 'Moved to Received.'
+                      : giver.status === 'bought'
+                        ? `Moved to Received. ${who} bought this for you.`
+                        : `Moved to Received. ${who} had reserved this for you.`,
+                  )
+                  onClose()
+                } catch (err) {
+                  setErrors({ form: friendlyError(err) })
+                }
+              }}
+            />
+          </div>
+        )}
+
+        {item && (
+          <div className="border-t border-blush pt-4">
             <ConfirmButton
               label="Delete wish"
               question="Delete it from your list and every Circle?"

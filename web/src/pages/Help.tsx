@@ -39,10 +39,18 @@ const groups: { id: string; title: string; items: QA[] }[] = [
         q: 'Will the person know I’m buying their gift?',
         a: (
           <p>
-            No. Reserving a gift and marking it bought are coming soon. When they arrive, everyone else in the Circle will see that a gift is taken, so
-            nobody buys it twice, but the person it’s for never will, until they mark it received.
+            No. When you reserve a gift or mark it bought, everyone else in the Circle sees it’s taken, so nobody buys it twice. The person it’s for
+            never does: their phone isn’t even sent the claim. They find out who gave it only when they mark it received.
           </p>
         ),
+      },
+      {
+        q: 'Can others see that I claimed something?',
+        a: <p>Other givers see only “Already claimed”, never who claimed it. Only you see “Reserved by you” or “Bought by you”, and you can undo it.</p>,
+      },
+      {
+        q: 'How do I see who gave me a gift?',
+        a: <p>Once you have it, open the wish on Your list and choose Mark received. It moves to Received, with the name of whoever bought it.</p>,
       },
       {
         q: 'Can people in one Circle see my other Circles?',

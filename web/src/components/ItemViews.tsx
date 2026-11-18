@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import type { Claim } from '../lib/claims'
 import type { ViewMode } from '../lib/view'
 import { formatPrice, priorityBand, type PriorityBand } from '../lib/format'
 import { dateStamp, heartCount, occasionLabel, OCCASIONS, SORTS, storeOf, tintFor, usedOccasions, type Item, type ListFilter, type SortKey } from '../lib/wishlist'
@@ -28,13 +29,45 @@ function GiftArt({ className = '' }: { className?: string }) {
   )
 }
 
-export function Photo({ item, size = 'frame' }: { item: Item; size?: 'frame' | 'thumb' | 'sheet' }) {
+const BOW = 'M22 15C15 3 3 2 4 10s10 7 18 5c8 2 17 3 18-5S29 3 22 15z'
+
+/**
+ * The claim as drawn, set straight on the frame so CSS transitions run. A frame
+ * always starts unwrapped and animates into its state; it is never drawn already
+ * wrapped. The booth flash plays only when a claim lands while the frame is shown.
+ */
+function useWrap(claim: Claim | null | undefined, frame: RefObject<HTMLDivElement | null>, flash: RefObject<HTMLSpanElement | null>) {
+  const wrap = !claim ? null : claim.status === 'bought' || !claim.mine ? 'bought' : 'reserved'
+  const settled = useRef(false)
+  const wasWrapped = useRef(false)
+  useLayoutEffect(() => {
+    const el = frame.current
+    if (!el) return
+    if (!settled.current) {
+      void el.offsetWidth // settle the unwrapped style so the change below transitions
+      settled.current = true
+    } else if (!wasWrapped.current && wrap && flash.current) {
+      flash.current.classList.remove('go')
+      void flash.current.offsetWidth
+      flash.current.classList.add('go')
+    }
+    wasWrapped.current = !!wrap
+    if (wrap) el.setAttribute('data-wrap', wrap)
+    else el.removeAttribute('data-wrap')
+  }, [wrap, frame, flash])
+}
+
+export function Photo({ item, size = 'frame', claim }: { item: Item; size?: 'frame' | 'thumb' | 'sheet'; claim?: Claim | null }) {
   const [broken, setBroken] = useState(false)
   const showImg = item.image_url && !broken
   const thumb = size === 'thumb'
+  const frame = useRef<HTMLDivElement>(null)
+  const flash = useRef<HTMLSpanElement>(null)
+  useWrap(claim, frame, flash)
   return (
     <div
-      className={`relative grid aspect-square place-items-center overflow-hidden ${thumb ? 'w-12 rounded-print' : 'rounded-photo'}`}
+      ref={frame}
+      className={`relative grid aspect-square place-items-center overflow-hidden ${thumb ? 'thumb w-12 rounded-print' : 'rounded-photo'}`}
       style={{ background: tintFor(item.id) }}
     >
       {showImg ? (
@@ -44,22 +77,32 @@ export function Photo({ item, size = 'frame' }: { item: Item; size?: 'frame' | '
           loading="lazy"
           referrerPolicy="no-referrer"
           onError={() => setBroken(true)}
-          className="size-[86%] object-contain mix-blend-multiply"
+          className="photo-art size-[86%] object-contain mix-blend-multiply"
         />
       ) : (
-        <GiftArt className={`${thumb ? 'w-[74%]' : 'w-[60%]'} text-plum opacity-85`} />
+        <GiftArt className={`photo-art ${thumb ? 'w-[74%]' : 'w-[60%]'} text-plum`} />
       )}
       {item.original_price !== null && item.price !== null && item.price < item.original_price && !thumb && (
         <span className="absolute top-[7px] left-[7px] rounded-full bg-sky-wash px-[9px] py-0.5 text-small font-extrabold text-sky-ink">Sale</span>
       )}
+      {claim !== undefined && (
+        <span className="ribbon" aria-hidden="true">
+          <svg className="bow" viewBox="0 0 44 30">
+            <path d={BOW} fill="currentColor" />
+            <path d="M22 15l-7 13M22 15l7 13" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+            <circle cx="22" cy="15" r="4.5" fill="#fff" opacity=".3" />
+          </svg>
+        </span>
+      )}
       {size === 'frame' && (
         <span
-          className="absolute right-1.5 bottom-1.5 rounded-photo bg-white/88 px-[5px] text-small font-extrabold tracking-[0.02em] text-stamp tabular-nums"
+          className="absolute right-1.5 bottom-1.5 z-[1] rounded-photo bg-white/88 px-[5px] text-small font-extrabold tracking-[0.02em] text-stamp tabular-nums"
           aria-label={`Added ${new Date(item.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}`}
         >
           {dateStamp(item.created_at)}
         </span>
       )}
+      {claim !== undefined && <span ref={flash} className="booth-flash" aria-hidden="true" />}
     </div>
   )
 }
@@ -102,13 +145,32 @@ function Title({ item, className = '' }: { item: Item; className?: string }) {
 const store = (item: Item) => item.domain ?? storeOf(item.url) ?? 'No link'
 const occasionsText = (item: Item) => item.occasions.map(occasionLabel).join(', ')
 
+type ViewProps = {
+  items: Item[]
+  slot: (item: Item) => ReactNode
+  /** Givers' view only: claims on these wishes. Leave out on an owner's own list. */
+  claims?: Record<string, Claim>
+  /** Makes the photo open the wish's details. */
+  onOpen?: (item: Item) => void
+}
+
+function OpenPhoto({ item, size, claims, onOpen }: { item: Item; size: 'frame' | 'thumb' } & Pick<ViewProps, 'claims' | 'onOpen'>) {
+  const photo = <Photo item={item} size={size} claim={claims ? (claims[item.id] ?? null) : undefined} />
+  if (!onOpen) return photo
+  return (
+    <button type="button" onClick={() => onOpen(item)} className="block w-full cursor-pointer rounded-photo text-left" aria-label={`Details: ${item.title}`}>
+      {photo}
+    </button>
+  )
+}
+
 /** Strip view: one white print per wish. `slot` fills the fixed-height action area. */
-export function ItemStrip({ items, slot }: { items: Item[]; slot: (item: Item) => ReactNode }) {
+export function ItemStrip({ items, slot, claims, onOpen }: ViewProps) {
   return (
     <ul className="grid grid-cols-2 gap-x-3 gap-y-3.5 sm:grid-cols-[repeat(auto-fill,minmax(204px,1fr))] sm:gap-x-[18px] sm:gap-y-[22px]">
       {items.map((item) => (
         <li key={item.id} className="flex min-w-0 flex-col rounded-print bg-print px-[7px] pt-[7px] shadow-[0_1px_2px_rgba(59,29,63,.08)] sm:px-2 sm:pt-2">
-          <Photo item={item} />
+          <OpenPhoto item={item} size="frame" claims={claims} onOpen={onOpen} />
           <div className="flex flex-1 flex-col gap-1 px-[3px] pt-2.5 pb-3">
             <span className="truncate text-small text-plum-soft">{store(item)}</span>
             <Title item={item} />
@@ -126,15 +188,15 @@ export function ItemStrip({ items, slot }: { items: Item[]; slot: (item: Item) =
 }
 
 /** List view: dense rows in one white panel. */
-export function ItemList({ items, slot }: { items: Item[]; slot: (item: Item) => ReactNode }) {
+export function ItemList({ items, slot, claims, onOpen }: ViewProps) {
   return (
     <ul className="rounded-panel bg-print px-3 py-0.5 sm:px-3.5 sm:py-1">
       {items.map((item) => (
         <li
           key={item.id}
-          className="grid grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 border-b border-blush py-2 last:border-b-0 md:grid-cols-[48px_minmax(0,1fr)_110px_70px_auto]"
+          className="grid grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 border-b border-blush py-2 last:border-b-0 md:grid-cols-[48px_minmax(0,1fr)_110px_70px_268px]"
         >
-          <Photo item={item} size="thumb" />
+          <OpenPhoto item={item} size="thumb" claims={claims} onOpen={onOpen} />
           <div className="min-w-0">
             <span className="block truncate text-small text-plum-soft">{store(item)}</span>
             <Title item={item} className="text-small [&_.line-clamp-3]:line-clamp-2" />
@@ -235,6 +297,6 @@ export function ListTools({
   )
 }
 
-export function ItemsView({ items, view, slot }: { items: Item[]; view: ViewMode; slot: (item: Item) => ReactNode }) {
-  return view === 'list' ? <ItemList items={items} slot={slot} /> : <ItemStrip items={items} slot={slot} />
+export function ItemsView({ view, ...props }: ViewProps & { view: ViewMode }) {
+  return view === 'list' ? <ItemList {...props} /> : <ItemStrip {...props} />
 }

@@ -71,6 +71,45 @@
   .select-pill:hover { box-shadow: inset 0 0 0 1.5px var(--color-plum-soft); }
   .select-pill::-ms-expand { display: none; }
 
+  /* The ribbon claim (DESIGN.md "The ribbon claim"). Givers only; never on an owner's own wishes.
+     Base state is unwrapped, and its transitions are the undo: the bow lifts, then the bands retract. */
+  .ribbon { position: absolute; inset: 0; pointer-events: none; }
+  .ribbon::before, .ribbon::after { content: ""; position: absolute; background: var(--color-ribbon); }
+  .ribbon::before {
+    left: calc(64% - 8px); top: 0; bottom: 0; width: 16px;
+    transform-origin: top; transform: scaleY(0);
+    transition: transform .3s .12s cubic-bezier(.5, 0, .75, 0), background-color .4s;
+  }
+  .ribbon::after {
+    top: calc(58% - 8px); left: 0; right: 0; height: 16px;
+    transform-origin: left; transform: scaleX(0);
+    transition: transform .3s .08s cubic-bezier(.5, 0, .75, 0), background-color .4s;
+  }
+  .ribbon .bow {
+    position: absolute; z-index: 1; left: 64%; top: 58%; width: 42px; height: 29px;
+    transform: translate(-50%, -50%) scale(0); color: var(--color-ribbon-deep);
+    transition: transform .2s cubic-bezier(.5, 0, .75, 0), color .4s;
+  }
+  /* Wrap: the vertical band draws down, the horizontal sweeps across, the bow settles. */
+  [data-wrap] .ribbon::before { transform: scaleY(1); transition: transform .55s .2s cubic-bezier(.22, 1, .36, 1), background-color .4s; }
+  [data-wrap] .ribbon::after { transform: scaleX(1); transition: transform .55s .4s cubic-bezier(.22, 1, .36, 1), background-color .4s; }
+  [data-wrap] .ribbon .bow { transform: translate(-50%, -50%) scale(1); transition: transform .5s .8s cubic-bezier(.34, 1.56, .64, 1), color .4s; }
+  [data-wrap="bought"] .ribbon::before, [data-wrap="bought"] .ribbon::after { background-color: var(--color-ribbon-deep); }
+  [data-wrap="bought"] .ribbon .bow { color: var(--color-ribbon-knot); }
+  .photo-art { transition: opacity .3s; }
+  svg.photo-art { opacity: .85; }
+  [data-wrap] .photo-art { transition: opacity .5s .25s; }
+  [data-wrap] svg.photo-art { opacity: .4; }
+  [data-wrap] img.photo-art { opacity: .55; }
+  /* List thumbnails: thin bands, no bow. */
+  .thumb .ribbon::before { width: 5px; left: calc(64% - 2.5px); }
+  .thumb .ribbon::after { height: 5px; top: calc(58% - 2.5px); }
+  .thumb .ribbon .bow { display: none; }
+  /* The booth flash, once, when a claim lands while you're looking. */
+  .booth-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  .booth-flash.go { animation: booth-flash .6s cubic-bezier(.25, .8, .25, 1); }
+  @keyframes booth-flash { 0% { opacity: 0; } 18% { opacity: .7; } 100% { opacity: 0; } }
+
   /* Running text on Help and legal pages. */
   .prose-info { max-width: 68ch; }
   .prose-info > * + * { margin-top: 10px; }

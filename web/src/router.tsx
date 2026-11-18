@@ -10,6 +10,7 @@ import { CookiesPage, PrivacyPage, TermsPage } from './pages/Legal'
 import { MyListPage } from './pages/MyList'
 import { ResetPasswordPage, UpdatePasswordPage } from './pages/Password'
 import { ProfilePage } from './pages/Profile'
+import { ReceivedPage } from './pages/Received'
 import { SignInPage } from './pages/SignIn'
 import { WelcomePage } from './pages/Welcome'
 
@@ -58,15 +59,7 @@ const welcomeRoute = createRoute({ getParentRoute: () => appRoute, path: '/welco
 const circlesRoute = createRoute({ getParentRoute: () => appRoute, path: '/circles', component: CirclesPage })
 const circleRoute = createRoute({ getParentRoute: () => appRoute, path: '/circles/$circleId', component: CirclePage })
 const circleSettingsRoute = createRoute({ getParentRoute: () => appRoute, path: '/circles/$circleId/settings', component: CircleSettingsPage })
-const receivedRoute = createRoute({
-  getParentRoute: () => appRoute,
-  path: '/received',
-  component: () => (
-    <Page title="Received" lead="Gifts you’ve marked as received, and who gave them.">
-      <EmptyState title="No gifts received yet.">When you get something from your list, mark it received to see who gave it.</EmptyState>
-    </Page>
-  ),
-})
+const receivedRoute = createRoute({ getParentRoute: () => appRoute, path: '/received', component: ReceivedPage })
 const profileRoute = createRoute({ getParentRoute: () => appRoute, path: '/profile', component: ProfilePage })
 
 const routeTree = rootRoute.addChildren([

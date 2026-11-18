@@ -59,6 +59,7 @@ notifications      (id, user_id, type, payload, read_at)
 ### RLS summary
 - **items**: owner sees own; others see an item if they share a Circle listed in `item_circles`.
 - **claims**: readable only if the viewer can see the item **AND** `items.owner_id <> auth.uid()`. Insert allowed under the same condition; update/delete only by `claimed_by`.
+  - Since Phase 3 (18 Nov 2026) the table has no API access at all: claims go through `circle_claims`, `claim_item`, `unclaim_item`, `mark_received` and `my_received`, which return only the status and whether a claim is yours. Live updates use the insert-only `claim_signals` table, which the wish's owner can't read.
 - **circle_members**: visible to members of the same Circle.
 - **circles**: joining only through an RPC (`join_circle(code)`) that checks the code, expiry and a rate limit — never a direct insert.
 - **push_subscriptions / quick_add_tokens**: owner only.
@@ -161,6 +162,8 @@ Scope
 - Automated RLS test suite (pgTAP) in GitHub Actions covering every claim-visibility case.
 
 Deliverables: claim buttons, claimed badges, received archive.
+
+**Status (18 Nov 2026):** built and tested (66 database checks in the existing PGlite suite rather than pgTAP; it already runs in GitHub Actions). Goes live once `20261120000000_phase3_claims.sql` is applied.
 
 Done when: RLS tests pass, and with the owner signed in on a second device, nothing changes on their screen — and no claim data appears in their network traffic — while others claim.
 
@@ -337,6 +340,6 @@ About 3.5 months part-time to public launch (~7–8 weeks full-time), at a total
 1. Target region/retailers first? (Sets parser adapters and default currency.)
 2. Should Circle admins approve new joiners, or is a valid code enough?
 3. Can a user hide an item from one member inside a Circle (e.g. partner-only items)?
-4. Show who claimed an item to other members, or only "Claimed"?
+4. ~~Show who claimed an item to other members, or only "Claimed"?~~ Decided 18 Nov 2026: only "Already claimed", for everyone except the claimer.
 5. Monetisation: affiliate-only, or freemium too?
 6. Make the GitHub repo public? (Unlimited free Actions minutes and F-Droid eligibility, but the code becomes visible; secrets stay safe in repo secrets.)

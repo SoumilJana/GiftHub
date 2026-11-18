@@ -18,8 +18,7 @@ for (const f of fs.readdirSync(migrationsDir).filter((f) => f.endsWith('.sql')).
 }
 console.log('migrations applied')
 const A='00000000-0000-0000-0000-00000000000a',B='00000000-0000-0000-0000-00000000000b',D='00000000-0000-0000-0000-00000000000d',I='11111111-1111-1111-1111-111111111111'
-await db.exec(`grant usage on schema public to authenticated; grant all on all tables in schema public to authenticated;
-insert into auth.users (id) values ('${A}'),('${B}'),('${D}');`)
+await db.exec(`insert into auth.users (id) values ('${A}'),('${B}'),('${D}'); update profiles set display_name='Sam Rivera' where id='${B}';`)
 const as = async (u, sql) => { await db.exec(`reset role; set request.jwt.claim.sub='${u}'; set role authenticated;`); return (await db.query(sql)).rows }
 let fails = 0
 const expect = (name, got, want) => { const ok = JSON.stringify(got) === JSON.stringify(want); if (!ok) fails++; console.log(ok ? 'ok  ' : 'FAIL', name, ok ? '' : `got ${JSON.stringify(got)} want ${JSON.stringify(want)}`) }
@@ -29,13 +28,28 @@ await as(A, `insert into items (id, owner_id, title, priority) values ('${I}','$
 await as(A, `insert into item_circles values ('${I}','${circle.id}')`)
 await as(B, `select join_circle('${circle.invite_code.toLowerCase()}')`)
 expect('Sam sees Maya item', (await as(B, `select count(*)::int n from items`))[0].n, 1)
-await as(B, `insert into claims (item_id, claimed_by, status) values ('${I}','${B}','bought')`)
-expect('Sam sees claim', (await as(B, `select count(*)::int n from claims`))[0].n, 1)
-expect('Maya sees NO claim', (await as(A, `select count(*)::int n from claims`))[0].n, 0)
-let err = ''; try { await as(A, `insert into claims (item_id, claimed_by) values ('${I}','${A}')`) } catch (e) { err = e.message }
-expect('Maya cannot claim own item (RLS, not unique leak)', /row-level security/.test(err), true)
-err=''; try { await as(B, `update claims set claimed_by='${A}'`) } catch (e) { err = e.message }
-expect('Sam cannot reassign claim', /row-level security/.test(err), true)
+// Phase 3: claims only through functions.
+let err = ''
+const fails_with = async (u, sql, re) => { try { await as(u, sql); return 'no error' } catch (e) { return re.test(e.message) ? 'refused' : e.message } }
+expect('Maya sees no claims in the Circle before any claim', (await as(A, `select count(*)::int n from circle_claims('${circle.id}')`))[0].n, 0)
+const mayaBefore = await fails_with(A, `select claim_item('${I}','reserved')`, /isn’t available/)
+expect('Maya cannot claim own item', mayaBefore, 'refused')
+await as(B, `select claim_item('${I}','reserved')`)
+expect('Sam sees his claim, marked as his', await as(B, `select status::text, mine from circle_claims('${circle.id}')`), [{ status: 'reserved', mine: true }])
+await as(B, `select claim_item('${I}','bought')`)
+expect('Sam can change reserved to bought', (await as(B, `select status::text s from circle_claims('${circle.id}')`))[0].s, 'bought')
+expect('Maya sees NO claim through circle_claims', (await as(A, `select count(*)::int n from circle_claims('${circle.id}')`))[0].n, 0)
+expect('Maya gets the same answer claimed or not', await fails_with(A, `select claim_item('${I}','reserved')`, /isn’t available/), mayaBefore)
+expect('Maya cannot read the claims table', await fails_with(A, `select count(*) from claims`, /permission denied/), 'refused')
+expect('Sam cannot read the claims table either', await fails_with(B, `select count(*) from claims`, /permission denied/), 'refused')
+expect('Sam cannot write the claims table directly', await fails_with(B, `insert into claims (item_id, claimed_by) values ('${I}','${B}')`, /permission denied/), 'refused')
+expect('Maya cannot unclaim for Sam', (await as(A, `select unclaim_item('${I}')`), (await as(B, `select count(*)::int n from circle_claims('${circle.id}')`))[0].n), 1)
+expect('stranger cannot claim', await fails_with(D, `select claim_item('${I}','reserved')`, /isn’t available/), 'refused')
+expect('stranger sees no claims', (await as(D, `select count(*)::int n from circle_claims('${circle.id}')`))[0].n, 0)
+expect('Sam receives live signals for the Circle', (await as(B, `select count(*)::int n from claim_signals where circle_id='${circle.id}'`))[0].n > 0, true)
+expect('Maya receives NO live signals about her wishes', (await as(A, `select count(*)::int n from claim_signals`))[0].n, 0)
+expect('stranger receives no live signals', (await as(D, `select count(*)::int n from claim_signals`))[0].n, 0)
+expect('claims are not in the Realtime publication', (await db.query(`select count(*)::int n from pg_publication_tables where pubname='supabase_realtime' and tablename='claims'`)).rows[0].n, 0)
 expect('stranger sees no items', (await as(D, `select count(*)::int n from items`))[0].n, 0)
 expect('stranger sees no circles', (await as(D, `select count(*)::int n from circles`))[0].n, 0)
 const bad = (await as(D, `select join_circle('AAAAAA') r`))[0].r
@@ -45,11 +59,19 @@ err=''; try { await as(D, `select join_circle('${circle.invite_code}')`) } catch
 expect('rate limit after 5 tries', /Too many tries/.test(err), true)
 err=''; try { await as(D, `insert into circle_members values ('${circle.id}','${D}','owner')`) } catch (e) { err = e.message }
 expect('no direct membership insert', /row-level security/.test(err), true)
-await as(A, `update items set status='received' where id='${I}'`)
-expect('Maya sees claim after received', (await as(A, `select count(*)::int n from claims`))[0].n, 1)
+expect('Sam cannot mark Maya’s wish received', await fails_with(B, `select * from mark_received('${I}')`, /isn’t on your list/), 'refused')
+expect('Maya sees no givers before receiving', (await as(A, `select count(*)::int n from my_received()`))[0].n, 0)
+expect('mark received reveals the giver', await as(A, `select giver_name, claim_status::text from mark_received('${I}')`), [{ giver_name: 'Sam Rivera', claim_status: 'bought' }])
+expect('Received lists the giver', await as(A, `select giver_name from my_received()`), [{ giver_name: 'Sam Rivera' }])
+expect('a received wish leaves Sam’s claim list', (await as(B, `select count(*)::int n from circle_claims('${circle.id}')`))[0].n, 0)
+expect('a received wish cannot be claimed', await fails_with(B, `select claim_item('${I}','reserved')`, /isn’t available/), 'refused')
+await as(A, `update items set status='active' where id='${I}'`)
+await as(B, `select unclaim_item('${I}')`)
+expect('Sam can undo his claim', (await as(B, `select count(*)::int n from circle_claims('${circle.id}')`))[0].n, 0)
 await as(A, `delete from circle_members where user_id='${B}'`)
 expect('removed Sam loses items', (await as(B, `select count(*)::int n from items`))[0].n, 0)
-expect('removed Sam loses claims view', (await as(B, `select count(*)::int n from claims`))[0].n, 0)
+expect('removed Sam loses claims view', (await as(B, `select count(*)::int n from circle_claims('${circle.id}')`))[0].n, 0)
+expect('removed Sam loses live signals', (await as(B, `select count(*)::int n from claim_signals`))[0].n, 0)
 
 // Sign-up currency: detected currency from user metadata becomes the profile currency.
 await db.exec(`reset role; insert into auth.users (id, raw_user_meta_data) values
@@ -70,15 +92,19 @@ await as(BF, `select join_circle('${couple.invite_code}')`)
 await as(FR, `select join_circle('${crew.invite_code}')`)
 await as(GF, `insert into items (id, owner_id, title) values ('${I1}','${GF}','Couple only'),('${I2}','${GF}','Crew only'),('${I3}','${GF}','Both')`)
 await as(GF, `insert into item_circles values ('${I1}','${couple.id}'),('${I2}','${crew.id}'),('${I3}','${couple.id}'),('${I3}','${crew.id}')`)
-await as(FR, `insert into claims (item_id, claimed_by) values ('${I3}','${FR}')`)
+await as(FR, `select claim_item('${I3}','reserved')`)
 expect('BF sees only Couple', (await as(BF, `select name from circles order by name`)).map((r) => r.name), ['Couple'])
 expect('BF sees GF in one Circle only', (await as(BF, `select count(*)::int n from circle_members where user_id='${GF}'`))[0].n, 1)
 expect('BF cannot see Crew members', (await as(BF, `select count(*)::int n from circle_members where circle_id='${crew.id}'`))[0].n, 0)
 expect('BF cannot read FRIEND profile', (await as(BF, `select count(*)::int n from profiles where id='${FR}'`))[0].n, 0)
 expect('BF sees Couple items, not Crew-only', (await as(BF, `select title from items where owner_id='${GF}' order by title`)).map((r) => r.title), ['Both', 'Couple only'])
 expect('BF sees only Couple sharing of a shared item', (await as(BF, `select count(*)::int n from item_circles where item_id='${I3}'`))[0].n, 1)
-expect('BF still sees the item is claimed', (await as(BF, `select count(*)::int n from claims where item_id='${I3}'`))[0].n, 1)
-expect('GF still sees no claim', (await as(GF, `select count(*)::int n from claims`))[0].n, 0)
+expect('BF sees "Already claimed", not who or from where', await as(BF, `select * from circle_claims('${couple.id}')`), [{ item_id: I3, status: 'reserved', mine: false }])
+expect('BF cannot take over FRIEND’s claim', await fails_with(BF, `select claim_item('${I3}','bought')`, /already claimed/), 'refused')
+expect('BF cannot undo FRIEND’s claim', (await as(BF, `select unclaim_item('${I3}')`), (await as(FR, `select count(*)::int n from circle_claims('${crew.id}')`))[0].n), 1)
+expect('BF cannot read Crew claims', (await as(BF, `select count(*)::int n from circle_claims('${crew.id}')`))[0].n, 0)
+expect('BF cannot read Crew signals', (await as(BF, `select count(*)::int n from claim_signals where circle_id='${crew.id}'`))[0].n, 0)
+expect('GF still sees no claim', (await as(GF, `select (select count(*)::int from circle_claims('${couple.id}')) + (select count(*)::int from circle_claims('${crew.id}')) + (select count(*)::int from claim_signals) n`))[0].n, 0)
 
 // Ownership and roles.
 err=''; try { await as(BF, `select transfer_ownership('${couple.id}','${BF}')`) } catch (e) { err = e.message }

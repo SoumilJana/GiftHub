@@ -4,7 +4,7 @@ import { removePhoto } from './photo'
 import { supabase } from './supabase'
 import type { Item, Occasion } from './wishlist'
 
-const COLS = 'id, owner_id, title, url, image_url, domain, price, currency, original_price, priority, notes, created_at, item_occasions(occasion)'
+export const COLS = 'id, owner_id, title, url, image_url, domain, price, currency, original_price, priority, notes, created_at, item_occasions(occasion)'
 
 type Row = Omit<Item, 'occasions' | 'circle_ids' | 'price' | 'original_price'> & {
   price: number | string | null
@@ -26,7 +26,7 @@ function toItem({ item_occasions, item_circles, ...r }: Row): Item {
   }
 }
 
-function rows(result: { data: unknown; error: unknown }): Item[] {
+export function rows(result: { data: unknown; error: unknown }): Item[] {
   if (result.error) throw result.error
   return (result.data as Row[]).map(toItem)
 }
