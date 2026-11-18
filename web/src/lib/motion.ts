@@ -57,8 +57,24 @@ export function useCalmMotion(): [boolean, boolean] {
  * or fades and settles (wider screens), and the backdrop fades. Keeps every caller's
  * plain onClose, however the sheet was closed.
  */
+let sheetGoneAt = 0
+
+/** Resolves once no sheet is open or leaving, so a list change isn't hidden behind one. Gives up after 4s. */
+function afterSheets(): Promise<void> {
+  const started = performance.now()
+  return new Promise((resolve) => {
+    const check = () => {
+      const now = performance.now()
+      if ((!document.querySelector('dialog[open]') && now >= sheetGoneAt) || now - started > 4000) resolve()
+      else window.setTimeout(check, 50)
+    }
+    check()
+  })
+}
+
 export function sheetExit(dialog: HTMLDialogElement) {
   if (!dialog.open) return
+  sheetGoneAt = performance.now() + 220
   const rect = dialog.getBoundingClientRect()
   if (!rect.height) return
   const ghost = document.createElement('div')
@@ -155,15 +171,28 @@ export function useListMotion(ids: string[]) {
     for (const [id, { el, box }] of now) {
       const old = prev.get(id)
       if (!old) {
-        el.animate(
-          calm
-            ? [{ opacity: 0 }, { opacity: 1 }]
-            : [
-                { clipPath: 'inset(0 0 100% 0 round 6px)', transform: 'translateY(-10px)' },
-                { clipPath: 'inset(0 0 0 0 round 6px)', transform: 'none' },
-              ],
-          { duration: calm ? 250 : 480, delay: removed.length ? 120 : 0, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'backwards' },
-        )
+        // Hold the new wish out of sight until the form that added it has gone, then print it.
+        const hidden = calm ? { opacity: '0' } : { clipPath: 'inset(0 0 100% 0 round 6px)' }
+        Object.assign(el.style, hidden)
+        afterSheets().then(async () => {
+          // Bring it into view first if it landed off screen.
+          const r = el.getBoundingClientRect()
+          if (r.bottom < 60 || r.top > window.innerHeight - 80) {
+            el.scrollIntoView({ block: 'center', behavior: calm ? 'auto' : 'smooth' })
+            await new Promise((done) => window.setTimeout(done, calm ? 0 : 350))
+          }
+          el.animate(
+            calm
+              ? [{ opacity: 0 }, { opacity: 1 }]
+              : [
+                  { clipPath: 'inset(0 0 100% 0 round 6px)', transform: 'translateY(-14px)' },
+                  { clipPath: 'inset(0 0 0 0 round 6px)', transform: 'none' },
+                ],
+            { duration: calm ? 300 : 750, delay: 120, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'backwards' },
+          )
+          el.style.opacity = ''
+          el.style.clipPath = ''
+        })
       } else if (!calm) {
         const dx = old.box.left - box.left
         const dy = old.box.top - box.top
