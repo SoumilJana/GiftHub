@@ -2,6 +2,7 @@ import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { useUserId } from '../lib/auth'
 import { circleTitle, useMyCircles, useProfile } from '../lib/queries'
+import { CircleSwitcher } from './CircleSwitcher'
 import { GiftMark } from './GiftMark'
 import { CirclesIcon, ListIcon, ReceivedIcon } from './NavIcons'
 import { SlidingPill } from './SlidingPill'
@@ -62,11 +63,9 @@ export function AppShell() {
         </Link>
       </aside>
 
-      <header className="flex items-center justify-between rounded-b-sheet bg-print px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 shadow-[0_1px_3px_rgba(59,29,63,0.06)] shell:hidden">
+      <header className="flex items-center justify-between gap-3 rounded-b-sheet bg-print px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 shadow-[0_1px_3px_rgba(59,29,63,0.06)] shell:hidden">
         <Wordmark small />
-        <Link to="/profile" aria-label="Profile">
-          <Avatar name={name} size={34} />
-        </Link>
+        <CircleSwitcher />
       </header>
 
       <main className="min-w-0 px-4 pt-7 pb-28 shell:px-[clamp(16px,3.4vw,44px)] shell:pt-7">
@@ -78,14 +77,23 @@ export function AppShell() {
         className="fixed inset-x-0 bottom-0 z-10 flex rounded-t-sheet bg-print px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_3px_rgba(59,29,63,0.06)] shell:hidden"
       >
         <SlidingPill active={ACTIVE} target=".nav-icon" watch={path} />
-        {[...sections, { to: '/profile' as const, label: 'Profile', icon: <Avatar name={name} size={24} /> }].map((s) => (
+        {[...sections, { to: '/profile' as const, label: 'Profile', icon: <ProfileFace name={name} /> }].map((s) => (
           <Link key={s.to} to={s.to} activeOptions={{ exact: s.to === '/' }} className={bottomLink}>
-            <span className="nav-icon">{s.icon}</span>
+            <span className={s.to === '/profile' ? 'nav-icon w-[30px]!' : 'nav-icon'}>{s.icon}</span>
             {s.label}
           </Link>
         ))}
       </nav>
     </div>
+  )
+}
+
+/** Your initials. When Profile is current the sliding pill shrinks to a plum ring around them. */
+function ProfileFace({ name }: { name: string }) {
+  return (
+    <span className="flex rounded-full transition-shadow duration-200 group-data-[status=active]:shadow-[0_0_0_2px_var(--color-print)]">
+      <Avatar name={name} size={22} />
+    </span>
   )
 }
 

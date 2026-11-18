@@ -22,7 +22,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         data-motion-move
         role="status"
         aria-live="polite"
-        className={`pointer-events-none fixed bottom-[88px] left-1/2 z-30 max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-full bg-plum px-[18px] py-3 text-small font-semibold text-white transition-[opacity,transform] duration-200 ease-out shell:bottom-6 ${
+        className={`pointer-events-none fixed bottom-[88px] left-1/2 z-30 w-max max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-full bg-plum px-[18px] py-3 text-small font-semibold text-white transition-[opacity,transform] duration-200 ease-out shell:bottom-6 ${
           visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
         }`}
       >
