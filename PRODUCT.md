@@ -43,13 +43,14 @@ GiftHub is a private, shared wishlist for people who buy gifts for each other. M
 - Claim states: *Reserved* and *Bought*; the claimer can undo. Owner can mark *Received*, which reveals the giver and archives the item.
 - Price tracking with a *Sale* badge (≥5% below baseline) and was/now display.
 - Offline read of cached lists and Circles; queued adds sync later. Web Push for Circle activity (never claim activity to the owner).
-- **$0 budget, permanently.** Free tiers only, enforced quotas: 150 active items/user, 10 Circles/user, 20 members/Circle, 30 parses/day, 30 items/page. At 80% of any limit the app goes into waitlist mode.
+- **$0 budget, permanently.** Free tiers only (payment-provider fees come out of Pro revenue). Enforced quotas today: 150 active items/user, 10 Circles/user, 20 members/Circle, 30 items/page. From the launch (Phase 5.5), Free is 50 wishes, 5 Circles, 10 photos, 20 members and 15 link reads a day; Pro is 150, 15, 50, 50 and 30 or more. At 80% of any limit the app goes into waitlist mode.
 - Product images load directly from retailer servers; user uploads are resized to ≤100 KB WebP.
 - **Global from day one:** multi-currency (per-profile preferred currency), no single home market or retailer set.
 - Terminology: *Circle* (group), *Secretly Bought*, *Reserved*, *Bought*, *Received*, *invite code*.
 - Joining: a valid, unexpired invite code or `/join/<code>` link adds the person straight away; no owner approval (decided 2026-11-17).
 - Decided 18 Nov 2026: other givers see only "Already claimed", never who claimed it, in the same Circle or another. Only the claimer sees "Reserved by you" or "Bought by you".
-- Undecided (`Development Plan.md` §6): hiding an item from one member inside a Circle; affiliate-only vs freemium; public repo.
+- Decided 19 Nov 2026: **freemium**, built just before the public launch (not now). Free allows almost everything. Pro lifts the extreme limits, such as many links a day, many wishes, Circles or photos, or price alerts on every wish. A one-time Event pass gives one occasion's Circle (such as a wedding gift list) unlimited members. Claims, privacy and anything a giver does are never paid, and there are no ads or nagging. Prices come after market research. Details are in `Development Plan.md` → Phase 5.5.
+- Undecided (`Development Plan.md` §6): hiding an item from one member inside a Circle; public repo.
 
 ## Brand Commitments
 

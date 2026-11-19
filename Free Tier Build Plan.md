@@ -64,7 +64,7 @@ How to build, launch and run GiftHub for **$0, permanently**: what's included, w
 
 ## 4. Quotas Enforced in the App
 
-Enforced in the database (constraints/triggers or RPC checks), so they can't be bypassed from the browser.
+Enforced in the database (constraints/triggers or RPC checks), so they can't be bypassed from the browser. These are today's limits for everyone. From the public launch, Free and Pro plans replace the per-person ones (`Development Plan.md` → Phase 5.5): Free has 50 wishes, 5 Circles, 10 photos, 20 members and 15 link reads a day; Pro has 150, 15, 50, 50 and 30 or more. The global caps that keep the app inside free infrastructure still apply to everyone.
 
 | Quota | Value | Protects |
 |---|---|---|

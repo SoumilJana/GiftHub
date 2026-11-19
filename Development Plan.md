@@ -292,7 +292,7 @@ Decided with the user (18 Nov 2026): icons with labels in the bottom bar, a Circ
 1. ~~Deploy `parse-url`~~ (deployed 19 Nov 2026).
 2. Try it live on a phone with real links, then run the 100-link test set for the "Done when" figure.
 3. Myntra blocks its images on other sites: save store photos to GiftHub's storage when that matters.
-4. Decide the limit: `PRODUCT.md` says 30 parses a day per person; what's built is 30 a minute (a daily count needs storage, e.g. a small Supabase table). Cached links don't count against either.
+4. Daily link limit: Free 15 a day, Pro 30 or more (Phase 5.5, with a `usage_daily` count). Until then, 30 a minute for everyone, as built. Cached links don't count.
 5. Untested fallbacks for the blocked stores: ScraperAPI's free tier, GitHub Actions + Playwright on `parse_jobs`, and the share text from store apps (Phase 5).
 
 **Original scope:**
@@ -379,7 +379,7 @@ Fully parsed product pages: Worker 10 of 18, Edge Function 8 of 18 (+1 partial).
 
 ---
 
-### Phase 5 — PWA Experience & Quick-Add (2 weeks) → **Public web launch**
+### Phase 5 — PWA Experience & Quick-Add (2 weeks)
 **Goal:** the web app feels like a native app and items can be added from anywhere.
 
 Scope
@@ -398,6 +398,62 @@ Scope
 Deliverables: installable PWA with offline mode, share target, bookmarklet, iOS Shortcut, push notifications.
 
 Done when: on Android, sharing from Chrome or the Amazon app adds an item without opening GiftHub fully; on iOS, the Shortcut does the same; Lighthouse scores ≥90 for performance and accessibility.
+
+Then Phase 5.5 (Free and Pro plans), then the public launch.
+
+---
+
+### Phase 5.5 — Free and Pro plans (planned 19 Nov 2026; build just before the public launch)
+**Not now.** The main app comes first (Phases 4 and 5). This phase is built last, right before the public launch, so the app opens to everyone with its plans in place. Until then, today's single set of limits applies to everyone.
+
+**Model (decided 19 Nov 2026): freemium.** Free allows almost everything; Pro lifts the "extreme" limits. A one-time **Event** pass covers big occasions such as a wedding gift list. Affiliate links (Phase 7) stay the other revenue source.
+
+**Rules for what can be paid:**
+1. **The surprise is never paid.** Claims, privacy, Circles, the hand-off and Received are the same on every plan.
+2. **Givers never meet a paywall.** Viewing someone's list, reserving and buying are always free. Only the list owner's own heavy use is limited.
+3. **Limits are plain and calm.** At a limit, one line says what happened and what Pro allows (for example, "You've read 15 links today. Pro reads more."). No pop-ups, nagging, countdowns or ads.
+4. **Nothing is taken away.** People already past a Free limit when plans start, or whose Pro ends, keep everything visible and editable; they just can't add more until they're under the limit.
+5. **Pro still fits the free infrastructure**, unless Pro revenue pays for an upgrade.
+
+**Limits (decided 19 Nov 2026):**
+
+| | Free | Pro |
+|---|---|---|
+| Link reading | 15 a day | 30 or more a day (exact number set with the price) |
+| Active wishes | 50 | 150 |
+| Circles | 5 | 15 |
+| Photo uploads | 10 | 50 |
+| Members per Circle (set by the Circle owner's plan) | 20 | 50 |
+| Price-drop alerts (Phase 6) | 5 a month | Every wish |
+| Bulk import, custom occasions, themes | No | Yes |
+| Claims, hand-off, Received, privacy, couple and group Circles, notifications | Yes | Yes |
+
+**Event pass (idea, one-time price):** one Circle for one occasion, such as a wedding or baby-shower gift list, with **unlimited members** (guests). It lasts for the event and a while after, then the Circle stays readable. Still to design: how long it lasts, whether guests need accounts to reserve, and how it differs from a group Circle.
+
+**Price: not set.** Research Indian and world markets first: what similar wishlist and registry apps charge, what people pay for comparable apps in India (UPI subscriptions) and elsewhere, and monthly vs yearly vs one-time. Set Pro and the Event pass price from that.
+
+**Payments (to choose at build time):**
+- **Razorpay:** no setup fee, about 2% per payment, UPI and cards, accepts individuals with PAN and a bank account.
+- **Outside India:** Razorpay international cards, or a merchant of record (Lemon Squeezy, Paddle) that handles tax worldwide.
+- Fees come out of revenue, so the $0 rule holds. Card and UPI details stay on the provider's hosted checkout. GST registration is needed only above ₹20 lakh a year.
+
+**How it would be built:**
+1. **Plan-aware limits:**
+   - `profiles.plan` (free, pro), `pro_until` and event passes are set only by the server.
+   - `private.plan_of(uid)` feeds every quota trigger instead of fixed numbers.
+   - `usage_daily` with a `use_credit(kind)` function counts link reading; the Worker asks it before reading a page, and cached links are free.
+2. **Profile → "Your plan":** what you've used, what Pro adds, Upgrade and Manage.
+3. **Checkout and a `payments-webhook` Edge Function** that verifies the provider's signature and sets the plan; renewals and cancellations arrive the same way.
+4. **Legal and Help:**
+   - Terms: the paid plans, renewal, cancelling and refunds.
+   - Privacy: names the payment provider.
+   - Help: a "Free and Pro" section.
+   - The legal review covers all of this.
+5. **Tests:** only the server can set a plan; quotas switch with the plan; usage can't be reset from the browser.
+
+**Decisions still open:** the price; the payment provider; whether one partner's Pro covers the couple Circle; the Event pass details; whether Pro revenue pays for Supabase's paid plan if needed.
+
+Done when: someone can upgrade, renew and cancel on the live site; limits switch with the plan; and Free users never see an ad, a pop-up or a locked claim.
 
 **→ Public launch** of the web app.
 
@@ -428,7 +484,7 @@ Scope
 - Group gifting / contribution pooling.
 - Browser extension for desktop quick-add, published free on **Firefox Add-ons** and **Microsoft Edge Add-ons**; Chrome users load it from GitHub Releases or keep using the bookmarklet (the Chrome Web Store charges $5).
 - Amazon Creators API (PA-API's 2026 successor; free once Associates has 10 qualifying sales in 30 days on that marketplace) for reliable Amazon data.
-- Optional revenue (doesn't affect the $0 cost rule): premium features like custom occasions or themes.
+- Paid plans: Free, Pro and the Event pass are built before the launch (Phase 5.5).
 - SEO landing pages, referral through invite links.
 
 Done when: tracked by metrics — weekly active Circles, items added per user, claim rate, affiliate revenue.
@@ -452,7 +508,7 @@ Out of scope (cost money): Google Play ($25), Apple App Store ($99/yr). iOS user
 
 ```
 Weeks:  1-2     3-4        5-7         8-9          10-12        13-14          15-16       17+        later
-      [P0 Base][P1 Circles][P2 Wishlist][P3 Secret ★][P4 Parsing][P5 PWA+QuickAdd][P6 Prices][P7 Growth][P8 APK?]
+      [P0 Base][P1 Circles][P2 Wishlist][P3 Secret ★][P4 Parsing][P5 PWA+QuickAdd][P5.5 Plans][P6 Prices][P7 Growth][P8 APK?]
                                             ↑ private beta                  ↑ public web launch
 ```
 
@@ -490,5 +546,5 @@ About 3.5 months part-time to public launch (~7–8 weeks full-time), at a total
 2. Should Circle admins approve new joiners, or is a valid code enough?
 3. Can a user hide an item from one member inside a Circle (e.g. partner-only items)?
 4. ~~Show who claimed an item to other members, or only "Claimed"?~~ Decided 18 Nov 2026: only "Already claimed", for everyone except the claimer.
-5. Monetisation: affiliate-only, or freemium too?
+5. ~~Monetisation: affiliate-only, or freemium too?~~ Decided 19 Nov 2026: freemium (Free, Pro and an Event pass, see Phase 5.5) alongside affiliate links.
 6. Make the GitHub repo public? (Unlimited free Actions minutes and F-Droid eligibility, but the code becomes visible; secrets stay safe in repo secrets.)
