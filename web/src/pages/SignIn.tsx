@@ -26,7 +26,7 @@ export function SignInPage() {
   const pending = readPendingJoin()
 
   // Only same-site paths are allowed as a destination after sign-in.
-  const next = search.redirect && search.redirect.startsWith('/') && !search.redirect.startsWith('//') ? search.redirect : '/'
+  const next = search.redirect && /^\/(?![/\\])/.test(search.redirect) && !/[\\\s]/.test(search.redirect) ? search.redirect : '/'
 
   if (!loading && session) return pending ? <Redirect to="/join/$code" params={{ code: pending }} /> : <Redirect href={next} />
 

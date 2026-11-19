@@ -406,6 +406,18 @@ Scope
     - A price too big to store, or a made-up currency, gave a raw database error. Now: "That price is too high." / "Pick a currency code like INR or USD."
     - A photo address wasn't checked at all. Now it must be a web address.
     - Applied to the live database on 19 Nov 2026.
+- **Security pass:** ✅ done 19 Nov 2026.
+  - **Link reader:** it followed redirects blindly, and hostnames that point at internal addresses (such as `127.0.0.1.nip.io`) got through, so a link could make our servers fetch an internal address. Now every redirect hop is checked, and every hostname is looked up first (over DNS-over-HTTPS): private, local and cloud-metadata addresses are refused. Tested against `127.0.0.1.nip.io` and a redirect to `169.254.169.254`; real store links still read.
+  - **Page headers:** added a Content Security Policy (scripts only from our own site; connections only to our site and Supabase), blocking of other sites framing the app (clickjacking), and HSTS. Checked locally: the app loads and reaches Supabase, other sites are blocked.
+  - **Leftover design mockup:** `demo.html` was being deployed and was live at /demo. It's now left out of deploys (`public/.assetsignore`).
+  - **Sign-in return link:** a link like `/\evil.com` (which browsers read as another website) is now refused.
+  - **Packages:** nothing in the shipped app has a known flaw. 4 moderate warnings are in build tools only; the suggested "fix" is a downgrade, so they stay until the tools update.
+  - **Leaked keys:** none in the code, the git history or the built app.
+  - **Already in place:** database access rules (96 checks), rate limits on link reading (30 a minute), invite-code guessing (5 tries) and bug reports (daily cap), quotas on wishes, Circles and photos.
+  - **Still open:**
+    - Before opening sign-up: in the Supabase dashboard, turn on email confirmation, set the minimum password length to 8, turn on "Secure password change", and run Advisors → Security.
+    - Consider Cloudflare Turnstile (free) on sign-up against bot accounts.
+    - The `parse-url` Supabase function can be called directly by any signed-in person without the 30-a-minute limit. Low risk while sign-up is invite-only.
 - **App robustness pass:** every screen empty and with a lot of data; slow and dropped connections; double taps on every button; error messages on every form; long names everywhere; phone, tablet and desktop sizes.
 - **Manual test script (the owner, about 20 minutes, two accounts on two phones):** sign up, start and join a Circle, add wishes by link and by hand, upload a photo, claim, buy, the gift hand-off, Received, a couple Circle, Help and bug report.
 - **Light load check (optional):** about 20 simulated users for a couple of minutes against a test copy (a second free Supabase project), never the live database. The full stress test stays in Phase 7.5.

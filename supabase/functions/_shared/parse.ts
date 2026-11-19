@@ -58,6 +58,68 @@ export function safeTarget(input: string): URL | null {
   return u
 }
 
+/** Is this a public internet address? False for private, local, link-local, shared and reserved ranges. */
+export function isPublicIp(ip: string): boolean {
+  const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(ip)
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])]
+    if (a === 0 || a === 10 || a === 127 || a >= 224) return false
+    if (a === 100 && b >= 64 && b <= 127) return false // carrier-grade NAT
+    if (a === 169 && b === 254) return false // link-local, cloud metadata
+    if (a === 172 && b >= 16 && b <= 31) return false
+    if (a === 192 && b === 168) return false
+    if (a === 192 && b === 0) return false
+    if (a === 198 && (b === 18 || b === 19)) return false
+    return true
+  }
+  const v6 = ip.toLowerCase()
+  if (!v6.includes(':')) return false
+  if (v6 === '::' || v6 === '::1') return false
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(v6)
+  if (mapped) return isPublicIp(mapped[1])
+  if (/^::ffff:/.test(v6)) return false
+  if (/^f[cd]/.test(v6) || /^fe[89ab]/.test(v6) || /^ff/.test(v6)) return false // private, link-local, multicast
+  if (/^64:ff9b:/.test(v6) || /^2001:db8:/.test(v6)) return false
+  return true
+}
+
+/** Does this hostname point only at public addresses? Asked over DNS-over-HTTPS; any doubt means no. */
+export async function resolvesPublic(host: string): Promise<boolean> {
+  try {
+    const answers = await Promise.all(
+      ['A', 'AAAA'].map(async (type) => {
+        const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(host)}&type=${type}`, {
+          headers: { accept: 'application/dns-json' },
+          signal: AbortSignal.timeout(3000),
+        })
+        if (!res.ok) throw new Error('dns')
+        const d = (await res.json()) as { Answer?: { type: number; data: string }[] }
+        return (d.Answer ?? []).filter((x) => x.type === 1 || x.type === 28).map((x) => x.data)
+      }),
+    )
+    const ips = answers.flat()
+    return ips.length > 0 && ips.every(isPublicIp)
+  } catch {
+    return false
+  }
+}
+
+/** Fetch, following up to 5 redirects by hand so every hop is checked: a public page can't bounce us inward. */
+async function fetchChecked(start: URL, init: RequestInit): Promise<{ res: Response; url: string } | null> {
+  let at = start
+  for (let hop = 0; hop <= 5; hop++) {
+    if (!(await resolvesPublic(at.hostname))) return null
+    const res = await fetch(at.toString(), { ...init, redirect: 'manual' })
+    if (res.status < 300 || res.status >= 400) return { res, url: at.toString() }
+    res.body?.cancel().catch(() => {})
+    const loc = res.headers.get('location')
+    const next = loc ? safeTarget(new URL(loc, at).toString()) : null
+    if (!next) return null
+    at = next
+  }
+  return null
+}
+
 /** The link worth saving: tracking removed, and Amazon and Flipkart cut down to the product. */
 export function cleanUrl(input: string): string {
   const u = new URL(input)
@@ -330,10 +392,9 @@ export async function readPage(input: string, via: string): Promise<ReadResult> 
     const found = await fromTataCliq(target)
     if (found) return { ok: true, data: { url: cleanUrl(target.toString()), ...found }, via }
   }
-  let res: Response
+  let got: { res: Response; url: string } | null
   try {
-    res = await fetch(target.toString(), {
-      redirect: 'follow',
+    got = await fetchChecked(target, {
       headers: {
         'user-agent': UA,
         accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -342,10 +403,11 @@ export async function readPage(input: string, via: string): Promise<ReadResult> 
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
   } catch {
-    return { ok: false, reason: 'unreadable', url: cleanUrl(target.toString()), store: storeName(target.toString()), via }
+    got = null
   }
-  // Redirects (short links) may land anywhere: check the final address too.
-  const finalUrl = res.url && safeTarget(res.url) ? res.url : target.toString()
+  // Unreachable, or it pointed (or redirected) somewhere that isn't the public internet.
+  if (!got) return { ok: false, reason: 'unreadable', url: cleanUrl(target.toString()), store: storeName(target.toString()), via }
+  const { res, url: finalUrl } = got
   const url = cleanUrl(finalUrl)
   const store = storeName(finalUrl)
   const type = res.headers.get('content-type') ?? ''

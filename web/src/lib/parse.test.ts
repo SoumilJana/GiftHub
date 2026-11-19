@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cleanUrl, extract, looksBlocked, safeTarget, toPrice } from '../../../supabase/functions/_shared/parse.ts'
+import { cleanUrl, extract, isPublicIp, looksBlocked, safeTarget, toPrice } from '../../../supabase/functions/_shared/parse.ts'
 
 describe('cleanUrl', () => {
   it('cuts Amazon links down to the product', () => {
@@ -116,5 +116,15 @@ describe('store data the page keeps outside tags', () => {
     const html = '<title>Labubu keychain</title><meta property="og:image" content="https://cdn.fcglcdn.com/a.jpg">'
       + '{"Dis":10,"mrp":5000,"pid":111}{"Dis":78.55,"SDis":0,"mrp":999,"pd":"Keychain toy","pid":20630432,"pn":"Labubu"}'
     expect(extract(html, 'https://www.firstcry.com/yamama/labubu/20630432/product-detail').price).toBe(214)
+  })
+})
+
+describe('isPublicIp', () => {
+  it('refuses private, local and cloud-metadata addresses', () => {
+    for (const ip of ['127.0.0.1', '10.1.2.3', '172.16.0.1', '172.31.255.255', '192.168.1.1', '169.254.169.254', '100.64.0.1', '0.0.0.0', '::1', '::', 'fd00::1', 'fe80::1', '::ffff:127.0.0.1', '::ffff:7f00:1'])
+      expect(isPublicIp(ip), ip).toBe(false)
+  })
+  it('allows ordinary public addresses', () => {
+    for (const ip of ['8.8.8.8', '104.16.0.1', '172.32.0.1', '2606:4700::1111', '::ffff:8.8.8.8']) expect(isPublicIp(ip), ip).toBe(true)
   })
 })
