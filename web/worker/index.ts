@@ -6,7 +6,8 @@
 //   2. Per-person limit: 30 links a minute.
 //   3. Cached for a day (blocked results for an hour).
 //   4. Read from Cloudflare; if the store refuses, try once more from Supabase's servers,
-//      which some stores (FirstCry, Croma) let through.
+//      which some stores (FirstCry, Croma) let through. That function only answers this Worker:
+//      both hold the PARSE_URL_SECRET secret, so nobody can skip the limit by calling it directly.
 //   5. Still refused: read it through scrape.do's Indian proxies (Myntra, Nykaa, Ajio...),
 //      when the SCRAPEDO_TOKEN secret is set. Free plan: about 1,000 credits a month;
 //      when they run out, the app shows the pre-filled form as before.
@@ -17,6 +18,8 @@ interface Env {
   ASSETS: { fetch: (req: Request) => Promise<Response> }
   PARSE_LIMIT?: { limit: (o: { key: string }) => Promise<{ success: boolean }> }
   SUPABASE_URL: string
+  /** Secret shared with the Supabase `parse-url` function. Unset: that retry is skipped. */
+  PARSE_URL_SECRET?: string
   /** Secret, set with `npx wrangler secret put SCRAPEDO_TOKEN`. Optional. */
   SCRAPEDO_TOKEN?: string
 }
@@ -50,10 +53,14 @@ async function userId(env: Env, auth: string, apikey: string) {
 }
 
 async function fromSupabase(env: Env, url: string, auth: string, apikey: string, trail: string[]): Promise<ReadResult | null> {
+  if (!env.PARSE_URL_SECRET) {
+    trail.push('supabase off')
+    return null
+  }
   try {
     const res = await fetch(`${env.SUPABASE_URL}/functions/v1/parse-url`, {
       method: 'POST',
-      headers: { authorization: auth, apikey, 'content-type': 'application/json' },
+      headers: { authorization: auth, apikey, 'x-gifthub-key': env.PARSE_URL_SECRET, 'content-type': 'application/json' },
       body: JSON.stringify({ url }),
       signal: AbortSignal.timeout(15_000),
     })

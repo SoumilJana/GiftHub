@@ -21,7 +21,7 @@ Companion to *Wishlist App Product Plan.md*. This document turns the concept int
 | PWA | `vite-plugin-pwa` (Workbox) | Manifest, service worker, offline cache, update prompts |
 | Hosting | **Cloudflare Workers (static assets)**, auto-deployed from GitHub via Workers Builds; config in `web/wrangler.jsonc` | Free, unlimited bandwidth, commercial use allowed, preview URL per pull request |
 | Push | Web Push (VAPID) sent from a Supabase Edge Function | No third-party service |
-| Email | Resend (SMTP for Supabase Auth + notifications) | Free tier covers early stage |
+| Email | Gmail SMTP for Supabase Auth emails (set up 19 Nov 2026); Resend for bug reports | Free tier covers early stage |
 | Monitoring | Sentry + PostHog | Free tiers cover early stage |
 | Domain | `gifthub.grave07.workers.dev` (free Cloudflare subdomain) | No domain purchase |
 | Later Android app | **Capacitor** APK published on GitHub Releases | Reuses ~100% of the code; no Play Store fee |
@@ -97,7 +97,7 @@ Done when: merging to `main` deploys automatically, and the app installs to a ph
 **Goal:** users can sign up and form groups with invite codes.
 
 Scope
-- Auth: email + password, magic link, Google sign-in. Custom SMTP via Resend.
+- Auth: email + password, magic link, Google sign-in. Auth emails go through Gmail SMTP (`smtp.gmail.com`, port 465, an app password set by the owner in Supabase), since Supabase's own sender stopped delivering.
 - Profile setup (name, avatar, preferred currency). Account deletion.
 - Create Circle → 6-char code from an unambiguous alphabet (no `0/O/1/I`), e.g. `K7QX3M`.
 - Join Circle by code: during onboarding, from the dashboard, or via link `gifthub.app/join/K7QX3M`.
@@ -401,7 +401,7 @@ Fully parsed product pages: Worker 10 of 18, Edge Function 8 of 18 (+1 partial).
 ### Phase 4.5 — Pre-beta check (after Phase 4; before the private beta)
 **Goal:** friends find the app solid on the first try. Bugs and edge cases get caught by us, not by them.
 
-**Status (19 Nov 2026):** edge-case tests, security pass, Security Advisor fixes and the robustness pass are done. First-run onboarding (Phase 4.6) is built. Next: the manual two-phone test, which now covers the new first run.
+**Status (19 Nov 2026):** edge-case tests, security pass, Security Advisor fixes and the robustness pass are done. First-run onboarding (Phase 4.6) is live. Google sign-in works on the phone (confirmed by the owner, 19 Nov 2026). The last open security item, the `parse-url` function, is closed in code (see the security pass below). **The two-phone test moves to just before the public launch** (decided 19 Nov 2026): it becomes part of a final pre-launch check, where every test runs again on the finished app (see Phase 5).
 
 Scope
 - **Automated edge-case tests (database checks, run on every push):** two claims on the same wish at the same moment (only one wins); a member removed in the middle of a claim; a Circle deleted while a hand-off is pending; leaving a couple Circle; wishes with no price, a huge price, a very long or emoji name; expired and reused invite codes.
@@ -420,7 +420,7 @@ Scope
   - **Already in place:** database access rules (96 checks), rate limits on link reading (30 a minute), invite-code guessing (5 tries) and bug reports (daily cap), quotas on wishes, Circles and photos.
   - **Dashboard settings (done by the owner, 19 Nov 2026):** email confirmation on, minimum password length 8, "Secure password change" on, Security Advisor run (see below). The scrape.do key was regenerated and the ScrapingAnt account deleted.
   - **Cloudflare Turnstile (free person check), live 19 Nov 2026:** on sign-up, sign-in, Google sign-in, email links and password reset; usually invisible. Supabase checks the token (Authentication → Attack Protection, secret key set by the owner). The public site key is written in `web/src/lib/turnstile.ts`, because the automatic deploy on every push builds without `web/.env.local`: one such deploy dropped the key while Supabase required the check, which would have broken sign-in.
-  - **Still open:** the `parse-url` Supabase function can be called directly by any signed-in person without the 30-a-minute limit. Low risk while sign-up is invite-only; closing it needs a shared secret between the Worker and the function.
+  - **Closed (19 Nov 2026, code done; live once the secret is set and the function deployed):** the `parse-url` Supabase function could be called directly by any signed-in person, skipping the 30-a-minute limit. Now the Worker and the function share a secret, `PARSE_URL_SECRET` (set by the owner in Cloudflare and in Supabase's function secrets, at least 32 characters). The function refuses any call without it, and refuses everything while its own copy isn't set; the Worker skips that retry when it has no secret. Either side can go live first without breaking link reading: until both match, links that Cloudflare can't read go straight to scrape.do.
 - **Security Advisor (19 Nov 2026):**
   - `rls_auto_enable()` (Supabase's own function that turns RLS on for new tables) was callable by anyone. Migration `20261124000000_lock_rls_auto_enable.sql` removes that (applied live 19 Nov 2026).
   - The 18 "signed-in users can run a SECURITY DEFINER function" warnings are intended: these are the app's own actions (claim, join, create Circle…). Each one checks who is asking, and the database tests cover them.
@@ -434,14 +434,20 @@ Scope
   - Fixed: a page that couldn't load had no way back short of reloading; every list now has "Try again".
   - Fixed: with no connection, pages sat on "Loading…" for about 18 seconds (the Supabase client retried 3 times on top of the app's own retry); now the message shows in about a second.
   - Checked and fine: empty list, Circles and Received pages; form error messages; busy states on slow saves.
-- **Manual test script (the owner, about 20 minutes, two accounts on two phones):** sign up, start and join a Circle, add wishes by link and by hand, upload a photo, claim, buy, the gift hand-off, Received, a couple Circle, Help and bug report.
+- **Manual test script (moved to the final pre-launch check in Phase 5; the owner, about 20 minutes, two accounts on two phones):** sign up, start and join a Circle, add wishes by link and by hand, upload a photo, claim, buy, the gift hand-off, Received, a couple Circle, Help and bug report.
 - **Light load check (optional):** about 20 simulated users for a couple of minutes against a test copy (a second free Supabase project), never the live database. The full stress test stays in Phase 7.5.
 - Then: fix what turns up and open sign-up for the people invited (email confirmation is already back on).
 
-Done when: all automated checks pass, the manual script runs clean on two phones, and nothing in the robustness pass is left open. Then the private beta (5–10 couples and friend groups).
+Done when: all automated checks pass, nothing in the robustness pass or the security pass is left open, and Google sign-in works on a phone. Then the private beta (5–10 couples and friend groups). The two-phone test runs before the public launch instead.
 
 ### Phase 4.6 — First-run onboarding (added 19 Nov 2026; about 2–3 days, before the private beta)
-**Status (19 Nov 2026): built, not yet live.** Intro cards at `/intro` (the front door: every signed-out visit starts there; linked from Help), an invite screen on `/join/<code>` that names the inviter from the link (`?from=Maya`, display only), Welcome in three numbered steps (name and currency → Circle → first wish), one-time hints on Circle lists, six-box invite code entry, and an invite link that types its code into the boxes before the Circle opens. Checked locally at phone and desktop sizes, with the keyboard and in calm mode.
+**Status (19 Nov 2026): live.** Intro cards at `/intro` (the front door: every signed-out visit starts there; linked from Help), an invite screen on `/join/<code>` that names the inviter from the link (`?from=Maya`, display only), Welcome in three numbered steps (name and currency → Circle → first wish), one-time hints on Circle lists, six-box invite code entry, and an invite link that types its code into the boxes before the Circle opens. Checked locally at phone and desktop sizes, with the keyboard and in calm mode.
+
+**Added after the first build (19–19 Nov 2026, live):**
+- **Circles tab opens your Circle (phones):** the bottom bar's Circles tab opens the Circle shown in the top-right switcher: the one you picked or opened last, else your couple Circle, else your first. In only one Circle, it opens straight away. The page with all your Circles stays one tap away ("Start or join a Circle" in the switcher). The desktop side menu already lists every Circle, so it's unchanged.
+- **A fourth intro card**, "Your Circle, one tap away": a small phone where Family is picked at the top and the Circles tab opens Family's wishes.
+- **What's new, once:** people who signed up before this see only that card, once per device, on a phone, if they're in a Circle. "Got it" fades it out and the real Circles tab pulses once. New people never see it (the intro already showed it). Pattern for later features: one card, once, then out of the way.
+- **Loading screens:** the gift hops over a small shadow, centred, with the label below; full screen for "Signing you in" and app start, smaller inside pages. It fades in after 0.2 s, so quick loads don't flash. In calm mode the gift stays still.
 
 **Goal:** a new person understands GiftHub in under 30 seconds and has a Circle and a first wish within 2 minutes, without help. Today the first run is only "name and currency, then start a Circle", and nothing explains the secret claims, which is the whole point.
 
@@ -478,7 +484,9 @@ Deliverables: installable PWA with offline mode, share target, bookmarklet, iOS 
 
 Done when: on Android, sharing from Chrome or the Amazon app adds an item without opening GiftHub fully; on iOS, the Shortcut does the same; Lighthouse scores ≥90 for performance and accessibility.
 
-Then Phase 5.5 (Free and Pro plans), then the public launch.
+Then Phase 5.5 (Free and Pro plans), then the final pre-launch check, then the public launch.
+
+**Final pre-launch check (decided 19 Nov 2026):** on the finished app, run everything again in one go: all automated tests, the robustness pass (screen sizes, slow and dropped connections, double taps, long names), the security pass (Security Advisor, headers, packages, leaked keys), and the two-phone test from Phase 4.5 (the owner, two accounts on two phones, about 20 minutes, now also covering install, the Share menu, push notifications and the plans). The launch waits until it runs clean.
 
 ---
 

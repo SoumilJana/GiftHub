@@ -54,7 +54,8 @@ How to build, launch and run GiftHub for **$0, permanently**: what's included, w
 | CI + scheduled jobs | GitHub Actions | 2,000 min/month private repo — **unlimited if public** |
 | Web hosting | Cloudflare Workers static assets | Free, unlimited static asset requests; Workers Builds minutes are capped on the free plan |
 | Push | Web Push | No cost |
-| Email | Resend Free | **100/day**, 3,000/month |
+| Email (sign-up, sign-in links, password reset) | Gmail SMTP with an app password | about **500/day** (Gmail's sending limit) |
+| Email (bug reports) | Resend Free | **100/day**, 3,000/month |
 | Errors | Sentry Developer | ~5k errors/month |
 | Analytics | PostHog Cloud | ~1M events/month |
 
