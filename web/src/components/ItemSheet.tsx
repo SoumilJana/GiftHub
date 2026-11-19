@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { isTaggedAmazon, storeLink } from '../lib/affiliate'
 import { useUserId } from '../lib/auth'
 import { currencyForNewItem, currencyOptions } from '../lib/currency'
 import { friendlyError } from '../lib/errors'
@@ -547,13 +548,16 @@ export function ViewItemSheet({ item, ownerName, onClose }: { item: Item; ownerN
           {item.notes && <p className="mt-2 rounded-panel bg-blush px-4 py-3 text-small whitespace-pre-line">{item.notes}</p>}
           {item.url && (
             <a
-              href={item.url}
+              href={storeLink(item.url)}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 inline-flex h-10 items-center self-start rounded-full bg-plum px-[18px] font-semibold text-white hover:bg-plum-hover"
             >
               Open in store
             </a>
+          )}
+          {isTaggedAmazon(item.url) && (
+            <p className="text-small text-plum-soft">GiftHub may earn a small commission on Amazon purchases, at no extra cost to you.</p>
           )}
         </div>
       </div>

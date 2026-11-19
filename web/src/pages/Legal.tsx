@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { InfoFrame, Mail, OPERATOR, type InfoSection } from '../components/InfoFrame'
 
 /** Bump when the text of a page changes in substance. */
-const UPDATED = '17 November 2026'
+const UPDATED = '19 November 2026'
 
 const privacySections: InfoSection[] = [
   {
@@ -96,6 +96,10 @@ const privacySections: InfoSection[] = [
             <strong>Resend:</strong> delivers bug reports to us by email.
           </li>
         </ul>
+        <p>
+          <strong>Amazon links:</strong> when you open a wish on amazon.in or amazon.com, the link carries GiftHub’s Amazon Associates tag, so
+          Amazon knows the visit came from GiftHub. Amazon tells us only which products were bought and the commission earned, never who bought them.
+        </p>
         <p>
           <strong>Store images:</strong> product pictures load directly from the store’s own website, so that store can see your IP address when your
           browser fetches the picture, as it would if you visited the store.
@@ -232,7 +236,7 @@ const termsSections: InfoSection[] = [
       <ul>
         <li>GiftHub is free. To stay free it has limits, such as 150 active wishes per person, 10 Circles per person and 20 members per Circle.</li>
         <li>We may change features or limits, and will tell you in the app first when a change affects you.</li>
-        <li>GiftHub may later earn a commission when someone buys through a store link. If that starts, we will say so clearly next to those links.</li>
+        <li>GiftHub earns a small commission when someone buys through an Amazon link in the app, at no extra cost to them. We say so next to those links.</li>
       </ul>
     ),
   },
@@ -240,10 +244,16 @@ const termsSections: InfoSection[] = [
     id: 'stores',
     title: 'Stores and prices',
     body: (
-      <p>
-        GiftHub doesn’t sell anything. Prices, pictures and availability come from you or from stores, and can be wrong or out of date. Anything you buy
-        is between you and the store.
-      </p>
+      <>
+        <p>
+          GiftHub doesn’t sell anything. Prices, pictures and availability come from you or from stores, and can be wrong or out of date. Anything you
+          buy is between you and the store.
+        </p>
+        <p>
+          As an Amazon Associate, GiftHub earns from qualifying purchases. When you open a wish on amazon.in or amazon.com, GiftHub adds its own
+          Associates tag to the link. You pay the same price, and the wish you saved is not changed.
+        </p>
+      </>
     ),
   },
   {

@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { storeLink } from '../lib/affiliate'
 import type { Claim } from '../lib/claims'
 import { useHeartPop, useListMotion } from '../lib/motion'
 import type { ViewMode } from '../lib/view'
@@ -134,7 +135,7 @@ function Title({ item, className = '' }: { item: Item; className?: string }) {
   return (
     <h3 className={`leading-tight font-semibold ${className}`}>
       {item.url ? (
-        <a href={item.url} target="_blank" rel="noopener noreferrer" className="hover:underline hover:decoration-[1.5px] hover:underline-offset-3">
+        <a href={storeLink(item.url)} target="_blank" rel="noopener noreferrer" className="hover:underline hover:decoration-[1.5px] hover:underline-offset-3">
           {text}
           <span className="sr-only"> (opens the store)</span>
         </a>
