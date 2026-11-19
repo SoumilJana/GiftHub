@@ -41,7 +41,7 @@ describe('applyFilter', () => {
 describe('helpers', () => {
   it('lists used occasions in standard order', () => expect(usedOccasions([b, a])).toEqual(['birthday', 'holiday']))
   it('maps priority to hearts', () => expect([10, 9, 8, 6, 5, 1].map(heartCount)).toEqual([3, 3, 2, 2, 1, 1]))
-  it('formats the date stamp', () => expect(dateStamp('2026-11-07T12:00:00')).toBe('’26 11 07'))
+  it('formats the date stamp', () => expect(dateStamp('2026-11-07T12:00:00')).toBe('07·11·26'))
   it('normalizes pasted links', () => {
     expect(normalizeUrl('amazon.in/dp/B0F8')).toBe('https://amazon.in/dp/B0F8')
     expect(normalizeUrl(' https://Example.com/x ')).toBe('https://example.com/x')

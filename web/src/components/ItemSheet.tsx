@@ -100,6 +100,7 @@ export function EditItemSheet({
   const [circleIds, setCircleIds] = useState<string[]>(item?.circle_ids ?? circles.map((c) => c.id))
   const [openedAt] = useState(() => new Date().toISOString())
   const [uploading, setUploading] = useState(false)
+  const [imageLinkOpen, setImageLinkOpen] = useState(false)
   const [uploaded, setUploaded] = useState<string[]>([])
   const [errors, setErrors] = useState<{ title?: string; url?: string; price?: string; image?: string; form?: string }>({})
   const [reading, setReading] = useState<{ state: 'idle' | 'reading' | 'done' | 'failed'; store?: string | null; reason?: string }>({ state: 'idle' })
@@ -251,6 +252,9 @@ export function EditItemSheet({
     circle_ids: [],
   }
 
+  // The image-link field stays folded away unless it's in use.
+  const showImageLink = imageLinkOpen || !!errors.image
+
   return (
     <Sheet title={item ? 'Edit wish' : 'Add a wish'} onClose={close}>
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
@@ -310,7 +314,7 @@ export function EditItemSheet({
         />
 
         <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-3">
-          <TextField label="Price" inputMode="decimal" placeholder="Optional" value={price} error={errors.price} onChange={(e) => {
+          <TextField label="Price" inputMode="decimal" placeholder={reading.state === 'reading' ? 'Reading…' : 'Optional'} value={price} error={errors.price} onChange={(e) => {
               edited.current.price = true
               setPrice(e.target.value)
             }}
@@ -323,6 +327,54 @@ export function EditItemSheet({
             ))}
           </SelectField>
         </div>
+
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1.5 px-1 text-small font-semibold">Photo</legend>
+          <div className="flex items-start gap-3">
+            <div className="w-20 shrink-0">
+              <Photo item={preview} size="sheet" />
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
+              <input ref={fileInput} type="file" accept="image/*" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => pickPhoto(e.target.files?.[0])} />
+              <Button variant="ghost" busy={uploading} onClick={() => fileInput.current?.click()}>
+                {uploading ? 'Uploading' : 'Upload a photo'}
+              </Button>
+              {imageUrl && (
+                <Button
+                  variant="text"
+                  onClick={() => {
+                    edited.current.image = true
+                    setImageUrl('')
+                  }}
+                >
+                  Remove photo
+                </Button>
+              )}
+            </div>
+          </div>
+          {showImageLink ? (
+            <TextField
+              label="Image link"
+              autoFocus={imageLinkOpen}
+              type="url"
+              inputMode="url"
+              placeholder="https://"
+              value={isUploadedPhoto(imageUrl) ? '' : imageUrl}
+              error={errors.image}
+              hint={isUploadedPhoto(imageUrl) ? 'Using your uploaded photo.' : 'In the store, long-press the photo (or right-click it) and copy the image address.'}
+              onChange={(e) => {
+                edited.current.image = true
+                setImageUrl(e.target.value)
+              }}
+            />
+          ) : (
+            <div className="px-1">
+              <Button variant="text" onClick={() => setImageLinkOpen(true)}>
+                Use an image link instead
+              </Button>
+            </div>
+          )}
+        </fieldset>
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="priority" className="flex items-center justify-between gap-3 px-1 text-small font-semibold">
@@ -355,45 +407,6 @@ export function EditItemSheet({
           </div>
         </fieldset>
 
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1.5 px-1 text-small font-semibold">Photo</legend>
-          <div className="flex items-start gap-3">
-            <div className="w-20 shrink-0">
-              <Photo item={preview} size="sheet" />
-            </div>
-            <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
-              <input ref={fileInput} type="file" accept="image/*" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => pickPhoto(e.target.files?.[0])} />
-              <Button variant="ghost" busy={uploading} onClick={() => fileInput.current?.click()}>
-                {uploading ? 'Uploading' : 'Upload a photo'}
-              </Button>
-              {imageUrl && (
-                <Button
-                  variant="text"
-                  onClick={() => {
-                    edited.current.image = true
-                    setImageUrl('')
-                  }}
-                >
-                  Remove photo
-                </Button>
-              )}
-            </div>
-          </div>
-          <TextField
-            label="Or paste an image link"
-            type="url"
-            inputMode="url"
-            placeholder="https://"
-            value={isUploadedPhoto(imageUrl) ? '' : imageUrl}
-            error={errors.image}
-            hint={isUploadedPhoto(imageUrl) ? 'Using your uploaded photo.' : 'Right-click the product photo in the store and copy its image address.'}
-            onChange={(e) => {
-              edited.current.image = true
-              setImageUrl(e.target.value)
-            }}
-          />
-        </fieldset>
-
         <fieldset className="flex flex-col gap-1.5">
           <legend className="mb-1.5 px-1 text-small font-semibold">Who can see it</legend>
           {circles.length ? (
@@ -418,7 +431,8 @@ export function EditItemSheet({
 
         {errors.form && <Notice tone="alert">{errors.form}</Notice>}
 
-        <div className="flex flex-wrap items-center gap-3 pt-1">
+        {/* Stays in reach at the bottom of the sheet while the form scrolls. */}
+        <div className="sticky bottom-[calc(-20px-env(safe-area-inset-bottom))] z-[2] -mx-4 flex flex-wrap items-center gap-3 border-t border-blush bg-print px-4 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pt-1 sm:pb-0">
           <Button type="submit" busy={save.isPending} disabled={uploading}>
             {item ? 'Save' : 'Add to my list'}
           </Button>

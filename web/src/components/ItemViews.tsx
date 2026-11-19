@@ -99,7 +99,7 @@ export function Photo({ item, size = 'frame', claim }: { item: Item; size?: 'fra
       )}
       {size === 'frame' && (
         <span
-          className="absolute right-1.5 bottom-1.5 z-[1] rounded-photo bg-white/88 px-[5px] text-small font-extrabold tracking-[0.02em] text-stamp tabular-nums"
+          className="date-imprint absolute right-2 bottom-1.5 z-[1] text-small font-semibold tracking-[0.08em] text-stamp tabular-nums"
           aria-label={`Added ${new Date(item.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}`}
         >
           {dateStamp(item.created_at)}

@@ -114,7 +114,7 @@ components:
 
 **Creative North Star: "Photo Booth Strip"**
 
-Every wish is a frame in your partner's photo-booth strip. The app sits on a booth-curtain blush ground; each product is a glossy white print with a thick caption edge and a small orange date stamp in the photo's corner, the way a booth prints the day you visited. When a giver claims something, the booth flashes once and a tomato ribbon wraps the photo. That flash-and-wrap is the one big moment. Everything else moves like paper in a booth: sheets rise, prints slide out, and a few small gift moments (see Motion) stay short and run once.
+Every wish is a frame in your partner's photo-booth strip. The app sits on a booth-curtain blush ground; each product is a glossy white print with a thick caption edge and a small orange date imprint in the photo's corner, the way a film camera burns the day into the picture. When a giver claims something, the booth flashes once and a tomato ribbon wraps the photo. That flash-and-wrap is the one big moment. Everything else moves like paper in a booth: sheets rise, prints slide out, and a few small gift moments (see Motion) stay short and run once.
 
 The look is cute and fun, but kept clean and grown-up for couples: one decoration per frame at most, three type sizes with rank carried by weight, every product at one frame ratio on one white ground, and plain, calm copy (PRODUCT.md voice). Controls are familiar web controls: pills, tabs, a select, a toggle.
 
@@ -141,7 +141,7 @@ A committed blush shell with white prints, plum ink and three small, single-job 
 - **Sky Wash** (sky-wash) with **Sky Ink** (sky-ink): the Sale badge, "On sale" text and privacy notes ("You won't see who is buying what").
 
 ### Tertiary
-- **Date Stamp Orange** (stamp): the date-added stamp in each photo's corner, on a translucent white chip so it stays legible over any tint or ribbon.
+- **Date Stamp Orange** (stamp): the date-added imprint in each photo's corner: bare orange digits, day first and dotted ("19·11·26"), semibold with wide tracking, no chip. A faint white-and-orange glow keeps them legible over any tint, photo or ribbon.
 
 ### Neutral
 - **Blush** (blush): the app background (booth curtain). **Blush Deep** (blush-deep): hover on unselected member tabs.
@@ -195,7 +195,7 @@ Nearly flat. Depth comes from white prints on the blush ground. A print frame ha
 
 - **Photo paper:** prints have 6px corners, and photos inside them 3px.
 - **Containers:** panels such as the List view and notes use 14px; the rail and bottom nav use 22px.
-- **Controls:** every small control is a full pill. That includes buttons, inputs, tabs, chips, the sort select, segmented controls, badges, toasts, the Circle picker and the date stamp chip (3px).
+- **Controls:** every small control is a full pill. That includes buttons, inputs, tabs, chips, the sort select, segmented controls, badges, toasts and the Circle picker.
 - **Icons:** priority hearts and the bow are filled SVG shapes. Product placeholders are 2.6px line drawings.
 
 ## Components
@@ -213,7 +213,7 @@ Nearly flat. Depth comes from white prints on the blush ground. A print frame ha
 
 ### Print frame (signature)
 - **Frame:** a white print with 8px padding on the top and sides and none at the bottom, plus a square photo.
-- **Photo:** the product image on its pale tint, an optional Sale badge in the top-left, and the date stamp ("’26 11 13") bottom-right on a translucent white chip.
+- **Photo:** the product image on its pale tint, an optional Sale badge in the top-left, and the date imprint ("13·11·26") bottom-right, straight on the photo like a film camera's.
 - **Caption:** store, title, price with three hearts (3 = Must have, 2 = Would love, 1 = Nice to have; the band name is the accessible label), occasion, then the fixed claim slot.
 
 ### The ribbon claim (signature motion)
@@ -235,7 +235,8 @@ Nearly flat. Depth comes from white prints on the blush ground. A print frame ha
 
 ### Inputs
 - **Paste-a-link:** a white 46px pill with an inset edge, hint text in the placeholder colour and a plum Add button.
-- **Link reading (add form):** no spinner or card. The Link field's hint line carries the state in plain words: "Getting details from flipkart.com. You can save now." on a new wish ("Reading the page on flipkart.com…" when updating one), then "Filled in from flipkart.com. Check it looks right.", or, when a store refuses, "ajio.com doesn't let us read its pages yet. Fill in the rest yourself." (Honest about limits, never an error colour.) While reading, an empty Name field shows "Reading the page…" as its placeholder. Fields the person typed in are never overwritten. Saved before the read finished: the wish fills in afterwards with one toast, "Details added from flipkart.com."
+- **Link reading (add form):** no spinner or card. The Link field's hint line carries the state in plain words: "Getting details from flipkart.com. You can save now." on a new wish ("Reading the page on flipkart.com…" when updating one), then "Filled in from flipkart.com. Check it looks right.", or, when a store refuses, "ajio.com doesn't let us read its pages yet. Fill in the rest yourself." (Honest about limits, never an error colour.) While reading, an empty Name field shows "Reading the page…" as its placeholder. Fields the person typed in are never overwritten. Saved before the read finished: the wish fills in afterwards with one toast, "Details added from flipkart.com." The empty Price field shows "Reading…" meanwhile.
+- **Add form order:** Link, Name, Price and Currency, then Photo (so a photo filled from the link is seen at once), then priority, Occasions, Who can see it, Notes. The image-link field stays folded behind "Use an image link instead" unless it's in use. On phones, "Add to my list" and Cancel stay pinned at the bottom of the sheet on the print colour, above a blush hairline; on wider screens they sit at the end of the form.
 - **Errors:** shown as a plain-language toast that says what to do next.
 
 ### Navigation

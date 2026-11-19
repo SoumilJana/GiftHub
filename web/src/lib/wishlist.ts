@@ -85,7 +85,7 @@ export function heartCount(priority: number): 1 | 2 | 3 {
 export function dateStamp(iso: string): string {
   const d = new Date(iso)
   const p = (n: number) => String(n).padStart(2, '0')
-  return `’${p(d.getFullYear() % 100)} ${p(d.getMonth() + 1)} ${p(d.getDate())}`
+  return `${p(d.getDate())}·${p(d.getMonth() + 1)}·${p(d.getFullYear() % 100)}`
 }
 
 const TINTS = ['#E8EEFF', '#FFF0E6', '#E6F5EC', '#FFF6DD', '#F1EAFF', '#FFEAF0', '#E3F4FF']
