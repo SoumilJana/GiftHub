@@ -9,6 +9,10 @@ jobs:
   web:
     name: Web app
     runs-on: ubuntu-latest
+    # Placeholder values: the tests and the build import the Supabase client, which needs both set.
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci
     defaults:
       run:
         working-directory: web
@@ -24,9 +28,6 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
-        env:
-          VITE_SUPABASE_URL: https://example.supabase.co
-          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci
 
   database:
     name: Database privacy rules

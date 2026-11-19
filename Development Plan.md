@@ -192,7 +192,7 @@ Done when: a bought gift with a past give date prompts the giver; their Yes prom
 
 ---
 
-### Phase 3.6 — Couple and Group Circles (built 18 Nov 2026; migration not yet applied live)
+### Phase 3.6 — Couple and Group Circles (built and live 18 Nov 2026)
 **Goal:** a Circle for two feels like a shared space for a couple; a group Circle stays a coordination tool. Same privacy rules for both.
 
 Today there is no difference: every Circle is a group of up to 20, and a "couple" is just a Circle with two members.
@@ -287,7 +287,7 @@ Scope
   4. Return title, image, price, currency, domain and a confidence score.
 - Adapters for the top retailers in your target region.
 - Fallback: low confidence or blocked → row in `parse_jobs`; a scheduled GitHub Actions job runs Playwright on the queue and fills the item in later.
-- No paid scraping service. Sites that still block requests use the manual form; Amazon's official Creators API can be added for free once the Associates account qualifies (Phase 7).
+- No paid scraping service; free tiers of scraping services are allowed (decided 18 Nov 2026). Sites that still block requests use the manual form; Amazon's official Creators API can be added for free once the Associates account qualifies (Phase 7).
 - Last resort: pre-filled manual form ("We couldn't read this page — fill in the gaps").
 - Abuse protection: per-user rate limit, block private IP ranges (SSRF), response-size cap.
 
@@ -305,9 +305,35 @@ Done when: ≥80% of a 100-URL test set from target retailers parses title + ima
 | Myntra | all three | JSON-LD `Product` + Open Graph |
 | Amazon.in | all three | No JSON-LD or Open Graph. Needs an adapter: `#productTitle`, `.a-price-whole`, `#landingImage` / `data-old-hires` |
 
-Not yet known: whether stores (Amazon especially) block requests from Cloudflare's or Supabase's data centres.
+Tested on 18 Nov 2026: see the blocking test results below.
 
 **First step: blocking test.** Deploy a throwaway parser to both a Cloudflare Worker and a Supabase Edge Function. Run about 20 links (Amazon.in, Flipkart, Myntra, Nykaa, Ajio, Meesho, Croma, Tata CLiQ, Etsy, a Shopify shop) through each. Build on whichever is blocked less, then delete both.
+
+**Blocking test results (18 Nov 2026).** Plain `fetch` with a desktop Chrome user agent, 18 product pages plus 4 home pages, one run each. Both test deployments were deleted afterwards.
+
+| Store | Cloudflare Worker | Supabase Edge Function | Home connection |
+|---|---|---|---|
+| Amazon.in (4) | ✅ name, image, price (Amazon adapter) | ✅ same | ❌ captcha (after a few search-page requests) |
+| Flipkart (2) | ✅ JSON-LD | ❌ 429 | ✅ |
+| boAt, a Shopify shop (2) | ✅ JSON-LD | ✅ | ✅ |
+| Decathlon (2) | ✅ JSON-LD | ✅ | ✅ |
+| FirstCry (1) | ❌ 403 | ⚠️ name and image only (Open Graph) | ⚠️ same |
+| Croma (home page) | ❌ 403 | ✅ page loads | ✅ |
+| Tata CLiQ (home page) | ✅ loads, but the app is client-rendered: no product data in the HTML | same | same |
+| Myntra (2) | ❌ 520 | ❌ "Site Maintenance" page | ✅ |
+| Nykaa (2) | ❌ 403 | ❌ 403 | ✅ |
+| Ajio (2), Meesho, Etsy | ❌ 403 | ❌ 403 | ❌ 403 |
+
+Fully parsed product pages: Worker 10 of 18, Edge Function 8 of 18 (+1 partial). Amazon worked from both data centres, against expectations.
+
+**Decision:** build `parse-url` on the **Cloudflare Worker** (more stores, same host as the site). When the Worker is blocked (403/429/520 or a block page), retry once from a small Supabase Edge Function, which covers FirstCry and Croma. Still blocked → the fallbacks below. Myntra, Nykaa, Ajio, Meesho and Etsy need a browser or a scraping service. Tata CLiQ needs its product API or a browser.
+
+**Fallback test (19 Nov 2026)** on the blocked stores, test Worker deleted afterwards:
+- **Cloudflare Browser Run:** ❌ ruled out. Nykaa, Ajio, FirstCry, Meesho and Croma returned 403, Etsy a captcha, and Myntra timed out; Tata CLiQ loaded with a captcha and no price. The free plan also refuses more than a few browser starts a minute (429).
+- **ScrapingAnt free plan:** ❌ ruled out. It refuses Myntra, Nykaa, Ajio, Meesho and Croma by name ("This domain is not allowed for Free subscription plan"). FirstCry loaded with name and image, as from Supabase; Tata CLiQ was detected.
+- **Still untested:** ScraperAPI's free 1,000 credits a month, GitHub Actions + Playwright, and reading the page from the user's own phone (share text in Phase 5, CapacitorHttp in Phase 8).
+
+**For these stores, plan on the pre-filled manual form for now:** the app still keeps the link and fills in whatever the URL itself gives (store name, and often the product name from the URL slug, as on Myntra, Nykaa and Ajio).
 
 **Parser code: our own, open-source rules as reference.** JSON-LD `Product` → Open Graph (`og:*`, `product:price:*`) → meta and Twitter tags → per-store adapters → heuristics.
 - [metascraper](https://npmjs.com/package/metascraper) and `metascraper-amazon` (MIT, microlink): good rule sets for title and image; no evidence they extract price.
@@ -320,7 +346,7 @@ Not yet known: whether stores (Amazon especially) block requests from Cloudflare
 **Fallbacks when a store blocks the parser, in order:**
 1. **Cloudflare Browser Run** (formerly Browser Rendering): free plan has 10 browser-minutes a day and 3 concurrent browsers ([limits](https://developers.cloudflare.com/browser-rendering/limits/)). That is roughly 100–200 blocked links a day.
 2. **GitHub Actions + Playwright** on `parse_jobs`: slow (fills the item minutes later) but free.
-3. **Optional, needs a decision** (free tiers of paid services, which bends the "no scraping service" rule above): [ScrapingAnt](https://scrapingant.com/web-scraping-api), 10k credits a month with no card (browser rendering costs more credits per page); [ScraperAPI](https://docs.scraperapi.com/resources/faq/plans-and-billing), 1k credits a month.
+3. **Free tiers of scraping services** (allowed: the user confirmed on 18 Nov 2026 that free tiers count as $0): [ScrapingAnt](https://scrapingant.com/web-scraping-api), 10k credits a month with no card (browser rendering costs more credits per page); [ScraperAPI](https://docs.scraperapi.com/resources/faq/plans-and-billing), 1k credits a month.
 4. **Name and image only:** [Microlink](https://microlink.io/meta), 25 requests a day free. [LinkPreview.net](https://www.linkpreview.net), 60 an hour, but personal use only.
 5. The manual form, pre-filled with whatever was found.
 
