@@ -401,6 +401,11 @@ Fully parsed product pages: Worker 10 of 18, Edge Function 8 of 18 (+1 partial).
 
 Scope
 - **Automated edge-case tests (database checks, run on every push):** two claims on the same wish at the same moment (only one wins); a member removed in the middle of a claim; a Circle deleted while a hand-off is pending; leaving a couple Circle; wishes with no price, a huge price, a very long or emoji name; expired and reused invite codes.
+  - ✅ **Done 19 Nov 2026** (`supabase/rls-tests/edge.test.mjs`, 41 checks, runs with `npm test`). Found and fixed in migration `20261123000000_edge_fixes.sql`:
+    - A reservation stayed when the owner stopped sharing the wish, or when the giver left or was removed. The wish was stuck as "claimed" for everyone else. Now the reservation is dropped once the giver can't see the wish; a gift already bought stays claimed.
+    - A price too big to store, or a made-up currency, gave a raw database error. Now: "That price is too high." / "Pick a currency code like INR or USD."
+    - A photo address wasn't checked at all. Now it must be a web address.
+    - Not yet applied to the live database.
 - **App robustness pass:** every screen empty and with a lot of data; slow and dropped connections; double taps on every button; error messages on every form; long names everywhere; phone, tablet and desktop sizes.
 - **Manual test script (the owner, about 20 minutes, two accounts on two phones):** sign up, start and join a Circle, add wishes by link and by hand, upload a photo, claim, buy, the gift hand-off, Received, a couple Circle, Help and bug report.
 - **Light load check (optional):** about 20 simulated users for a couple of minutes against a test copy (a second free Supabase project), never the live database. The full stress test stays in Phase 7.5.
