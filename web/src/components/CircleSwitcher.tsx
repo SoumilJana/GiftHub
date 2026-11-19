@@ -1,19 +1,10 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useUserId } from '../lib/auth'
+import { currentCircle, readLastCircle, rememberCircle } from '../lib/circleTab'
 import { circleTitle, useMyCircles, type MyCircle } from '../lib/queries'
 import { Sheet } from './ItemSheet'
 import { Avatar } from './ui'
-
-const LAST_KEY = 'gifthub.lastCircle'
-
-function readLast() {
-  try {
-    return localStorage.getItem(LAST_KEY)
-  } catch {
-    return null
-  }
-}
 
 /** First names: "Maya", "Maya and Sam", "Maya, Sam and 3 others". */
 function withNames(names: string[]) {
@@ -52,12 +43,7 @@ export function CircleSwitcher() {
   const here = /^\/circles\/([^/]+)/.exec(path)?.[1]
 
   useEffect(() => {
-    if (!here) return
-    try {
-      localStorage.setItem(LAST_KEY, here)
-    } catch {
-      /* private mode: not remembered */
-    }
+    if (here) rememberCircle(here)
   }, [here])
 
   const list = circles.data ?? []
@@ -70,8 +56,7 @@ export function CircleSwitcher() {
     )
   }
 
-  const last = here ?? readLast()
-  const current = list.find((c) => c.id === last) ?? list.find((c) => c.kind === 'couple') ?? list[0]
+  const current = currentCircle(list, here ?? readLastCircle())!
   const title = circleTitle(current, current.members, uid)
 
   return (

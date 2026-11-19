@@ -55,7 +55,7 @@ export function SignInPage() {
     leaveSignIn(target)
     return (
       <>
-        <Spinner label="Signing you in" />
+        <Spinner full label="Signing you in" />
         {pending ? <Redirect to="/join/$code" params={{ code: pending }} /> : <Redirect href={next} />}
       </>
     )

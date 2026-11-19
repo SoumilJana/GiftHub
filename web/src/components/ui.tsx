@@ -1,4 +1,5 @@
 import { friendlyError } from '../lib/errors'
+import { GiftMark } from './GiftMark'
 import { useId, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 
 type Variant = 'primary' | 'ghost' | 'text' | 'danger'
@@ -199,11 +200,18 @@ export function Avatar({ name, size = 36 }: { name: string; size?: number }) {
   )
 }
 
-export function Spinner({ label = 'Loading' }: { label?: string }) {
+/** Loading: the gift hops while we wait. `full` fills the screen (sign-in, app start). Fades in after a beat, so quick loads never flash. */
+export function Spinner({ label = 'Loading', full = false }: { label?: string; full?: boolean }) {
   return (
-    <p role="status" className="py-12 text-plum-soft">
-      {label}…
-    </p>
+    <div role="status" className={`loader flex flex-col items-center justify-center text-plum-soft ${full ? 'min-h-dvh gap-5 px-4 pb-[10vh]' : 'gap-4 py-16'}`}>
+      <span className="flex flex-col items-center" aria-hidden="true">
+        <span className="loader-hop">
+          <GiftMark size={full ? 56 : 36} />
+        </span>
+        <span className={`loader-shadow mt-1.5 block h-1.5 rounded-full bg-plum/15 ${full ? 'w-11' : 'w-7'}`} />
+      </span>
+      <span className="loader-label font-semibold">{label}…</span>
+    </div>
   )
 }
 

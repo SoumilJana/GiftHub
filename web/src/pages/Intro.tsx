@@ -2,10 +2,11 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { GiftMark } from '../components/GiftMark'
 import { Hearts, Photo } from '../components/ItemViews'
+import { CirclesIcon, ListIcon, ReceivedIcon } from '../components/NavIcons'
 import { Avatar, Button } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import type { Claim } from '../lib/claims'
-import { markIntroSeen } from '../lib/intro'
+import { CIRCLE_TAB, markIntroSeen } from '../lib/intro'
 import { isCalm } from '../lib/motion'
 import type { Item } from '../lib/wishlist'
 
@@ -27,16 +28,23 @@ const sample = (n: number, title: string, priority: number): Item => ({
   circle_ids: [],
 })
 
-const cards: { title: string; body: string }[] = [
+const cards: { stage: 'save' | 'share' | 'tab' | 'surprise'; title: string; body: string }[] = [
   {
+    stage: 'save',
     title: 'Save wishes from any store',
     body: 'Paste a link from any shop and GiftHub fills in the photo, name and price. Mark how much you want each one.',
   },
   {
+    stage: 'share',
     title: 'Share with your Circle',
     body: 'Start a private Circle with your partner, or with friends and family. You see each other’s lists, and you choose which wishes each Circle sees.',
   },
   {
+    stage: 'tab',
+    ...CIRCLE_TAB,
+  },
+  {
+    stage: 'surprise',
     title: 'Gifts stay a surprise',
     body: 'When someone reserves or buys from your list, nothing changes on your screen. You find out who gave what when you mark it received.',
   },
@@ -123,7 +131,7 @@ export function IntroPage() {
             className="intro-slide flex w-full shrink-0 snap-center snap-always flex-col justify-center px-4"
           >
             <div className="grid h-[300px] place-items-center" aria-hidden="true">
-              {i === 0 ? <SaveStage /> : i === 1 ? <ShareStage /> : <SurpriseStage on={active === i} />}
+              {c.stage === 'save' ? <SaveStage /> : c.stage === 'share' ? <ShareStage /> : c.stage === 'tab' ? <CircleTabStage on={active === i} /> : <SurpriseStage on={active === i} />}
             </div>
             <h1 className="mt-6 text-display leading-none font-extrabold tracking-[-0.035em] text-balance">{c.title}</h1>
             <p className="mt-3 text-plum-soft">{c.body}</p>
@@ -277,6 +285,95 @@ function SurpriseStage({ on }: { on: boolean }) {
         </Print>
         <figcaption className="text-small text-plum-soft">What you see</figcaption>
       </figure>
+    </div>
+  )
+}
+
+/**
+ * The Circles tab card: a small phone. Family is picked at the top right; a tap on the
+ * Circles tab opens Family's wishes straight away, with no list of Circles in between.
+ */
+export function CircleTabStage({ on }: { on: boolean }) {
+  // 0: on My list. 1: Family is picked at the top. 2: the tab is tapped. 3: Family is open.
+  const [beat, setBeat] = useState(0)
+  useEffect(() => {
+    if (!on) return
+    const ts = [500, 1300, 1550].map((ms, i) => setTimeout(() => setBeat(i + 1), ms))
+    return () => {
+      ts.forEach(clearTimeout)
+      setBeat(0)
+    }
+  }, [on])
+  const open = beat >= 3
+  const views = [
+    { key: 'mine', title: 'My list', items: [sample(8, 'Running shoes', 9), sample(9, 'Desk lamp', 4)], shown: !open },
+    { key: 'family', title: 'Family', items: [sample(6, 'Ceramic mug', 7), sample(7, 'Plant stand', 5)], shown: open },
+  ]
+  const tabs = [
+    { label: 'My list', icon: <ListIcon />, on: !open },
+    { label: 'Circles', icon: <CirclesIcon />, on: open },
+    { label: 'Received', icon: <ReceivedIcon />, on: false },
+  ]
+  return (
+    <div className="flex h-[292px] w-[224px] flex-col overflow-hidden rounded-[28px] bg-blush shadow-[inset_0_0_0_1.5px_var(--color-edge),0_2px_6px_rgba(59,29,63,.12)]">
+      <div className="flex items-center justify-between rounded-b-[16px] bg-print px-3 pt-3 pb-2.5">
+        <GiftMark size={20} />
+        <span
+          className={`flex h-7 items-center gap-1.5 rounded-full bg-print pr-2.5 pl-1 text-[11px] font-semibold transition-shadow duration-300 ${
+            beat >= 1 ? 'shadow-[inset_0_0_0_2px_var(--color-plum)]' : 'shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
+          }`}
+        >
+          <Avatar name="Maya" size={20} />
+          Family
+          <svg width="8" height="5" viewBox="0 0 10 6" className="text-plum-soft">
+            <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
+
+      <div className="relative flex-1">
+        {views.map((v) => (
+          <div
+            key={v.key}
+            className={`absolute inset-0 px-3 pt-3 transition-[opacity,transform] duration-300 ${v.shown ? 'opacity-100' : 'pointer-events-none opacity-0'} ${
+              v.key === 'family' && !v.shown ? 'tab-stage-rise' : ''
+            }`}
+          >
+            <span className="flex items-center gap-1.5 text-[15px] leading-none font-extrabold tracking-[-0.02em]">
+              {v.title}
+              {v.key === 'family' && (
+                <span className="flex -space-x-1.5">
+                  {['Maya', 'Sam'].map((n) => (
+                    <span key={n} className="flex rounded-full ring-2 ring-blush">
+                      <Avatar name={n} size={18} />
+                    </span>
+                  ))}
+                </span>
+              )}
+            </span>
+            <div className="mt-2.5 grid grid-cols-2 gap-2">
+              {v.items.map((it) => (
+                <div key={it.id} className="rounded-print bg-print p-1 pb-2 shadow-[0_1px_3px_rgba(59,29,63,.1)]">
+                  <Photo item={it} />
+                  <span className="mt-1.5 block truncate px-0.5 text-[10px] leading-tight font-semibold">{it.title}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex rounded-t-[16px] bg-print px-1 pt-1.5 pb-2">
+        {tabs.map((t) => (
+          <span key={t.label} className={`flex flex-1 flex-col items-center gap-0.5 text-[9px] font-semibold ${t.on ? 'text-plum' : 'text-plum-soft'}`}>
+            <span className={`relative grid h-6 w-11 place-items-center rounded-full transition-colors duration-300 [&_svg]:size-[17px] ${t.on ? 'bg-plum text-white' : ''}`}>
+              {t.icon}
+              {t.label === 'Circles' && beat >= 2 && <span className="tab-tap absolute inset-0 rounded-full" />}
+            </span>
+            {t.label}
+          </span>
+        ))}
+      </div>
     </div>
   )
 }

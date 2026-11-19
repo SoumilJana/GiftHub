@@ -96,6 +96,12 @@
     transition-property: background-color, color; transition-delay: 0s;
   }
   [data-motion-move] { transition-property: opacity, color, background-color !important; }
+  /* Circles tab card and nudge: no movement, the colour change still shows. */
+  .tab-stage-rise { transform: none; }
+  .tab-tap { animation: none; opacity: 0; }
+  .tab-nudge { animation: none; }
+  /* Loading: the gift sits still; only the label breathes. */
+  .loader-hop, .loader-shadow { animation: none; }
   /* Code boxes: characters fade in, no shake. */
   .code-pop { animation-name: fade-in; }
   .code-shake { animation: none; }
@@ -180,6 +186,23 @@
     transition: transform .7s calc(.2s + (var(--i) + 1) * 70ms) var(--ease-out);
   }
 
+  /* Circles tab card (pages/Intro.tsx CircleTabStage): a tap ring on the tab, then the Circle rises into view. */
+  .tab-stage-rise { transform: translateY(14px); }
+  .tab-tap { animation: tab-tap .55s var(--ease-out) forwards; background: var(--color-plum); }
+  @keyframes tab-tap { from { transform: scale(.6); opacity: .35; } to { transform: scale(1.7); opacity: 0; } }
+  /* The real Circles tab, once, after the what's-new card fades out. */
+  .tab-nudge { animation: tab-nudge 1.2s var(--ease-out); }
+  @keyframes tab-nudge {
+    0% { box-shadow: 0 0 0 0 rgb(59 29 63 / .35); transform: scale(1); }
+    25% { transform: scale(1.12); }
+    50% { transform: scale(1); }
+    100% { box-shadow: 0 0 0 12px rgb(59 29 63 / 0); }
+  }
+  /* What's new (components/WhatsNew.tsx): fades in, and out when dismissed. */
+  .whats-new { animation: fade-in var(--dur-slow) var(--ease-out); }
+  .whats-new[data-closing] { animation: fade-out var(--dur-slow) var(--ease-out) forwards; pointer-events: none; }
+  @keyframes fade-out { to { opacity: 0; } }
+
   /* Invite code boxes (components/CodeInput.tsx): each character pops in, the caret blinks,
      and a wrong code shakes the row once. */
   .code-pop { display: inline-block; animation: code-pop .22s var(--ease-out); }
@@ -188,6 +211,20 @@
   @keyframes code-caret { 50% { opacity: 0; } }
   .code-shake { animation: code-shake .32s cubic-bezier(.36, .07, .19, .97); }
   @keyframes code-shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+  /* Loading (components/ui.tsx Spinner): the gift hops and lands, its shadow shrinking as it rises. */
+  .loader { animation: fade-in .3s .2s both; }
+  .loader-hop { display: block; transform-origin: 50% 100%; animation: loader-hop 1.3s cubic-bezier(.45, 0, .55, 1) infinite; }
+  @keyframes loader-hop {
+    0%, 62%, 100% { transform: none; }
+    10% { transform: scale(1.06, .92); }
+    34% { transform: translateY(-14px) rotate(-5deg); }
+    56% { transform: translateY(0) scale(1.05, .94); }
+  }
+  .loader-shadow { animation: loader-shadow 1.3s cubic-bezier(.45, 0, .55, 1) infinite; }
+  @keyframes loader-shadow { 0%, 62%, 100% { transform: none; } 34% { transform: scaleX(.55); opacity: .5; } }
+  .loader-label { animation: loader-pulse 1.6s ease-in-out infinite; }
+  @keyframes loader-pulse { 50% { opacity: .55; } }
 
   /* Running text on Help and legal pages. */
   .prose-info { max-width: 68ch; }

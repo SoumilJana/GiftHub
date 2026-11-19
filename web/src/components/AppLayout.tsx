@@ -12,7 +12,7 @@ export function AppLayout() {
   const location = useLocation()
   const profile = useProfile()
 
-  if (loading) return <Spinner />
+  if (loading) return <Spinner full />
   if (!session) return <Redirect to="/sign-in" search={{ redirect: location.href }} />
 
   const pending = readPendingJoin()

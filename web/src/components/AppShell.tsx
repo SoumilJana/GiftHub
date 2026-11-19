@@ -1,11 +1,13 @@
-import { Link, Outlet, useRouterState } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
+import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
+import { useState, type MouseEvent, type ReactNode } from 'react'
 import { useUserId } from '../lib/auth'
+import { currentCircle, readLastCircle } from '../lib/circleTab'
 import { circleTitle, useMyCircles, useProfile } from '../lib/queries'
 import { CircleSwitcher } from './CircleSwitcher'
 import { GiftMark } from './GiftMark'
 import { CirclesIcon, ListIcon, ReceivedIcon } from './NavIcons'
 import { SlidingPill } from './SlidingPill'
+import { WhatsNew } from './WhatsNew'
 import { Avatar } from './ui'
 
 const sections: { to: '/' | '/circles' | '/received'; label: string; icon: ReactNode }[] = [
@@ -27,6 +29,18 @@ export function AppShell() {
   const profile = useProfile()
   const name = profile.data?.display_name ?? ''
   const path = useRouterState({ select: (s) => s.location.pathname })
+  const navigate = useNavigate()
+  const [nudge, setNudge] = useState(false)
+
+  // Phone Circles tab: straight into the Circle shown at the top right (your only one, if you have one).
+  // The page with all of them stays one tap away in the switcher ("Start or join a Circle").
+  function openCirclesTab(e: MouseEvent) {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+    const id = currentCircle(circles.data ?? [], readLastCircle())?.id
+    if (!id) return
+    e.preventDefault()
+    if (path !== `/circles/${id}`) navigate({ to: '/circles/$circleId', params: { circleId: id } })
+  }
 
   return (
     <div className="min-h-dvh shell:grid shell:grid-cols-[240px_1fr]">
@@ -83,14 +97,24 @@ export function AppShell() {
       >
         <SlidingPill active={ACTIVE} target=".nav-icon" watch={path} />
         {[...sections, { to: '/profile' as const, label: 'Profile', icon: <ProfileFace name={name} /> }].map((s) => (
-          <Link key={s.to} to={s.to} activeOptions={{ exact: s.to === '/' }} className={bottomLink}>
-            <span className={s.to === '/profile' ? 'nav-icon w-[30px]!' : 'nav-icon'} data-fly-target={s.to === '/received' ? 'received' : undefined}>
+          <Link key={s.to} to={s.to} activeOptions={{ exact: s.to === '/' }} className={bottomLink} onClick={s.to === '/circles' ? openCirclesTab : undefined}>
+            <span
+              className={`${s.to === '/profile' ? 'nav-icon w-[30px]!' : 'nav-icon'} ${s.to === '/circles' && nudge ? 'tab-nudge' : ''}`}
+              data-fly-target={s.to === '/received' ? 'received' : undefined}
+            >
               {s.icon}
             </span>
             {s.label}
           </Link>
         ))}
       </nav>
+
+      <WhatsNew
+        onClose={() => {
+          setNudge(true)
+          setTimeout(() => setNudge(false), 1400)
+        }}
+      />
     </div>
   )
 }
