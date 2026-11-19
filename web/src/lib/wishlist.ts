@@ -135,6 +135,36 @@ export function linkFromText(text: string): { url: string; title: string | null 
   return { url, title: words.length >= 3 && /[a-z]{2,}/i.test(words) ? words.slice(0, 300) : null }
 }
 
+/**
+ * Store listing titles pack the specs into the name ("Samsung Galaxy M35 5G (Moonlight Blue, 8GB RAM) | 6000mAh
+ * Battery | …"). Keep the brand and model as the name, and hand back the rest as details for Notes.
+ */
+export function shortName(raw: string): { name: string; details: string | null } {
+  const s = raw.replace(/\s+/g, ' ').trim()
+  if (s.length <= 50 && !s.includes('|')) return { name: s, details: null }
+  // Where the specs usually start. Commas and "with/for" only count once the name has some length.
+  const cuts: number[] = []
+  for (const m of s.matchAll(/ ?\| | \(| \[| [-–—] |, | with | for /gi)) {
+    const min = /^(, | with | for )$/i.test(m[0]) ? 20 : 12
+    if (m.index >= min) cuts.push(m.index)
+  }
+  let cut = cuts.length ? Math.min(...cuts) : s.length
+  if (cut > 60) {
+    const space = s.lastIndexOf(' ', 60)
+    cut = space > 12 ? space : 60
+  }
+  const name = s.slice(0, cut).replace(/[\s,:;|\-–—([]+$/, '').trim()
+  let details = s
+    .slice(cut)
+    .replace(/^[\s,:;|\-–—]+/, '')
+    .replace(/^\(([^)]*)\)/, '$1')
+    .replace(/^\[([^\]]*)\]/, '$1')
+    .replace(/\s*\|\s*/g, ' · ')
+    .trim()
+  if (details.length > 300) details = details.slice(0, details.lastIndexOf(' ', 299)).replace(/[\s,·;:]+$/, '') + '…'
+  return { name: name || s.slice(0, 60), details: details || null }
+}
+
 /** Store name shown on a frame: www.amazon.in → amazon.in. */
 export function storeOf(url: string | null): string | null {
   if (!url) return null

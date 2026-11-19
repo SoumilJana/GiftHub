@@ -11,7 +11,7 @@ import { readLink, type LinkRead } from '../lib/linkReader'
 import { isUploadedPhoto, removePhoto, uploadPhoto } from '../lib/photo'
 import { circleTitle, type MyCircle } from '../lib/queries'
 import { useToast } from '../lib/toast'
-import { linkFromText, normalizeUrl, occasionLabel, OCCASIONS, storeOf, titleFromUrl, type Item, type Occasion } from '../lib/wishlist'
+import { linkFromText, normalizeUrl, occasionLabel, shortName, OCCASIONS, storeOf, titleFromUrl, type Item, type Occasion } from '../lib/wishlist'
 import { Hearts, Photo, Price } from './ItemViews'
 import { Button, ConfirmButton, Notice, SelectField, TextArea, TextField } from './ui'
 
@@ -90,12 +90,13 @@ export function EditItemSheet({
 
   const startUrl = item?.url ?? initialUrl ?? ''
   const [url, setUrl] = useState(startUrl)
-  const [title, setTitle] = useState(item?.title ?? initialTitle ?? (initialUrl ? titleFromUrl(initialUrl) : ''))
+  const shared = !item && initialTitle ? shortName(initialTitle) : null
+  const [title, setTitle] = useState(item?.title ?? shared?.name ?? (initialUrl ? titleFromUrl(initialUrl) : ''))
   const [imageUrl, setImageUrl] = useState(item?.image_url ?? '')
   const [price, setPrice] = useState(item?.price != null ? String(item.price) : '')
   const [currency, setCurrency] = useState(item?.currency ?? currencyForNewItem(initialUrl ?? null, userCurrency))
   const [priority, setPriority] = useState(item?.priority ?? 6)
-  const [notes, setNotes] = useState(item?.notes ?? '')
+  const [notes, setNotes] = useState(item?.notes ?? shared?.details ?? '')
   const [occasions, setOccasions] = useState<Occasion[]>(item?.occasions ?? [])
   const [circleIds, setCircleIds] = useState<string[]>(item?.circle_ids ?? circles.map((c) => c.id))
   const [openedAt] = useState(() => new Date().toISOString())
@@ -113,6 +114,13 @@ export function EditItemSheet({
   const handedOff = useRef(false)
 
   /** Read the store page and fill in what's still empty (or everything you haven't changed, when `all`). */
+  // Long store titles: the brand and model become the name, the specs go into empty Notes.
+  function nameFrom(full: string) {
+    const { name, details } = shortName(full)
+    setTitle(name.slice(0, 300))
+    if (details) setNotes((cur) => (cur.trim() ? cur : details))
+  }
+
   async function fillFromLink(link: string, all = false) {
     if (!all && lastRead.current === link) return
     lastRead.current = link
@@ -136,7 +144,7 @@ export function EditItemSheet({
       return
     }
     const d = r.data
-    if (d.title && (all || !edited.current.title)) setTitle(d.title)
+    if (d.title && (all || !edited.current.title)) nameFrom(d.title)
     if (d.price != null && (all || !edited.current.price)) {
       setPrice(String(d.price))
       if (d.currency) setCurrency(d.currency)
@@ -274,7 +282,7 @@ export function EditItemSheet({
             if (found && text.trim() !== found.url) {
               e.preventDefault()
               setUrl(found.url)
-              if (found.title && !edited.current.title) setTitle(found.title)
+              if (found.title && !edited.current.title) nameFrom(found.title)
               if (!item) fillFromLink(found.url)
               return
             }
@@ -289,7 +297,10 @@ export function EditItemSheet({
             const found = url.trim() ? linkFromText(url) : null
             const link = found?.url ?? null
             if (link && link !== url.trim()) setUrl(link)
-            if (link && !title.trim()) setTitle(found?.title ?? titleFromUrl(link))
+            if (link && !title.trim()) {
+              if (found?.title) nameFrom(found.title)
+              else setTitle(titleFromUrl(link))
+            }
             if (link && !item) fillFromLink(link)
           }}
         />

@@ -3,7 +3,7 @@ import { useAuth } from './auth'
 import { removePhoto } from './photo'
 import { supabase } from './supabase'
 import type { LinkRead } from './linkReader'
-import type { Item, Occasion } from './wishlist'
+import { shortName, type Item, type Occasion } from './wishlist'
 
 export const COLS = 'id, owner_id, title, url, image_url, domain, price, currency, original_price, priority, notes, created_at, item_occasions(occasion)'
 
@@ -119,16 +119,20 @@ export async function fillWishLater(
   if (!r?.ok) return null
   const d = r.data
   const next = { ...saved }
-  if (d.title && !keep.title) next.title = d.title.slice(0, 300)
+  if (d.title && !keep.title) {
+    const { name, details } = shortName(d.title)
+    next.title = name.slice(0, 300)
+    if (details && !saved.notes) next.notes = details
+  }
   if (d.price != null && !keep.price) {
     next.price = d.price
     if (d.currency) next.currency = d.currency
   }
   if (d.image && !keep.image) next.image_url = d.image
   if (d.url) next.url = d.url
-  if (next.title === saved.title && next.price === saved.price && next.image_url === saved.image_url && next.url === saved.url) return null
-  const { data: now } = await supabase.from('items').select('title, url, image_url, price').eq('id', saved.id).maybeSingle()
-  if (!now || now.title !== saved.title || now.url !== saved.url || now.image_url !== saved.image_url || num(now.price) !== saved.price) return null
+  if (next.title === saved.title && next.price === saved.price && next.image_url === saved.image_url && next.url === saved.url && next.notes === saved.notes) return null
+  const { data: now } = await supabase.from('items').select('title, url, image_url, price, notes').eq('id', saved.id).maybeSingle()
+  if (!now || now.title !== saved.title || now.url !== saved.url || now.image_url !== saved.image_url || num(now.price) !== saved.price || (now.notes ?? null) !== saved.notes) return null
   await saveItem(next)
   return d.store
 }

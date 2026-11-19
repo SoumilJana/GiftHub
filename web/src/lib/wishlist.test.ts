@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyFilter, dateStamp, defaultFilter, heartCount, linkFromText, normalizeUrl, storeOf, titleFromUrl, usedOccasions, type Item } from './wishlist'
+import { applyFilter, dateStamp, defaultFilter, heartCount, linkFromText, normalizeUrl, shortName, storeOf, titleFromUrl, usedOccasions, type Item } from './wishlist'
 
 const item = (over: Partial<Item>): Item => ({
   id: 'x',
@@ -53,6 +53,28 @@ describe('helpers', () => {
     expect(titleFromUrl('https://www.amazon.in/Philips-TAS2400BK-Bluetooth-Speaker/dp/B0F8W13YV4')).toBe('Philips TAS2400BK Bluetooth Speaker')
     expect(titleFromUrl('https://shop.com/products/linen-overshirt-sage-12345.html')).toBe('Linen overshirt sage')
     expect(titleFromUrl('https://www.amazon.in/dp/B0F8W13YV4')).toBe('')
+  })
+})
+
+describe('shortName', () => {
+  it('keeps short names as they are', () => {
+    expect(shortName('Samsung Original 25W Travel Adapter, Black')).toEqual({ name: 'Samsung Original 25W Travel Adapter, Black', details: null })
+    expect(shortName('Apple iPhone 15 (128 GB) - Black')).toEqual({ name: 'Apple iPhone 15 (128 GB) - Black', details: null })
+    expect(shortName('  boAt   Airdopes 141 ')).toEqual({ name: 'boAt Airdopes 141', details: null })
+  })
+  it('cuts long store titles where the specs start', () => {
+    expect(shortName('Samsung Galaxy M35 5G (Moonlight Blue, 8GB RAM, 128GB Storage) | 6000mAh Battery | 50MP Triple Camera')).toEqual({
+      name: 'Samsung Galaxy M35 5G',
+      details: 'Moonlight Blue, 8GB RAM, 128GB Storage · 6000mAh Battery · 50MP Triple Camera',
+    })
+    expect(shortName('Philips TAS2400BK Bluetooth Speaker | 10W Output | IPX7 Waterproof | 12 Hours Playtime').name).toBe('Philips TAS2400BK Bluetooth Speaker')
+    expect(shortName('Milton Thermosteel Flip Lid Flask, 1000 ml, Silver | 24 Hours Hot and Cold | Easy to Carry').name).toBe('Milton Thermosteel Flip Lid Flask')
+    expect(shortName('Noise Buds VS104 Truly Wireless Earbuds with 45H of Playtime, Quad Mic with ENC, Instacharge').name).toBe('Noise Buds VS104 Truly Wireless Earbuds')
+  })
+  it('caps a long title with no separators on a whole word', () => {
+    const r = shortName('Lenovo IdeaPad Slim 3 13th Gen Intel Core i5-13420H 15.3 inch WUXGA IPS Laptop 16GB 512GB SSD Windows 11 Office')
+    expect(r.name).toBe('Lenovo IdeaPad Slim 3 13th Gen Intel Core i5-13420H 15.3')
+    expect(r.details).toBe('inch WUXGA IPS Laptop 16GB 512GB SSD Windows 11 Office')
   })
 })
 
