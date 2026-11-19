@@ -7,13 +7,18 @@
 //   3. Cached for a day (blocked results for an hour).
 //   4. Read from Cloudflare; if the store refuses, try once more from Supabase's servers,
 //      which some stores (FirstCry, Croma) let through.
+//   5. Still refused: read it through scrape.do's Indian proxies (Myntra, Nykaa, Ajio...),
+//      when the SCRAPEDO_TOKEN secret is set. Free plan: about 1,000 credits a month;
+//      when they run out, the app shows the pre-filled form as before.
 
-import { cleanUrl, readPage, safeTarget, storeName, type ReadResult } from '../../supabase/functions/_shared/parse.ts'
+import { cleanUrl, extract, looksBlocked, readPage, safeTarget, storeName, type ReadResult } from '../../supabase/functions/_shared/parse.ts'
 
 interface Env {
   ASSETS: { fetch: (req: Request) => Promise<Response> }
   PARSE_LIMIT?: { limit: (o: { key: string }) => Promise<{ success: boolean }> }
   SUPABASE_URL: string
+  /** Secret, set with `npx wrangler secret put SCRAPEDO_TOKEN`. Optional. */
+  SCRAPEDO_TOKEN?: string
 }
 
 const json = (status: number, body: unknown) =>
@@ -56,6 +61,26 @@ async function fromSupabase(env: Env, url: string, auth: string, apikey: string)
   }
 }
 
+/** Stores whose pages need scrape.do's residential proxies (about 10 credits instead of 1). */
+const RESIDENTIAL = /(^|\.)etsy\.com$/
+
+async function fromScrapeDo(env: Env, url: string): Promise<ReadResult | null> {
+  if (!env.SCRAPEDO_TOKEN) return null
+  const host = new URL(url).hostname
+  const q = new URLSearchParams({ token: env.SCRAPEDO_TOKEN, url, geoCode: 'in', ...(RESIDENTIAL.test(host) ? { super: 'true' } : {}) })
+  try {
+    const res = await fetch('https://api.scrape.do/?' + q, { signal: AbortSignal.timeout(25_000) })
+    if (!res.ok) return null // refused, or out of credits
+    const html = (await res.text()).slice(0, 2_500_000)
+    if (looksBlocked(200, html)) return null
+    const found = extract(html, url)
+    if (!found.title && !found.image) return null
+    return { ok: true, data: { url: cleanUrl(url), ...found }, via: 'scrapedo' }
+  } catch {
+    return null
+  }
+}
+
 async function parse(req: Request, env: Env, ctx: ExecutionContext) {
   if (req.method !== 'POST') return json(405, { error: 'Use POST.' })
   const auth = req.headers.get('authorization') ?? ''
@@ -80,6 +105,7 @@ async function parse(req: Request, env: Env, ctx: ExecutionContext) {
 
   let result = await readPage(target.toString(), 'cloudflare')
   if (!result.ok && result.reason === 'blocked') result = (await fromSupabase(env, target.toString(), auth, apikey)) ?? result
+  if (!result.ok && result.reason === 'blocked') result = (await fromScrapeDo(env, target.toString())) ?? result
   if (!result.ok && !result.store) result.store = storeName(target.toString())
 
   const keep = result.ok ? DAY : result.reason === 'blocked' ? 3600 : 0

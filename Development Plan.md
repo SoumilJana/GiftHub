@@ -280,7 +280,7 @@ Decided with the user (18 Nov 2026): icons with labels in the bottom bar, a Circ
 **Goal:** paste a URL and get a clean product card in ~3 s for most stores.
 
 **Built 19 Nov 2026** (the original scope below is kept for reference; where they differ, this wins):
-- **Where it runs:** `POST /api/parse` on the site's own Cloudflare Worker (`web/worker/index.ts`), not an Edge Function, because the blocking test showed Cloudflare gets through to more stores. When a store refuses Cloudflare, the Worker asks the Edge Function `parse-url` once (`supabase/functions/parse-url`), which FirstCry and Croma let through.
+- **Where it runs:** `POST /api/parse` on the site's own Cloudflare Worker (`web/worker/index.ts`), not an Edge Function, because the blocking test showed Cloudflare gets through to more stores. When a store refuses Cloudflare, the Worker asks the Edge Function `parse-url` once (`supabase/functions/parse-url`), which FirstCry and Croma let through. Still refused: scrape.do (see the fallback test below).
 - **One parser for both:** `supabase/functions/_shared/parse.ts`, plain web APIs and no imports. Order: JSON-LD `Product` → Amazon page adapter → Open Graph and meta tags → page title. Store suffixes are trimmed from names ("| Flipkart.com"). Tested in `web/src/lib/parse.test.ts`.
 - **Clean links:** tracking parameters removed; Amazon cut to `/dp/ASIN`; Flipkart kept to `?pid=`; short links followed to the product.
 - **Safety:** signed-in users only (the Supabase session is checked with Supabase), 30 links a minute per person (Cloudflare rate-limit binding), https/http pages on ordinary hostnames only (no IP addresses, local names or odd ports, also after redirects), 2.5 MB and 10 s per page, HTML only.
@@ -293,7 +293,7 @@ Decided with the user (18 Nov 2026): icons with labels in the bottom bar, a Circ
 2. Try it live on a phone with real links, then run the 100-link test set for the "Done when" figure.
 3. Myntra blocks its images on other sites: save store photos to GiftHub's storage when that matters.
 4. Daily link limit: Free 15 a day, Pro 30 or more (Phase 5.5, with a `usage_daily` count). Until then, 30 a minute for everyone, as built. Cached links don't count.
-5. Untested fallbacks for the blocked stores: ScraperAPI's free tier, GitHub Actions + Playwright on `parse_jobs`, and the share text from store apps (Phase 5).
+5. ~~Add scrape.do as the third retry~~ (built 19 Nov 2026; needs the `SCRAPEDO_TOKEN` secret). Other untested fallbacks for the blocked stores: ScraperAPI's free tier, GitHub Actions + Playwright on `parse_jobs`, and the share text from store apps (Phase 5).
 
 **Original scope:**
 
@@ -349,7 +349,9 @@ Fully parsed product pages: Worker 10 of 18, Edge Function 8 of 18 (+1 partial).
 **Fallback test (19 Nov 2026)** on the blocked stores, test Worker deleted afterwards:
 - **Cloudflare Browser Run:** ❌ ruled out. Nykaa, Ajio, FirstCry, Meesho and Croma returned 403, Etsy a captcha, and Myntra timed out; Tata CLiQ loaded with a captcha and no price. The free plan also refuses more than a few browser starts a minute (429).
 - **ScrapingAnt free plan:** ❌ ruled out. It refuses Myntra, Nykaa, Ajio, Meesho and Croma by name ("This domain is not allowed for Free subscription plan"). FirstCry loaded with name and image, as from Supabase; Tata CLiQ was detected.
+- **scrape.do (tested 19 Nov 2026, run from the user's terminal, Indian proxies): ✅ works.** With standard proxies it got Myntra (name, photo, price), Nykaa (all three), Ajio (all three) and FirstCry (name and photo, no price on the page), in 1.5–4 s each. Meesho, Croma and Tata CLiQ were tried only on their home pages, which loaded. Etsy needs the residential proxies (`super=true`); standard ones return HTTP 400. Free plan: about 1,000 credits a month (a standard request is 1 credit, residential about 10).
 - **Still untested:** ScraperAPI's free 1,000 credits a month, GitHub Actions + Playwright, and reading the page from the user's own phone (share text in Phase 5, CapacitorHttp in Phase 8).
+- **Built 19 Nov 2026:** scrape.do is the Worker's last retry, used only after Cloudflare and Supabase are both refused (Indian proxies; residential only for Etsy). It is active once the user sets the Worker secret `SCRAPEDO_TOKEN`. Results are cached for a day, so each product costs at most one credit a day. When the month's credits run out, refused stores fall back to the pre-filled form.
 
 **For these stores, plan on the pre-filled manual form for now:** the app still keeps the link and fills in whatever the URL itself gives (store name, and often the product name from the URL slug, as on Myntra, Nykaa and Ajio).
 

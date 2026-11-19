@@ -20,7 +20,7 @@ The full plan, with what is built and live, is in [Development Plan.md](Developm
 | Part | Where | Notes |
 |---|---|---|
 | Web app (PWA) | `web/` | React 19, Vite, TypeScript, TanStack Router and Query, Tailwind 4 |
-| Hosting and `/api` | `web/wrangler.jsonc`, `web/worker/` | Cloudflare Workers. Static files are served directly; only `/api/*` runs the Worker (link reading) |
+| Hosting and `/api` | `web/wrangler.jsonc`, `web/worker/` | Cloudflare Workers. Static files are served directly; only `/api/*` runs the Worker (link reading). Optional secret `SCRAPEDO_TOKEN` enables the scrape.do retry for stores that refuse |
 | Database, sign-in, storage | `supabase/` | Supabase Postgres with row-level security on every table; all claim access goes through database functions |
 | Edge Functions | `supabase/functions/` | `report-bug` (bug reports, emailed through Resend) and `parse-url` (link-reading retry from Supabase's servers) |
 | Shared link parser | `supabase/functions/_shared/parse.ts` | Used by both the Worker and `parse-url` |
