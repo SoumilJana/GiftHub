@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyFilter, dateStamp, defaultFilter, heartCount, normalizeUrl, storeOf, titleFromUrl, usedOccasions, type Item } from './wishlist'
+import { applyFilter, dateStamp, defaultFilter, heartCount, linkFromText, normalizeUrl, storeOf, titleFromUrl, usedOccasions, type Item } from './wishlist'
 
 const item = (over: Partial<Item>): Item => ({
   id: 'x',
@@ -53,5 +53,30 @@ describe('helpers', () => {
     expect(titleFromUrl('https://www.amazon.in/Philips-TAS2400BK-Bluetooth-Speaker/dp/B0F8W13YV4')).toBe('Philips TAS2400BK Bluetooth Speaker')
     expect(titleFromUrl('https://shop.com/products/linen-overshirt-sage-12345.html')).toBe('Linen overshirt sage')
     expect(titleFromUrl('https://www.amazon.in/dp/B0F8W13YV4')).toBe('')
+  })
+})
+
+describe('linkFromText', () => {
+  it('finds the link in text shared by store apps', () => {
+    expect(linkFromText('Samsung Original 25W Travel Adapter, Black https://amzn.in/d/1aBcD2e')).toEqual({
+      url: 'https://amzn.in/d/1aBcD2e',
+      title: 'Samsung Original 25W Travel Adapter, Black',
+    })
+    expect(linkFromText('Check out this product on Flipkart: Noise TWO Earbuds\nhttps://dl.flipkart.com/s/abc123.')).toEqual({
+      url: 'https://dl.flipkart.com/s/abc123',
+      title: 'Noise TWO Earbuds',
+    })
+    expect(linkFromText('Amazon.in: OnePlus Nord Buds 3r https://www.amazon.in/dp/B0FMDL81GS?ref=x')?.title).toBe('OnePlus Nord Buds 3r')
+  })
+  it('handles a bare link, with or without https', () => {
+    expect(linkFromText('  https://www.myntra.com/x/123/buy ')).toEqual({ url: 'https://www.myntra.com/x/123/buy', title: null })
+    expect(linkFromText('www.ajio.com/shirt/p/1')).toEqual({ url: 'https://www.ajio.com/shirt/p/1', title: null })
+  })
+  it('gives no name when the words are only filler', () => {
+    expect(linkFromText('Check this out: https://amzn.in/d/xyz')).toEqual({ url: 'https://amzn.in/d/xyz', title: null })
+  })
+  it('returns nothing without a link', () => {
+    expect(linkFromText('just some words')).toBeNull()
+    expect(linkFromText('')).toBeNull()
   })
 })

@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useUserId } from '../lib/auth'
 import { currencyForNewItem, currencyOptions } from '../lib/currency'
@@ -5,12 +6,12 @@ import { friendlyError } from '../lib/errors'
 import { celebrate, flyHome, sheetExit } from '../lib/motion'
 import { priorityBand } from '../lib/format'
 import { useMarkReceived } from '../lib/claims'
-import { useDeleteItem, useSaveItem, type ItemDraft } from '../lib/items'
+import { fillWishLater, useDeleteItem, useSaveItem, type ItemDraft } from '../lib/items'
 import { readLink, type LinkRead } from '../lib/linkReader'
 import { isUploadedPhoto, removePhoto, uploadPhoto } from '../lib/photo'
 import { circleTitle, type MyCircle } from '../lib/queries'
 import { useToast } from '../lib/toast'
-import { normalizeUrl, occasionLabel, OCCASIONS, storeOf, titleFromUrl, type Item, type Occasion } from '../lib/wishlist'
+import { linkFromText, normalizeUrl, occasionLabel, OCCASIONS, storeOf, titleFromUrl, type Item, type Occasion } from '../lib/wishlist'
 import { Hearts, Photo, Price } from './ItemViews'
 import { Button, ConfirmButton, Notice, SelectField, TextArea, TextField } from './ui'
 
@@ -65,18 +66,22 @@ const chip =
 export function EditItemSheet({
   item,
   initialUrl,
+  initialTitle,
   circles,
   userCurrency,
   onClose,
 }: {
   item: Item | null
   initialUrl?: string | null
+  /** A first guess at the name, from text shared along with the link. */
+  initialTitle?: string | null
   circles: MyCircle[]
   userCurrency: string
   onClose: () => void
 }) {
   const uid = useUserId()
   const toast = useToast()
+  const qc = useQueryClient()
   const save = useSaveItem()
   const del = useDeleteItem()
   const received = useMarkReceived()
@@ -85,7 +90,7 @@ export function EditItemSheet({
 
   const startUrl = item?.url ?? initialUrl ?? ''
   const [url, setUrl] = useState(startUrl)
-  const [title, setTitle] = useState(item?.title ?? (initialUrl ? titleFromUrl(initialUrl) : ''))
+  const [title, setTitle] = useState(item?.title ?? initialTitle ?? (initialUrl ? titleFromUrl(initialUrl) : ''))
   const [imageUrl, setImageUrl] = useState(item?.image_url ?? '')
   const [price, setPrice] = useState(item?.price != null ? String(item.price) : '')
   const [currency, setCurrency] = useState(item?.currency ?? currencyForNewItem(initialUrl ?? null, userCurrency))
@@ -102,6 +107,9 @@ export function EditItemSheet({
   const edited = useRef({ title: false, price: false, image: false })
   const lastRead = useRef<string | null>(null)
   const reader = useRef<AbortController | null>(null)
+  // The read still running, so Save doesn't have to wait for it.
+  const pending = useRef<Promise<LinkRead> | null>(null)
+  const handedOff = useRef(false)
 
   /** Read the store page and fill in what's still empty (or everything you haven't changed, when `all`). */
   async function fillFromLink(link: string, all = false) {
@@ -111,11 +119,15 @@ export function EditItemSheet({
     const c = new AbortController()
     reader.current = c
     setReading({ state: 'reading', store: storeOf(link) })
+    const promise = readLink(link, c.signal)
+    pending.current = promise
     let r: LinkRead
     try {
-      r = await readLink(link, c.signal)
+      r = await promise
     } catch {
       return
+    } finally {
+      if (pending.current === promise) pending.current = null
     }
     if (c.signal.aborted) return
     if (!r.ok) {
@@ -141,7 +153,8 @@ export function EditItemSheet({
     const start = link ? setTimeout(() => fillFromLink(link)) : undefined
     return () => {
       clearTimeout(start)
-      reader.current?.abort()
+      // A read handed over at Save keeps going after the sheet closes.
+      if (!handedOff.current) reader.current?.abort()
       lastRead.current = null
     }
   }, [item, initialUrl])
@@ -174,7 +187,7 @@ export function EditItemSheet({
   async function submit(e: FormEvent) {
     e.preventDefault()
     const next: typeof errors = {}
-    const link = url.trim() ? normalizeUrl(url) : null
+    const link = url.trim() ? (linkFromText(url)?.url ?? null) : null
     if (url.trim() && !link) next.url = 'That doesn’t look like a web link. Check it, or leave it empty.'
     if (!title.trim()) next.title = 'Give your wish a name.'
     const img = imageUrl.trim() ? normalizeUrl(imageUrl) : null
@@ -198,7 +211,18 @@ export function EditItemSheet({
       circle_ids: circleIds,
     }
     try {
-      await save.mutateAsync(draft)
+      const id = await save.mutateAsync(draft)
+      // Still reading the page: finish in the background and fill the wish in afterwards.
+      const read = pending.current
+      if (!item && read && link) {
+        handedOff.current = true
+        const keep = { title: edited.current.title, price: edited.current.price || draft.price != null, image: edited.current.image || !!draft.image_url }
+        fillWishLater(read, { ...draft, id }, keep).then((store) => {
+          if (!store) return
+          qc.invalidateQueries({ queryKey: ['items'] })
+          toast(`Details added from ${store}.`)
+        })
+      }
       // Clean up uploads that ended up unused, and the old upload if it was replaced.
       uploaded.filter((u) => u !== img).forEach((u) => removePhoto(u))
       if (item?.image_url && item.image_url !== img && isUploadedPhoto(item.image_url)) removePhoto(item.image_url)
@@ -237,9 +261,19 @@ export function EditItemSheet({
           placeholder="https://"
           value={url}
           error={errors.url}
-          hint={linkHint(reading)}
+          hint={linkHint(reading, !item)}
           onChange={(e) => setUrl(e.target.value)}
           onPaste={(e) => {
+            // Store apps share "Product name https://...": keep the link, and use the words as the name.
+            const text = e.clipboardData.getData('text')
+            const found = linkFromText(text)
+            if (found && text.trim() !== found.url) {
+              e.preventDefault()
+              setUrl(found.url)
+              if (found.title && !edited.current.title) setTitle(found.title)
+              if (!item) fillFromLink(found.url)
+              return
+            }
             if (item) return
             const el = e.currentTarget
             setTimeout(() => {
@@ -248,8 +282,10 @@ export function EditItemSheet({
             })
           }}
           onBlur={() => {
-            const link = normalizeUrl(url)
-            if (link && !title.trim()) setTitle(titleFromUrl(link))
+            const found = url.trim() ? linkFromText(url) : null
+            const link = found?.url ?? null
+            if (link && link !== url.trim()) setUrl(link)
+            if (link && !title.trim()) setTitle(found?.title ?? titleFromUrl(link))
             if (link && !item) fillFromLink(link)
           }}
         />
@@ -446,9 +482,9 @@ export function EditItemSheet({
 }
 
 /** The line under the Link field while and after the page is read. */
-function linkHint(r: { state: string; store?: string | null; reason?: string }) {
+function linkHint(r: { state: string; store?: string | null; reason?: string }, isNew: boolean) {
   const store = r.store ?? 'the store'
-  if (r.state === 'reading') return `Reading the page on ${store}…`
+  if (r.state === 'reading') return isNew ? `Getting details from ${store}. You can save now.` : `Reading the page on ${store}…`
   if (r.state === 'done') return `Filled in from ${store}. Check it looks right.`
   if (r.state !== 'failed') return undefined
   if (r.reason === 'blocked') return `${store} doesn’t let us read its pages yet. Fill in the rest yourself.`

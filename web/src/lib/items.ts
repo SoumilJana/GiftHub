@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from './auth'
 import { removePhoto } from './photo'
 import { supabase } from './supabase'
+import type { LinkRead } from './linkReader'
 import type { Item, Occasion } from './wishlist'
 
 export const COLS = 'id, owner_id, title, url, image_url, domain, price, currency, original_price, priority, notes, created_at, item_occasions(occasion)'
@@ -85,23 +86,52 @@ function useItemMutation<TVars, TResult = void>(fn: (vars: TVars) => Promise<TRe
   return useMutation({ mutationFn: fn, onSuccess: () => qc.invalidateQueries({ queryKey: ['items'] }) })
 }
 
-export const useSaveItem = () =>
-  useItemMutation(async (d: ItemDraft) => {
-    const { data, error } = await supabase.rpc('save_item', {
-      p_id: d.id,
-      p_title: d.title,
-      p_url: d.url,
-      p_image_url: d.image_url,
-      p_price: d.price,
-      p_currency: d.currency,
-      p_priority: d.priority,
-      p_notes: d.notes,
-      p_occasions: d.occasions,
-      p_circle_ids: d.circle_ids,
-    })
-    if (error) throw error
-    return data as string
+async function saveItem(d: ItemDraft) {
+  const { data, error } = await supabase.rpc('save_item', {
+    p_id: d.id,
+    p_title: d.title,
+    p_url: d.url,
+    p_image_url: d.image_url,
+    p_price: d.price,
+    p_currency: d.currency,
+    p_priority: d.priority,
+    p_notes: d.notes,
+    p_occasions: d.occasions,
+    p_circle_ids: d.circle_ids,
   })
+  if (error) throw error
+  return data as string
+}
+
+export const useSaveItem = () => useItemMutation(saveItem)
+
+/**
+ * After a new wish is saved while its page is still being read: wait for the result, then fill
+ * in what's still guessed or empty. Fields you typed are kept, and nothing changes if the wish
+ * was edited in the meantime. Returns the store name when something was filled in.
+ */
+export async function fillWishLater(
+  read: Promise<LinkRead>,
+  saved: ItemDraft & { id: string },
+  keep: { title: boolean; price: boolean; image: boolean },
+): Promise<string | null> {
+  const r = await read.catch(() => null)
+  if (!r?.ok) return null
+  const d = r.data
+  const next = { ...saved }
+  if (d.title && !keep.title) next.title = d.title.slice(0, 300)
+  if (d.price != null && !keep.price) {
+    next.price = d.price
+    if (d.currency) next.currency = d.currency
+  }
+  if (d.image && !keep.image) next.image_url = d.image
+  if (d.url) next.url = d.url
+  if (next.title === saved.title && next.price === saved.price && next.image_url === saved.image_url && next.url === saved.url) return null
+  const { data: now } = await supabase.from('items').select('title, url, image_url, price').eq('id', saved.id).maybeSingle()
+  if (!now || now.title !== saved.title || now.url !== saved.url || now.image_url !== saved.image_url || num(now.price) !== saved.price) return null
+  await saveItem(next)
+  return d.store
+}
 
 export const useDeleteItem = () =>
   useItemMutation(async (item: Pick<Item, 'id' | 'image_url'>) => {

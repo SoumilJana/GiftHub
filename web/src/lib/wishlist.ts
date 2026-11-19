@@ -111,6 +111,30 @@ export function normalizeUrl(input: string): string | null {
   }
 }
 
+/**
+ * A link found inside pasted text, as store apps share it:
+ * "Samsung 25W Adapter https://amzn.in/d/abc12" → the link, plus the words as a first guess at the name.
+ */
+export function linkFromText(text: string): { url: string; title: string | null } | null {
+  const raw = text.trim()
+  if (!raw) return null
+  const m = /https?:\/\/[^\s<>"'“”]+/i.exec(raw)
+  if (!m) {
+    const url = /\s/.test(raw) ? null : normalizeUrl(raw)
+    return url ? { url, title: null } : null
+  }
+  const url = normalizeUrl(m[0].replace(/[).,;:!?\]}>»]+$/, ''))
+  if (!url) return null
+  const words = (raw.slice(0, m.index) + ' ' + raw.slice(m.index + m[0].length))
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^(hey[,!]?\s*)?(look at|check (this|it) out|check out( this)?( product| item| deal)?( on [\w.]+)?|i found this( on [\w.]+)?|sharing( this)?( product)?( from [\w.]+)?)\s*[:!-]*\s*/i, '')
+    .replace(/^(amazon|flipkart|myntra)(\.[a-z.]+)?\s*:\s*/i, '')
+    .replace(/\s*[-:|–]\s*$/, '')
+    .trim()
+  return { url, title: words.length >= 3 && /[a-z]{2,}/i.test(words) ? words.slice(0, 300) : null }
+}
+
 /** Store name shown on a frame: www.amazon.in → amazon.in. */
 export function storeOf(url: string | null): string | null {
   if (!url) return null

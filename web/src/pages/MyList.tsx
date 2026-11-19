@@ -10,9 +10,9 @@ import { useMyItems } from '../lib/items'
 import { useUserId } from '../lib/auth'
 import { circleRef, useMyCircles, useProfile } from '../lib/queries'
 import { useToast } from '../lib/toast'
-import { applyFilter, defaultFilter, normalizeUrl, type Item, type ListFilter } from '../lib/wishlist'
+import { applyFilter, defaultFilter, linkFromText, type Item, type ListFilter } from '../lib/wishlist'
 
-type Editing = { item: Item | null; url: string | null } | null
+type Editing = { item: Item | null; url: string | null; title?: string | null } | null
 
 export function MyListPage() {
   const items = useMyItems()
@@ -38,7 +38,7 @@ export function MyListPage() {
             {circleNames.length ? `Shared with ${listJoin(circleNames)}, item by item.` : 'Only you can see it until you start or join a Circle.'}
           </p>
         </div>
-        <AddBar onAdd={(url) => setEditing({ item: null, url })} />
+        <AddBar onAdd={(url, title) => setEditing({ item: null, url, title })} />
       </div>
 
       <HandoffPrompts />
@@ -100,6 +100,7 @@ export function MyListPage() {
         <EditItemSheet
           item={editing.item}
           initialUrl={editing.url}
+          initialTitle={editing.title}
           circles={myCircles}
           userCurrency={profile.data?.currency?.trim() || 'USD'}
           onClose={() => setEditing(null)}
@@ -121,19 +122,20 @@ function listJoin(names: string[]) {
 }
 
 /** Paste-a-link pill. Opens the add sheet with the link filled in. */
-export function AddBar({ onAdd }: { onAdd: (url: string | null) => void }) {
+export function AddBar({ onAdd }: { onAdd: (url: string | null, title?: string | null) => void }) {
   const [value, setValue] = useState('')
   const toast = useToast()
   function submit(e: FormEvent) {
     e.preventDefault()
     if (!value.trim()) return onAdd(null)
-    const url = normalizeUrl(value)
-    if (!url) return toast('That doesn’t look like a link. Paste the full address from the store.')
+    // Store apps often copy the product name along with the link: keep both.
+    const found = linkFromText(value)
+    if (!found) return toast('No link in that. Paste the address from the store.')
     setValue('')
-    onAdd(url)
+    onAdd(found.url, found.title)
   }
   return (
-    <form onSubmit={submit} className="flex w-full max-w-[500px] flex-[1_1_360px] gap-2">
+    <form onSubmit={submit} noValidate className="flex w-full max-w-[500px] flex-[1_1_360px] gap-2">
       <label htmlFor="add-link" className="sr-only">
         Link to a wish
       </label>
