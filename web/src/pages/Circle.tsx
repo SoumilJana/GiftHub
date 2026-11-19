@@ -1,12 +1,12 @@
 import { Link, useParams } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { GiveDateSheet } from '../components/Handoff'
 import { EditItemSheet, ViewItemSheet } from '../components/ItemSheet'
 import { ItemsView, ListTools } from '../components/ItemViews'
 import { useStoredView } from '../lib/view'
 import { EmptyState, Page } from '../components/Page'
 import { SlidingPill } from '../components/SlidingPill'
-import { Avatar, Button, Notice, Panel, Spinner } from '../components/ui'
+import { Avatar, Button, LoadError, Panel, Spinner } from '../components/ui'
 import { useUserId } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
 import { inviteLink } from '../lib/invite'
@@ -37,9 +37,11 @@ export function CirclePage() {
   const [viewing, setViewing] = useState<Item | null>(null)
   const [editing, setEditing] = useState<{ item: Item | null } | null>(null)
   const [dating, setDating] = useState<Item | null>(null)
+  // One claim at a time, even for taps that land before the next render.
+  const claiming = useRef(false)
 
   if (q.isPending) return <Spinner />
-  if (q.error) return <Notice tone="alert">{friendlyError(q.error)}</Notice>
+  if (q.error) return <LoadError error={q.error} onRetry={() => q.refetch()} />
   if (!q.data) {
     return (
       <Page title="Circle not found">
@@ -79,6 +81,8 @@ export function CirclePage() {
   const clearFilters = () => setFilter((f) => ({ ...defaultFilter, sort: f.sort }))
 
   async function claim(item: Item, status: ClaimStatus | null) {
+    if (claiming.current) return
+    claiming.current = true
     const owner = firstName(members.find((m) => m.user_id === item.owner_id)?.display_name ?? '') || 'They'
     const wasBought = claims.data?.[item.id]?.status === 'bought'
     try {
@@ -88,6 +92,8 @@ export function CirclePage() {
       if (status === 'bought' && !wasBought) setDating(item)
     } catch (err) {
       toast(friendlyError(err))
+    } finally {
+      claiming.current = false
     }
   }
 
@@ -173,9 +179,7 @@ export function CirclePage() {
             {loading ? (
               <Spinner />
             ) : loadError ? (
-              <div className="mt-4">
-                <Notice tone="alert">{friendlyError(loadError)}</Notice>
-              </div>
+              <LoadError error={loadError} onRetry={() => (isMe ? mine.refetch() : circleItems.refetch())} />
             ) : all.length === 0 ? (
               <EmptyState
                 title={isMe ? `You haven’t shared any wishes with ${sharedWith} yet.` : `${firstName(selected.display_name)} hasn’t shared any wishes here yet.`}
@@ -209,6 +213,7 @@ export function CirclePage() {
                         <ClaimSlot
                           claim={claims.data?.[item.id] ?? null}
                           loading={claims.isPending}
+                          saving={setClaim.isPending && setClaim.variables?.itemId === item.id}
                           couple={couple}
                           onClaim={(status) => claim(item, status)}
                           onDate={() => setDating(item)}
@@ -287,12 +292,15 @@ export function CirclePage() {
 function ClaimSlot({
   claim,
   loading,
+  saving = false,
   onClaim,
   onDate,
   couple = false,
 }: {
   claim: Claim | null
   loading: boolean
+  /** A claim on this wish is being saved: no second tap until it lands. */
+  saving?: boolean
   /** A couple plans gifts rather than reserving them. */
   couple?: boolean
   onClaim: (status: ClaimStatus | null) => void
@@ -303,10 +311,10 @@ function ClaimSlot({
   if (!claim)
     return (
       <>
-        <Button className="h-[34px]! px-3.5! text-small" onClick={() => onClaim('reserved')}>
+        <Button className="h-[34px]! px-3.5! text-small" disabled={saving} onClick={() => onClaim('reserved')}>
           {couple ? 'Plan to get' : 'Reserve'}
         </Button>
-        <Button variant="text" onClick={() => onClaim('bought')}>
+        <Button variant="text" disabled={saving} onClick={() => onClaim('bought')}>
           I bought it
         </Button>
       </>
@@ -315,15 +323,15 @@ function ClaimSlot({
     <>
       <span className="text-small font-extrabold text-ribbon-deep">{claim.status === 'reserved' ? (couple ? 'Planning to get this' : 'Reserved by you') : 'Bought by you'}</span>
       {claim.status === 'reserved' ? (
-        <Button variant="text" onClick={() => onClaim('bought')}>
+        <Button variant="text" disabled={saving} onClick={() => onClaim('bought')}>
           Mark bought
         </Button>
       ) : (
-        <Button variant="text" onClick={onDate}>
+        <Button variant="text" disabled={saving} onClick={onDate}>
           {claim.giveOn ? `Giving ${dayLabel(claim.giveOn, 'short')}` : 'Add date'}
         </Button>
       )}
-      <Button variant="text" onClick={() => onClaim(null)}>
+      <Button variant="text" disabled={saving} onClick={() => onClaim(null)}>
         Undo
       </Button>
     </>

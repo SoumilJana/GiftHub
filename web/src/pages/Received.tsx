@@ -1,6 +1,6 @@
 import { ItemsView, ViewSwitch } from '../components/ItemViews'
 import { EmptyState, Page } from '../components/Page'
-import { Button, Notice, Spinner } from '../components/ui'
+import { Button, LoadError, Spinner } from '../components/ui'
 import { useReceived, useReturnToList, type Giver } from '../lib/claims'
 import { friendlyError } from '../lib/errors'
 import { useToast } from '../lib/toast'
@@ -15,7 +15,7 @@ export function ReceivedPage() {
   const [view, setView] = useStoredView()
 
   if (q.isPending) return <Spinner />
-  if (q.error) return <Notice tone="alert">{friendlyError(q.error)}</Notice>
+  if (q.error) return <LoadError error={q.error} onRetry={() => q.refetch()} />
 
   const { items, givers } = q.data
   if (!items.length) {
@@ -43,6 +43,8 @@ export function ReceivedPage() {
             <span className="text-small text-plum-soft">{fromLine(givers[item.id])}</span>
             <Button
               variant="text"
+              busy={back.isPending && back.variables === item.id}
+              disabled={back.isPending}
               onClick={async () => {
                 try {
                   await back.mutateAsync(item.id)

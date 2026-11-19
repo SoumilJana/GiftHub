@@ -14,4 +14,7 @@ export const supabase = createClient(url, key, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
   },
+  // React Query already retries once; the client's own 3 retries on top made a dropped
+  // connection sit on "Loading…" for ~18 s before saying so.
+  db: { retry: false },
 })

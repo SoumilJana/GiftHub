@@ -4,7 +4,7 @@ import { BugReportSheet } from '../components/BugReport'
 import { CurrencySelect } from '../components/CurrencySelect'
 import { InfoLinks } from '../components/InfoFrame'
 import { Page } from '../components/Page'
-import { Button, ConfirmButton, Notice, Panel, Spinner, TextField } from '../components/ui'
+import { Button, ConfirmButton, LoadError, Notice, Panel, Spinner, TextField } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
 import { setFewerAnimations, useCalmMotion } from '../lib/motion'
@@ -15,7 +15,7 @@ import { useToast } from '../lib/toast'
 export function ProfilePage() {
   const profile = useProfile()
   if (profile.isPending) return <Spinner />
-  if (profile.error) return <Notice tone="alert">{friendlyError(profile.error)}</Notice>
+  if (profile.error) return <LoadError error={profile.error} onRetry={() => profile.refetch()} />
   return <ProfileForm profile={profile.data} />
 }
 
@@ -52,7 +52,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
       <div className="mt-6 flex max-w-[560px] flex-col gap-4">
         <Panel>
           <form onSubmit={save} className="flex flex-col gap-4" noValidate>
-            <TextField label="Your name" hint="This is how you appear in your Circles." autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
+            <TextField label="Your name" hint="This is how you appear in your Circles." autoComplete="name" maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
             <CurrencySelect value={currency} onChange={setCurrency} hint="Used when a store doesn’t show its own currency." />
             {error && <Notice tone="alert">{error}</Notice>}
             <Button type="submit" busy={update.isPending} className="self-start">

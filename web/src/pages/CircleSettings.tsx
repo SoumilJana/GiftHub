@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 import { Page } from '../components/Page'
-import { Avatar, Button, ConfirmButton, Notice, Panel, SelectField, Spinner, TextField } from '../components/ui'
+import { Avatar, Button, ConfirmButton, LoadError, Notice, Panel, SelectField, Spinner, TextField } from '../components/ui'
 import { useUserId } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
 import {
@@ -46,7 +46,8 @@ export function CircleSettingsPage() {
   const [error, setError] = useState<string | null>(null)
 
   if (q.isPending) return <Spinner />
-  if (q.error || !q.data) return <Notice tone="alert">{q.error ? friendlyError(q.error) : 'You’re not in this Circle.'}</Notice>
+  if (q.error) return <LoadError error={q.error} onRetry={() => q.refetch()} />
+  if (!q.data) return <Notice tone="alert">You’re not in this Circle.</Notice>
 
   const { circle, members } = q.data
   const myRole = members.find((m) => m.user_id === uid)?.role ?? 'member'
@@ -165,6 +166,7 @@ export function CircleSettingsPage() {
                 member={m}
                 isMe={m.user_id === uid}
                 myRole={myRole}
+                busy={remove.isPending || setRole.isPending || transfer.isPending}
                 onRemove={() => run(() => remove.mutateAsync({ circleId: circle.id, userId: m.user_id }), `${m.display_name} was removed.`)}
                 onRole={(role) => run(() => setRole.mutateAsync({ circleId: circle.id, userId: m.user_id, role }), `${m.display_name} is now ${role === 'admin' ? 'an admin' : 'a member'}.`)}
                 onOwner={() => run(() => transfer.mutateAsync({ circleId: circle.id, userId: m.user_id }), `${m.display_name} is now the owner.`)}
@@ -284,6 +286,7 @@ function MemberRow({
   member,
   isMe,
   myRole,
+  busy,
   onRemove,
   onRole,
   onOwner,
@@ -291,6 +294,7 @@ function MemberRow({
   member: Member
   isMe: boolean
   myRole: Member['role']
+  busy: boolean
   onRemove: () => void
   onRole: (role: 'admin' | 'member') => void
   onOwner: () => void
@@ -313,19 +317,30 @@ function MemberRow({
       {(ownerControls || canRemove) && (
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:justify-end">
           {ownerControls && member.role !== 'owner' && (
-            <Button variant="text" onClick={() => onRole(member.role === 'admin' ? 'member' : 'admin')}>
+            <Button variant="text" disabled={busy} onClick={() => onRole(member.role === 'admin' ? 'member' : 'admin')}>
               {member.role === 'admin' ? 'Make member' : 'Make admin'}
             </Button>
           )}
           {ownerControls && (
-            <Button variant="text" onClick={onOwner}>
-              Make owner
-            </Button>
+            <ConfirmButton
+              variant="text"
+              label="Make owner"
+              question={`Make ${member.display_name} the owner? You become an admin, and only they can undo it.`}
+              confirmLabel="Make owner"
+              busy={busy}
+              onConfirm={onOwner}
+            />
           )}
           {canRemove && (
-            <Button variant="text" onClick={onRemove}>
-              Remove
-            </Button>
+            <ConfirmButton
+              variant="text"
+              label="Remove"
+              question={`Remove ${member.display_name}? Their wishes leave this Circle, and they need a code to come back.`}
+              confirmLabel="Remove"
+              busy={busy}
+              onConfirm={onRemove}
+              danger
+            />
           )}
         </span>
       )}

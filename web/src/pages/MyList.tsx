@@ -4,8 +4,7 @@ import { EditItemSheet } from '../components/ItemSheet'
 import { ItemsView, ListTools } from '../components/ItemViews'
 import { useDismissed, useStoredView } from '../lib/view'
 import { EmptyState } from '../components/Page'
-import { Button, LockIcon, Notice, Spinner } from '../components/ui'
-import { friendlyError } from '../lib/errors'
+import { Button, LoadError, LockIcon, Notice, Spinner } from '../components/ui'
 import { useMyItems } from '../lib/items'
 import { useUserId } from '../lib/auth'
 import { circleRef, useMyCircles, useProfile } from '../lib/queries'
@@ -58,9 +57,7 @@ export function MyListPage() {
       {items.isPending ? (
         <Spinner />
       ) : items.error ? (
-        <div className="mt-6">
-          <Notice tone="alert">{friendlyError(items.error)}</Notice>
-        </div>
+        <LoadError error={items.error} onRetry={() => items.refetch()} />
       ) : all.length === 0 ? (
         <EmptyState title="Your list is empty.">
           Paste a link to something you’d like, or{' '}

@@ -401,7 +401,7 @@ Fully parsed product pages: Worker 10 of 18, Edge Function 8 of 18 (+1 partial).
 ### Phase 4.5 — Pre-beta check (after Phase 4; before the private beta)
 **Goal:** friends find the app solid on the first try. Bugs and edge cases get caught by us, not by them.
 
-**Status (19 Nov 2026):** edge-case tests, security pass and Security Advisor fixes are done and live. Next: the robustness pass (when the owner says to start), then the manual two-phone test.
+**Status (19 Nov 2026):** edge-case tests, security pass, Security Advisor fixes and the robustness pass are done. Next: the manual two-phone test.
 
 Scope
 - **Automated edge-case tests (database checks, run on every push):** two claims on the same wish at the same moment (only one wins); a member removed in the middle of a claim; a Circle deleted while a hand-off is pending; leaving a couple Circle; wishes with no price, a huge price, a very long or emoji name; expired and reused invite codes.
@@ -426,7 +426,14 @@ Scope
   - The 18 "signed-in users can run a SECURITY DEFINER function" warnings are intended: these are the app's own actions (claim, join, create Circle…). Each one checks who is asking, and the database tests cover them.
   - "RLS enabled, no policy" on `bug_reports`, `join_attempts`, `parse_cache` and `parse_jobs` is intended: only the server uses these tables. (`parse_cache` and `parse_jobs` are unused leftovers from the first design.)
   - Leaked password protection needs Supabase's paid plan, so it stays off; minimum length 8 instead.
-- **App robustness pass:** every screen empty and with a lot of data; slow and dropped connections; double taps on every button; error messages on every form; long names everywhere; phone, tablet and desktop sizes.
+- **App robustness pass:** every screen empty and with a lot of data; slow and dropped connections; double taps on every button; error messages on every form; long names everywhere; phone, tablet and desktop sizes. **Done (19 Nov 2026)** with made-up data (40 own wishes, 30 others, 12 members, very long names and titles):
+  - No page or sheet overflows at phone (375 px), tablet (768 px) or desktop (1440 px); long titles cut off cleanly and broken photos fall back to the gift icon.
+  - Fixed: fast double or triple taps sent a claim, a wish save or "Put back on my list" more than once; now one at a time.
+  - Fixed: names over 60 characters gave a raw database error; the fields now stop at 60.
+  - Fixed: "Remove" and "Make owner" in Circle settings happened in one tap; both now ask first.
+  - Fixed: a page that couldn't load had no way back short of reloading; every list now has "Try again".
+  - Fixed: with no connection, pages sat on "Loading…" for about 18 seconds (the Supabase client retried 3 times on top of the app's own retry); now the message shows in about a second.
+  - Checked and fine: empty list, Circles and Received pages; form error messages; busy states on slow saves.
 - **Manual test script (the owner, about 20 minutes, two accounts on two phones):** sign up, start and join a Circle, add wishes by link and by hand, upload a photo, claim, buy, the gift hand-off, Received, a couple Circle, Help and bug report.
 - **Light load check (optional):** about 20 simulated users for a couple of minutes against a test copy (a second free Supabase project), never the live database. The full stress test stays in Phase 7.5.
 - Then: fix what turns up and open sign-up for the people invited (email confirmation is already back on).

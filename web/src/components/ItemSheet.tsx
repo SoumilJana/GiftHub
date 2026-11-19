@@ -111,6 +111,7 @@ export function EditItemSheet({
   const reader = useRef<AbortController | null>(null)
   // The read still running, so Save doesn't have to wait for it.
   const pending = useRef<Promise<LinkRead> | null>(null)
+  const saving = useRef(false)
   const handedOff = useRef(false)
 
   /** Read the store page and fill in what's still empty (or everything you haven't changed, when `all`). */
@@ -195,6 +196,8 @@ export function EditItemSheet({
 
   async function submit(e: FormEvent) {
     e.preventDefault()
+    // A ref, not save.isPending: two quick taps can both land before the next render.
+    if (saving.current || uploading) return
     const next: typeof errors = {}
     const link = url.trim() ? (linkFromText(url)?.url ?? null) : null
     if (url.trim() && !link) next.url = 'That doesn’t look like a web link. Check it, or leave it empty.'
@@ -219,6 +222,7 @@ export function EditItemSheet({
       occasions,
       circle_ids: circleIds,
     }
+    saving.current = true
     try {
       const id = await save.mutateAsync(draft)
       // Still reading the page: finish in the background and fill the wish in afterwards.
@@ -240,6 +244,8 @@ export function EditItemSheet({
       onClose()
     } catch (err) {
       setErrors({ form: friendlyError(err) })
+    } finally {
+      saving.current = false
     }
   }
 

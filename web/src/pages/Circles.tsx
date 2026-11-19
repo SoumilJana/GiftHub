@@ -1,9 +1,8 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { EmptyState, Page } from '../components/Page'
-import { Avatar, LockIcon, Notice, Spinner } from '../components/ui'
+import { Avatar, LoadError, LockIcon, Notice, Spinner } from '../components/ui'
 import { useUserId } from '../lib/auth'
-import { friendlyError } from '../lib/errors'
 import { circleTitle, roleLabel, useMyCircles, type MyCircle } from '../lib/queries'
 import { StartCircle } from './Welcome'
 
@@ -92,7 +91,7 @@ export function CirclesPage() {
   )
 
   if (circles.isPending) return <Spinner />
-  if (circles.error) return <Notice tone="alert">{friendlyError(circles.error)}</Notice>
+  if (circles.error) return <LoadError error={circles.error} onRetry={() => circles.refetch()} />
 
   const list = circles.data
 

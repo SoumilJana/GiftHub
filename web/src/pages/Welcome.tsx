@@ -2,7 +2,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 import { CurrencySelect } from '../components/CurrencySelect'
 import { Page } from '../components/Page'
-import { Button, Notice, Panel, Spinner, TextField } from '../components/ui'
+import { Button, LoadError, Notice, Panel, Spinner, TextField } from '../components/ui'
 import { detectUserCurrency, FALLBACK_CURRENCY } from '../lib/currency'
 import { friendlyError } from '../lib/errors'
 import { normalizeInviteCode, readPendingJoin } from '../lib/invite'
@@ -12,7 +12,7 @@ import { useToast } from '../lib/toast'
 export function WelcomePage() {
   const profile = useProfile()
   if (profile.isPending) return <Spinner />
-  if (profile.error) return <Notice tone="alert">{friendlyError(profile.error)}</Notice>
+  if (profile.error) return <LoadError error={profile.error} onRetry={() => profile.refetch()} />
   return <Welcome profile={profile.data} />
 }
 
@@ -44,7 +44,7 @@ function Welcome({ profile }: { profile: Profile }) {
       <Page title="Welcome to GiftHub" lead="Two quick things, then you can start a Circle.">
         <Panel className="mt-6 max-w-[480px]">
           <form onSubmit={saveProfile} className="flex flex-col gap-4" noValidate>
-            <TextField label="Your name" hint="This is how you appear in your Circles." autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
+            <TextField label="Your name" hint="This is how you appear in your Circles." autoComplete="name" maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
             <CurrencySelect value={currency} onChange={setCurrency} hint="Used when a store doesn’t show its own currency. You can change it later." />
             {error && <Notice tone="alert">{error}</Notice>}
             <Button type="submit" busy={update.isPending} className="self-start">

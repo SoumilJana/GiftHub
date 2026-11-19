@@ -1,3 +1,4 @@
+import { friendlyError } from '../lib/errors'
 import { useId, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 
 type Variant = 'primary' | 'ghost' | 'text' | 'danger'
@@ -157,6 +158,18 @@ export function Notice({ children, tone = 'info' }: { children: ReactNode; tone?
   )
 }
 
+/** A list or page that couldn't load, with a way to try again without reloading. */
+export function LoadError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  return (
+    <div className="mt-6 flex flex-col items-start gap-3">
+      <Notice tone="alert">{friendlyError(error)}</Notice>
+      <Button variant="ghost" onClick={onRetry}>
+        Try again
+      </Button>
+    </div>
+  )
+}
+
 export function LockIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" className="mr-1.5 inline-block -translate-y-px">
@@ -201,13 +214,17 @@ export function ConfirmButton({
   onConfirm,
   busy,
   variant = 'ghost',
+  danger = false,
 }: {
   label: string
   confirmLabel: string
   question: string
   onConfirm: () => void
   busy?: boolean
-  variant?: 'ghost' | 'danger'
+  /** 'danger' is a ghost trigger with a red confirm; 'text' is a link-style trigger. */
+  variant?: 'ghost' | 'danger' | 'text'
+  /** Red confirm button for a 'text' trigger. */
+  danger?: boolean
 }) {
   const id = useId()
   return (
@@ -216,10 +233,10 @@ export function ConfirmButton({
         {label}
       </summary>
       <div className="mt-3 flex flex-wrap items-center gap-3" role="group" aria-labelledby={id}>
-        <p id={id} className="text-small text-plum-soft">
+        <p id={id} className="text-small whitespace-normal text-plum-soft">
           {question}
         </p>
-        <Button variant={variant === 'danger' ? 'danger' : 'primary'} busy={busy} onClick={onConfirm}>
+        <Button variant={variant === 'danger' || danger ? 'danger' : 'primary'} busy={busy} onClick={onConfirm}>
           {confirmLabel}
         </Button>
       </div>
