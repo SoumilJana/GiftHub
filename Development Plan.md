@@ -276,14 +276,14 @@ Decided with the user (18 Nov 2026): icons with labels in the bottom bar, a Circ
 
 ---
 
-### Phase 4 — Automated Link Parsing (2–3 weeks, in progress: link reading built 19 Nov 2026)
-**Goal:** paste a URL and get a clean product card in ~3 s for most stores. **Status (19 Nov 2026): done when the phone check passes; the 80% target is met (84%).**
+### Phase 4 — Automated Link Parsing (2–3 weeks, done 19 Nov 2026)
+**Goal:** paste a URL and get a clean product card in ~3 s for most stores. **Status (19 Nov 2026): ✅ done. The 80% target is met (85% on the third link test) and the phone check passed.**
 
 **Built 19 Nov 2026** (the original scope below is kept for reference; where they differ, this wins):
 - **Where it runs:** `POST /api/parse` on the site's own Cloudflare Worker (`web/worker/index.ts`), not an Edge Function, because the blocking test showed Cloudflare gets through to more stores. When a store refuses Cloudflare, the Worker asks the Edge Function `parse-url` once (`supabase/functions/parse-url`), which FirstCry and Croma let through. Still refused: scrape.do (see the fallback test below).
 - **One parser for both:** `supabase/functions/_shared/parse.ts`, plain web APIs and no imports. Order: JSON-LD `Product` → Amazon page adapter → Open Graph and meta tags → page title. Store suffixes are trimmed from names ("| Flipkart.com"). Tested in `web/src/lib/parse.test.ts`.
 - **Clean links:** tracking parameters removed; Amazon cut to `/dp/ASIN`; Flipkart kept to `?pid=`; short links followed to the product.
-- **Safety:** signed-in users only (the Supabase session is checked with Supabase), 30 links a minute per person (Cloudflare rate-limit binding), https/http pages on ordinary hostnames only (no IP addresses, local names or odd ports, also after redirects), 2.5 MB and 10 s per page, HTML only.
+- **Safety:** signed-in users only (the Supabase session is checked with Supabase), 30 links a minute per person (Cloudflare rate-limit binding), https/http pages on ordinary hostnames only (no IP addresses, local names or odd ports); since the security pass (Phase 4.5), every redirect hop is checked and every hostname is looked up first, so nothing that points at a private, local or cloud-metadata address is fetched; 2.5 MB and 10 s per page, HTML only.
 - **Cache:** Cloudflare's cache, not the `parse_cache` table: a day for read pages, an hour for refusals. `parse_cache` and `parse_jobs` stay unused for now.
 - **In the app:** pasting a link in the bar, or into the Link field of a new wish, reads the page. Name, price with currency, and photo fill in; anything you've typed yourself is kept. The line under Link says "Reading the page on flipkart.com…", then "Filled in from flipkart.com. Check it looks right." or, when refused, "ajio.com doesn't let us read its pages yet. Fill in the rest yourself." Editing a wish offers "Update from the store", which refreshes name, price and photo (an uploaded photo stays).
 - **No waiting (19 Nov 2026):** Save works while the page is still being read ("Getting details from amazon.in. You can save now."). The read carries on after the form closes. Then the saved wish gets whatever is still guessed or empty, and a one-line toast says "Details added from amazon.in." A name you typed is kept, and nothing changes if you edited the wish in the meantime. If the app is closed before the read finishes, the wish keeps its guessed name.
@@ -293,7 +293,7 @@ Decided with the user (18 Nov 2026): icons with labels in the bottom bar, a Circ
 
 **Still to do in Phase 4:**
 1. ~~Deploy `parse-url`~~ (deployed 19 Nov 2026).
-2. Try it live on a phone with real links. ~~Link test~~: done, 84% on the second run (see below). Rerun `web/scripts/link-test.mjs` after parser changes.
+2. ~~Try it live on a phone with real links~~ (done 19 Nov 2026). ~~Link test~~: done, 85% on the third run (see below). Rerun `web/scripts/link-test.mjs` after parser changes.
 3. ~~Save Myntra photos to GiftHub's storage~~: not needed. Checked 19 Nov 2026 in a browser from another site: photos from all 13 stores in the test (Myntra, Amazon, Flipkart, Nykaa, Croma, Meesho and others) load fine.
 4. Daily link limit: Free 15 a day, Pro 30 or more (Phase 5.5, with a `usage_daily` count). Until then, 30 a minute for everyone, as built. Cached links don't count.
 5. ~~Add scrape.do as the third retry~~ (built 19 Nov 2026; needs the `SCRAPEDO_TOKEN` secret). Other untested fallbacks for the blocked stores: ScraperAPI's free tier, GitHub Actions + Playwright on `parse_jobs`, and the share text from store apps (Phase 5).
@@ -396,8 +396,12 @@ Fully parsed product pages: Worker 10 of 18, Edge Function 8 of 18 (+1 partial).
 
 **Link test, second run (19 Nov 2026, after the fixes, 74 links): 62 of 74 with name, photo and price (84%). ✅ Target met.** Myntra 10 of 10, Croma 6 of 6, Tata CLiQ 6 of 6, FirstCry 2 of 2, Lenskart 1 of 1, Nykaa 4 of 6, Amazon 13 of 15, Flipkart 7 of 11, Meesho 1 of 4, Ajio 0 of 1. Of the 12 misses, 6 are products that no longer exist or aren't for sale (Nykaa 2 and Meesho 2 gone, Amazon 2 unavailable) and 4 are Flipkart listings with no price shown. Only 2 are real failures: scrape.do timed out on Meesho and Ajio after 25 s. Leaving out the gone products: 62 of 68 (91%). Follow-up fixes: scrape.do's 404/410 now reports "gone" instead of "blocked", and its time limit went up to 40 s (Save no longer waits for the read, so a slow read only fills in later).
 
+**Link test, third run (19 Nov 2026, after the security pass): 63 of 74 (85%). ✅** A Meesho page that timed out before now reads in full; the 4 removed products report "gone". The 11 misses: 4 removed products, 2 unavailable Amazon items, 4 Flipkart listings with no price, and Ajio (scrape.do timeout). Most links came from the one-day cache, so only 6 went through the new address checks; a rerun after the cache clears covers all of them.
+
 ### Phase 4.5 — Pre-beta check (after Phase 4; before the private beta)
 **Goal:** friends find the app solid on the first try. Bugs and edge cases get caught by us, not by them.
+
+**Status (19 Nov 2026):** edge-case tests, security pass and Security Advisor fixes are done and live. Next: the robustness pass (when the owner says to start), then the manual two-phone test.
 
 Scope
 - **Automated edge-case tests (database checks, run on every push):** two claims on the same wish at the same moment (only one wins); a member removed in the middle of a claim; a Circle deleted while a hand-off is pending; leaving a couple Circle; wishes with no price, a huge price, a very long or emoji name; expired and reused invite codes.
@@ -408,25 +412,24 @@ Scope
     - Applied to the live database on 19 Nov 2026.
 - **Security pass:** ✅ done 19 Nov 2026.
   - **Link reader:** it followed redirects blindly, and hostnames that point at internal addresses (such as `127.0.0.1.nip.io`) got through, so a link could make our servers fetch an internal address. Now every redirect hop is checked, and every hostname is looked up first (over DNS-over-HTTPS): private, local and cloud-metadata addresses are refused. Tested against `127.0.0.1.nip.io` and a redirect to `169.254.169.254`; real store links still read.
-  - **Page headers:** added a Content Security Policy (scripts only from our own site; connections only to our site and Supabase), blocking of other sites framing the app (clickjacking), and HSTS. Checked locally: the app loads and reaches Supabase, other sites are blocked.
+  - **Page headers:** added a Content Security Policy (scripts only from our own site, Google sign-in and Cloudflare Turnstile; connections only to our site, Supabase and Google sign-in), blocking of other sites framing the app (clickjacking), and HSTS. Checked live: the app loads, Google sign-in and Turnstile work, other sites are blocked. (The first version blocked Google's sign-in script for about 2 minutes; fixed the same day.)
   - **Leftover design mockup:** `demo.html` was being deployed and was live at /demo. It's now left out of deploys (`public/.assetsignore`).
   - **Sign-in return link:** a link like `/\evil.com` (which browsers read as another website) is now refused.
   - **Packages:** nothing in the shipped app has a known flaw. 4 moderate warnings are in build tools only; the suggested "fix" is a downgrade, so they stay until the tools update.
   - **Leaked keys:** none in the code, the git history or the built app.
   - **Already in place:** database access rules (96 checks), rate limits on link reading (30 a minute), invite-code guessing (5 tries) and bug reports (daily cap), quotas on wishes, Circles and photos.
-  - **Still open:**
-    - Before opening sign-up: in the Supabase dashboard, turn on email confirmation, set the minimum password length to 8, turn on "Secure password change", and run Advisors → Security.
-    - Cloudflare Turnstile (free person check): built 19 Nov 2026 on sign-up, sign-in, Google sign-in, email links and password reset. Site key set and deployed 19 Nov 2026; the last step is the secret key in Supabase → Authentication → Attack Protection.
+  - **Dashboard settings (done by the owner, 19 Nov 2026):** email confirmation on, minimum password length 8, "Secure password change" on, Security Advisor run (see below). The scrape.do key was regenerated and the ScrapingAnt account deleted.
+  - **Cloudflare Turnstile (free person check), live 19 Nov 2026:** on sign-up, sign-in, Google sign-in, email links and password reset; usually invisible. Supabase checks the token (Authentication → Attack Protection, secret key set by the owner). The public site key is written in `web/src/lib/turnstile.ts`, because the automatic deploy on every push builds without `web/.env.local`: one such deploy dropped the key while Supabase required the check, which would have broken sign-in.
+  - **Still open:** the `parse-url` Supabase function can be called directly by any signed-in person without the 30-a-minute limit. Low risk while sign-up is invite-only; closing it needs a shared secret between the Worker and the function.
 - **Security Advisor (19 Nov 2026):**
   - `rls_auto_enable()` (Supabase's own function that turns RLS on for new tables) was callable by anyone. Migration `20261124000000_lock_rls_auto_enable.sql` removes that (applied live 19 Nov 2026).
   - The 18 "signed-in users can run a SECURITY DEFINER function" warnings are intended: these are the app's own actions (claim, join, create Circle…). Each one checks who is asking, and the database tests cover them.
   - "RLS enabled, no policy" on `bug_reports`, `join_attempts`, `parse_cache` and `parse_jobs` is intended: only the server uses these tables. (`parse_cache` and `parse_jobs` are unused leftovers from the first design.)
   - Leaked password protection needs Supabase's paid plan, so it stays off; minimum length 8 instead.
-    - The `parse-url` Supabase function can be called directly by any signed-in person without the 30-a-minute limit. Low risk while sign-up is invite-only.
 - **App robustness pass:** every screen empty and with a lot of data; slow and dropped connections; double taps on every button; error messages on every form; long names everywhere; phone, tablet and desktop sizes.
 - **Manual test script (the owner, about 20 minutes, two accounts on two phones):** sign up, start and join a Circle, add wishes by link and by hand, upload a photo, claim, buy, the gift hand-off, Received, a couple Circle, Help and bug report.
 - **Light load check (optional):** about 20 simulated users for a couple of minutes against a test copy (a second free Supabase project), never the live database. The full stress test stays in Phase 7.5.
-- Then: fix what turns up, turn email confirmation back on, and open sign-up for the people invited.
+- Then: fix what turns up and open sign-up for the people invited (email confirmation is already back on).
 
 Done when: all automated checks pass, the manual script runs clean on two phones, and nothing in the robustness pass is left open. Then the private beta (5–10 couples and friend groups).
 

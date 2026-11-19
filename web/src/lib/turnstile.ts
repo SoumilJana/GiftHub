@@ -1,11 +1,17 @@
 /**
  * Cloudflare Turnstile: a free, mostly invisible "are you a person?" check.
  * Supabase Auth verifies the token on sign-up, sign-in, email links and password resets.
- * With no site key set, the check is off and nothing loads.
+ * GiftHub's own site key is built in (see below).
  */
 
-/** Public site key (not a secret). The secret key lives only in the Supabase dashboard. */
-export const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined)?.trim() || undefined
+/**
+ * Public site key (not a secret). The secret key lives only in the Supabase dashboard.
+ * It is written here, not only in .env.local, because the automatic deploy on every push
+ * builds without .env.local: a build without the key would break sign-in while Supabase
+ * requires the check. Set VITE_TURNSTILE_SITE_KEY to override it (Cloudflare's test key locally).
+ */
+export const TURNSTILE_SITE_KEY =
+  (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined)?.trim() || '0x4AAAAAAGILWAuXiVVhrVlm'
 
 export type Turnstile = {
   render(

@@ -1,6 +1,6 @@
 # How GiftHub reads a store link
 
-*19 November 2026, Phase 4*
+*19 November 2026, Phase 4 (updated after the Phase 4.5 security check)*
 
 When someone pastes a product link, GiftHub fills in the name, price and photo by itself. This note explains how that works, how we tested it, what the first test showed, what we changed, and how the second test went.
 
@@ -31,7 +31,7 @@ Reading a link means fetching the store's product page and pulling three things 
 
 **5. Never make the person wait.** They can save straight away. The details fill in a few seconds later, and anything they typed themselves is kept.
 
-**Limits and safety:** only signed-in people can read links, up to 30 a minute each. It only reads ordinary public web pages, and stops at 2.5 MB or 10 seconds per page.
+**Limits and safety:** only signed-in people can read links, up to 30 a minute each. It only reads ordinary public web pages, and stops at 2.5 MB or 10 seconds per page. Every redirect is checked, and every web address is looked up before it is fetched, so a link can never make our servers open an address inside a private network (see "Security check" below).
 
 ## How we tested it
 
@@ -101,11 +101,29 @@ The 12 that still miss:
 - Removed products found through scrape.do now also say "gone" instead of "blocked".
 - scrape.do now gets 40 seconds instead of 25. Because saving doesn't wait for the read, a slow store just means the details appear a little later.
 
+## Security check
+
+During the pre-beta security check we found that a link could trick the reader:
+
+- **Redirects weren't checked.** A page could send the reader on to an internal address, such as the one cloud servers use for their own settings.
+- **Web addresses weren't looked up.** A name like `127.0.0.1.nip.io` looks ordinary but points back at the server itself.
+
+Now the reader follows redirects one at a time and checks each one, and it looks up every address first. Anything that points at a private, local or cloud-settings address is refused. Both kinds of trick link are refused in tests, and real store links still read.
+
+## Third test: 85% ✅
+
+After the security changes, **63 of 74 links** came back complete.
+
+- One Meesho page that ran out of time before now reads in full.
+- The 11 misses are the same kinds as before: 4 removed products, 2 Amazon items that aren't for sale, 4 Flipkart listings with no price, and Ajio, where scrape.do still runs out of time.
+- Most links came from the one-day memory of earlier reads, so only 6 went through the new checks. A rerun once that memory clears tests all of them.
+
 ## What's next
 
-- **Phone check:** paste a few real links on a phone, including one shared from the Amazon app.
+- ~~Phone check~~: done.
 - **Phase 4.5, the pre-beta check:**
-  - edge-case tests, such as two people claiming the same wish at once
+  - ~~edge-case tests, such as two people claiming the same wish at once~~: done, 3 bugs fixed
+  - ~~security check~~: done (this page, plus page security headers and a person check on sign-in)
   - a robustness pass
   - a 20-minute manual test with two phones
 - **Then a private beta** with 5–10 couples and friend groups.

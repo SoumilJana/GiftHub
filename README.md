@@ -25,7 +25,9 @@ The full plan, with what is built and live, is in [Development Plan.md](Developm
 | Edge Functions | `supabase/functions/` | `report-bug` (bug reports, emailed through Resend) and `parse-url` (link-reading retry from Supabase's servers) |
 | Shared link parser | `supabase/functions/_shared/parse.ts` | Used by both the Worker and `parse-url` |
 
-Privacy is enforced in the database, not the app: `supabase/rls-tests` checks it against a real Postgres (PGlite).
+Privacy is enforced in the database, not the app: `supabase/rls-tests` checks it against a real Postgres (PGlite), along with edge cases such as two people claiming the same wish at once.
+
+Sign-up, sign-in, email links and password resets carry a Cloudflare Turnstile token, which Supabase checks. The public site key is in `web/src/lib/turnstile.ts`; locally, set `VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA` (Cloudflare's always-pass test key) in `web/.env.local` if the real key refuses `localhost`.
 
 ## Running it locally
 
@@ -72,7 +74,7 @@ npm test
 npm run build
 ```
 
-Database privacy checks, from `supabase/rls-tests/`:
+Database privacy and edge-case checks, from `supabase/rls-tests/`:
 
 ```bash
 npm test
@@ -80,7 +82,7 @@ npm test
 
 ## Deploying
 
-- **Web app and Worker:** every push to `main` deploys through Cloudflare Workers Builds.
+- **Web app and Worker:** every push to `main` deploys through Cloudflare Workers Builds. That build doesn't see `web/.env.local`, so anything the live app needs at build time must be in the code or in the Workers Builds settings. A manual `npx wrangler deploy` from `web/` is replaced by the next push.
 - **Database:** from the repository root, after checking the migration:
 
 ```bash
@@ -94,6 +96,8 @@ npx supabase functions deploy parse-url --use-api
 ```
 
 Apply a migration before pushing app code that needs it.
+
+Page security headers (Content Security Policy and others) are in `web/public/_headers`. A new outside script, frame or connection must be added there, or the browser blocks it.
 
 ## Rules
 
