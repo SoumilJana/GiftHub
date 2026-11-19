@@ -12,6 +12,8 @@ export function friendlyError(error: unknown): string {
     return 'Too many attempts just now. Wait a minute, then try again.'
   if (m.includes('unable to validate email') || m.includes('invalid email')) return 'Check the email address and try again.'
   if (m.includes('provider is not enabled')) return 'Google sign-in isn’t set up yet. Use email for now.'
+  if ((m.includes('sending') && m.includes('email')) || m.includes('not authorized') || m.includes('email_address_not_authorized'))
+    return 'We couldn’t send the confirmation email just now. Try again later, or continue with Google.'
   if (m.includes('captcha')) return 'We couldn’t check that you’re a person. Reload the page and try again.'
   if (m.includes('failed to fetch') || m.includes('network')) return 'Can’t reach GiftHub. Check your connection and try again.'
 
