@@ -16,7 +16,7 @@ export type Parsed = {
 
 export type ReadResult =
   | { ok: true; data: Parsed; via: string }
-  | { ok: false; reason: 'blocked' | 'unreadable' | 'bad-link'; url: string; store: string | null; via: string }
+  | { ok: false; reason: 'blocked' | 'unreadable' | 'bad-link' | 'gone'; url: string; store: string | null; via: string }
 
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
@@ -189,6 +189,56 @@ function fromAmazon(html: string): Found {
   return { title: title ? decode(title) : undefined, image, price, currency: symbol ? SYMBOLS[symbol.trim()] : undefined }
 }
 
+/** Stores that keep the price outside JSON-LD and meta tags. */
+function fromStoreData(html: string, store: string, pageUrl: string): Found {
+  // Croma: the page state carries "pdpPriceData":{"sellingPrice":{"value":"4694.00"}
+  if (store === 'croma.com') {
+    const v = /"pdpPriceData"\s*:\s*\{\s*"sellingPrice"\s*:\s*\{\s*"value"\s*:\s*"?([\d.]+)/.exec(html)?.[1]
+    return v ? { price: toPrice(v), currency: 'INR' } : {}
+  }
+  // FirstCry: each product on the page has "mrp" and "Dis" (percent off) just before its "pid".
+  if (store === 'firstcry.com') {
+    const pid = /\/(\d+)\/product-detail/.exec(pageUrl)?.[1]
+    const at = pid ? html.indexOf(`"pid":${pid}`) : -1
+    if (at < 0) return {}
+    const before = html.slice(Math.max(0, at - 800), at)
+    const mrp = [...before.matchAll(/"mrp":([\d.]+)/g)].pop()?.[1]
+    const dis = [...before.matchAll(/"Dis":([\d.]+)/g)].pop()?.[1]
+    if (!mrp) return {}
+    const price = Math.round(Number(mrp) * (1 - (Number(dis) || 0) / 100))
+    return price > 0 ? { price, currency: 'INR' } : {}
+  }
+  return {}
+}
+
+/** Tata CLiQ pages are empty shells filled in by the browser; its product API has everything. */
+async function fromTataCliq(target: URL): Promise<Omit<Parsed, 'url'> | null> {
+  const id = /\/p-(mp\d+)/i.exec(target.pathname)?.[1]?.toUpperCase()
+  if (!id) return null
+  try {
+    const res = await fetch(`https://www.tatacliq.com/marketplacewebservices/v2/mpl/products/productDetails/${id}?isPwa=true&isMDE=true`, {
+      headers: { 'user-agent': UA, accept: 'application/json' },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    })
+    if (!res.ok) return null
+    const d = (await res.json()) as {
+      productName?: string
+      winningSellerPrice?: { doubleValue?: number }
+      mrpPrice?: { doubleValue?: number }
+      galleryImagesList?: { galleryImages?: { key: string; value: string }[] }[]
+    }
+    if (!d.productName) return null
+    const img = d.galleryImagesList?.[0]?.galleryImages?.find((g) => g.key === 'superZoom' || g.key === 'zoom' || g.key === 'product')?.value
+    const price = toPrice(d.winningSellerPrice?.doubleValue ?? d.mrpPrice?.doubleValue)
+    const title = tidyTitle(decode(d.productName), 'tatacliq.com')
+    const image = img ? (img.startsWith('//') ? 'https:' + img : img) : null
+    const confidence = (title ? 0.4 : 0) + (image ? 0.3 : 0) + (price != null ? 0.3 : 0)
+    return { store: 'tatacliq.com', title, image, price, currency: price != null ? 'INR' : null, confidence: Math.round(confidence * 10) / 10 }
+  } catch {
+    return null
+  }
+}
+
 const BLOCK_TEXT = [
   'api-services-support@amazon.com', 'to discuss automated access', 'enter the characters you see below', 'robot check',
   'pardon our interruption', 'are you a human', 'access denied', 'request blocked', 'unusual traffic', 'px-captcha',
@@ -217,6 +267,7 @@ export function extract(html: string, pageUrl: string): Omit<Parsed, 'url'> {
   const store = storeName(pageUrl) ?? ''
   const ld = fromJsonLd(html)
   const amz: Found = /(^|\.)amazon\./.test(store) ? fromAmazon(html) : {}
+  const sd = fromStoreData(html, store, pageUrl)
   const og: Found = {
     title: metaContent(html, ['og:title', 'twitter:title']),
     image: metaContent(html, ['og:image:secure_url', 'og:image', 'twitter:image', 'twitter:image:src']),
@@ -227,8 +278,8 @@ export function extract(html: string, pageUrl: string): Omit<Parsed, 'url'> {
   const rawTitle = ld.title ?? amz.title ?? og.title ?? (titleTag ? decode(titleTag) : undefined)
   const title = rawTitle ? tidyTitle(rawTitle, store) : null
   const image = absolute(ld.image ?? amz.image ?? og.image, pageUrl)
-  const price = ld.price ?? amz.price ?? og.price ?? null
-  const cur = (price != null ? (ld.price != null ? ld.currency : amz.price != null ? amz.currency : og.currency) : undefined)?.toUpperCase()
+  const price = ld.price ?? amz.price ?? sd.price ?? og.price ?? null
+  const cur = (price != null ? (ld.price != null ? ld.currency : amz.price != null ? amz.currency : sd.price != null ? sd.currency : og.currency) : undefined)?.toUpperCase()
   const currency = cur && /^[A-Z]{3}$/.test(cur) ? cur : null
   const confidence = (title ? 0.4 : 0) + (image ? 0.3 : 0) + (price != null ? 0.3 : 0)
   return { store, title, image, price, currency, confidence: Math.round(confidence * 10) / 10 }
@@ -257,10 +308,28 @@ async function readCapped(res: Response) {
   return new TextDecoder().decode(all)
 }
 
+function isHomeShell(html: string, pageUrl: string) {
+  const path = new URL(pageUrl).pathname.replace(/\/+$/, '')
+  if (!path) return false
+  const canon =
+    /<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i.exec(html)?.[1] ??
+    /<meta[^>]+property=["']og:url["'][^>]*content=["']([^"']+)["']/i.exec(html)?.[1]
+  if (!canon) return false
+  try {
+    return new URL(canon, pageUrl).pathname.replace(/\/+$/, '') === ''
+  } catch {
+    return false
+  }
+}
+
 /** Fetch a page and read it. `via` names where it ran, for logs. */
 export async function readPage(input: string, via: string): Promise<ReadResult> {
   const target = safeTarget(input)
   if (!target) return { ok: false, reason: 'bad-link', url: input, store: null, via }
+  if (/(^|\.)tatacliq\.com$/.test(target.hostname)) {
+    const found = await fromTataCliq(target)
+    if (found) return { ok: true, data: { url: cleanUrl(target.toString()), ...found }, via }
+  }
   let res: Response
   try {
     res = await fetch(target.toString(), {
@@ -284,9 +353,17 @@ export async function readPage(input: string, via: string): Promise<ReadResult> 
     res.body?.cancel().catch(() => {})
     return { ok: false, reason: 'unreadable', url, store, via }
   }
+  // A removed product: say so, and don't spend retries on it.
+  if (res.status === 404 || res.status === 410) {
+    res.body?.cancel().catch(() => {})
+    return { ok: false, reason: 'gone', url, store, via }
+  }
   const html = await readCapped(res)
   if (looksBlocked(res.status, html)) return { ok: false, reason: 'blocked', url, store, via }
   const found = extract(html, finalUrl)
   if (!found.title && !found.image) return { ok: false, reason: res.ok ? 'unreadable' : 'blocked', url, store, via }
+  // A product link answered with the shop's home page (an empty app shell): not a product read.
+  const sentHome = new URL(finalUrl).pathname.replace(/\/+$/, '') === '' && target.pathname.replace(/\/+$/, '') !== ''
+  if (found.price == null && (sentHome || isHomeShell(html, finalUrl))) return { ok: false, reason: 'unreadable', url, store, via }
   return { ok: true, data: { url, ...found }, via }
 }

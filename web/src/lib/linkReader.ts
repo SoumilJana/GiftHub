@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 /** What the Worker's /api/parse returns (see supabase/functions/_shared/parse.ts). */
 export type LinkRead =
   | { ok: true; data: { url: string; store: string; title: string | null; image: string | null; price: number | null; currency: string | null } }
-  | { ok: false; reason: 'blocked' | 'unreadable' | 'bad-link' | 'busy' | 'offline'; store: string | null }
+  | { ok: false; reason: 'blocked' | 'unreadable' | 'bad-link' | 'gone' | 'busy' | 'offline'; store: string | null }
 
 /** Ask the server to read a store page. Never throws: failures come back as `ok: false`. */
 export async function readLink(url: string, signal?: AbortSignal): Promise<LinkRead> {

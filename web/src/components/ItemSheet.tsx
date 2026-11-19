@@ -513,6 +513,7 @@ function linkHint(r: { state: string; store?: string | null; reason?: string }, 
   if (r.state === 'done') return `Filled in from ${store}. Check it looks right.`
   if (r.state !== 'failed') return undefined
   if (r.reason === 'blocked') return `${store} doesn’t let us read its pages yet. Fill in the rest yourself.`
+  if (r.reason === 'gone') return `That page is gone from ${store}. Check the link, or fill in the rest yourself.`
   if (r.reason === 'busy') return 'That’s a lot of links in a minute. Fill this one in, or try again shortly.'
   if (r.reason === 'offline') return 'You’re offline, so fill in the rest yourself.'
   return 'Couldn’t read that page. Fill in the rest yourself.'

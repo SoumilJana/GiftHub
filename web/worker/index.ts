@@ -25,7 +25,9 @@ const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } })
 
 const DAY = 86400
-const cacheKey = (url: string) => new Request('https://parse-cache.gifthub.internal/' + encodeURIComponent(url))
+// Bump the version when the parser improves, so pages read by the old one are read again.
+const PARSER_VERSION = 2
+const cacheKey = (url: string) => new Request(`https://parse-cache.gifthub.internal/v${PARSER_VERSION}/` + encodeURIComponent(url))
 const cache = () => (caches as unknown as { default: Cache }).default
 
 /** Who is asking? Returns the user id, or null when the session isn't valid. */
@@ -47,7 +49,7 @@ async function userId(env: Env, auth: string, apikey: string) {
   return user.id
 }
 
-async function fromSupabase(env: Env, url: string, auth: string, apikey: string): Promise<ReadResult | null> {
+async function fromSupabase(env: Env, url: string, auth: string, apikey: string, trail: string[]): Promise<ReadResult | null> {
   try {
     const res = await fetch(`${env.SUPABASE_URL}/functions/v1/parse-url`, {
       method: 'POST',
@@ -55,8 +57,15 @@ async function fromSupabase(env: Env, url: string, auth: string, apikey: string)
       body: JSON.stringify({ url }),
       signal: AbortSignal.timeout(15_000),
     })
-    return res.ok ? ((await res.json()) as ReadResult) : null
-  } catch {
+    if (!res.ok) {
+      trail.push(`supabase ${res.status}`)
+      return null
+    }
+    const r = (await res.json()) as ReadResult
+    trail.push(r.ok ? 'supabase ok' : `supabase ${r.reason}`)
+    return r
+  } catch (e) {
+    trail.push(`supabase ${e instanceof Error && e.name === 'TimeoutError' ? 'timeout' : 'error'}`)
     return null
   }
 }
@@ -64,19 +73,34 @@ async function fromSupabase(env: Env, url: string, auth: string, apikey: string)
 /** Stores whose pages need scrape.do's residential proxies (about 10 credits instead of 1). */
 const RESIDENTIAL = /(^|\.)etsy\.com$/
 
-async function fromScrapeDo(env: Env, url: string): Promise<ReadResult | null> {
-  if (!env.SCRAPEDO_TOKEN) return null
+async function fromScrapeDo(env: Env, url: string, trail: string[]): Promise<ReadResult | null> {
+  if (!env.SCRAPEDO_TOKEN) {
+    trail.push('scrapedo off')
+    return null
+  }
   const host = new URL(url).hostname
   const q = new URLSearchParams({ token: env.SCRAPEDO_TOKEN, url, geoCode: 'in', ...(RESIDENTIAL.test(host) ? { super: 'true' } : {}) })
   try {
     const res = await fetch('https://api.scrape.do/?' + q, { signal: AbortSignal.timeout(25_000) })
-    if (!res.ok) return null // refused, or out of credits
+    if (!res.ok) {
+      // Refused, or out of credits. scrape.do passes on the store's own status.
+      trail.push(`scrapedo ${res.status}`)
+      return null
+    }
     const html = (await res.text()).slice(0, 2_500_000)
-    if (looksBlocked(200, html)) return null
+    if (looksBlocked(200, html)) {
+      trail.push('scrapedo blocked-page')
+      return null
+    }
     const found = extract(html, url)
-    if (!found.title && !found.image) return null
+    if (!found.title && !found.image) {
+      trail.push('scrapedo empty')
+      return null
+    }
+    trail.push('scrapedo ok')
     return { ok: true, data: { url: cleanUrl(url), ...found }, via: 'scrapedo' }
-  } catch {
+  } catch (e) {
+    trail.push(`scrapedo ${e instanceof Error && e.name === 'TimeoutError' ? 'timeout' : 'error'}`)
     return null
   }
 }
@@ -104,13 +128,18 @@ async function parse(req: Request, env: Env, ctx: ExecutionContext) {
   if (cached) return json(200, { ...((await cached.json()) as object), cached: true })
 
   let result = await readPage(target.toString(), 'cloudflare')
-  if (!result.ok && result.reason === 'blocked') result = (await fromSupabase(env, target.toString(), auth, apikey)) ?? result
-  if (!result.ok && result.reason === 'blocked') result = (await fromScrapeDo(env, target.toString())) ?? result
+  // Which steps ran and how each ended, for the link test (no secrets in it).
+  const trail = [result.ok ? 'cloudflare ok' : `cloudflare ${result.reason}`]
+  // Refused, or an empty page shell (Myntra sends Cloudflare one): try Supabase's servers, then scrape.do.
+  const retry = (r: ReadResult) => !r.ok && (r.reason === 'blocked' || r.reason === 'unreadable')
+  if (retry(result)) result = (await fromSupabase(env, target.toString(), auth, apikey, trail)) ?? result
+  if (retry(result)) result = (await fromScrapeDo(env, target.toString(), trail)) ?? result
   if (!result.ok && !result.store) result.store = storeName(target.toString())
 
-  const keep = result.ok ? DAY : result.reason === 'blocked' ? 3600 : 0
-  if (keep) ctx.waitUntil(cache().put(key, new Response(JSON.stringify(result), { headers: { 'cache-control': `max-age=${keep}` } })))
-  return json(200, result)
+  const keep = result.ok ? DAY : result.reason === 'blocked' || result.reason === 'gone' ? 3600 : 0
+  const answer = { ...result, trail }
+  if (keep) ctx.waitUntil(cache().put(key, new Response(JSON.stringify(answer), { headers: { 'cache-control': `max-age=${keep}` } })))
+  return json(200, answer)
 }
 
 export default {

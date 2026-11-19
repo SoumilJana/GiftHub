@@ -293,8 +293,8 @@ Decided with the user (18 Nov 2026): icons with labels in the bottom bar, a Circ
 
 **Still to do in Phase 4:**
 1. ~~Deploy `parse-url`~~ (deployed 19 Nov 2026).
-2. Try it live on a phone with real links, then run the 100-link test set for the "Done when" figure.
-3. Myntra blocks its images on other sites: save store photos to GiftHub's storage when that matters.
+2. Try it live on a phone with real links. The link test (`web/scripts/link-test.mjs`, links in `web/scripts/links.txt`) is built and was run once; see the results below. Run it again after the fixes are deployed.
+3. ~~Save Myntra photos to GiftHub's storage~~: not needed. Checked 19 Nov 2026 in a browser from another site: photos from all 13 stores in the test (Myntra, Amazon, Flipkart, Nykaa, Croma, Meesho and others) load fine.
 4. Daily link limit: Free 15 a day, Pro 30 or more (Phase 5.5, with a `usage_daily` count). Until then, 30 a minute for everyone, as built. Cached links don't count.
 5. ~~Add scrape.do as the third retry~~ (built 19 Nov 2026; needs the `SCRAPEDO_TOKEN` secret). Other untested fallbacks for the blocked stores: ScraperAPI's free tier, GitHub Actions + Playwright on `parse_jobs`, and the share text from store apps (Phase 5).
 
@@ -383,6 +383,28 @@ Fully parsed product pages: Worker 10 of 18, Edge Function 8 of 18 (+1 partial).
 - [FlareSolverr, Camoufox, curl-impersonate](https://scrapfly.io/blog/posts/best-anti-bot-bypass-tools): need an always-on server and frequent fixes as stores change their defences.
 
 ---
+
+**Link test, first run (19 Nov 2026, 76 links from 14 stores, live site): 37 of 76 with name, photo and price (49%).** Amazon 13 of 15 (the other 2 are unavailable products), Flipkart 7 of 11 (the other 4 show no price), IKEA, Decathlon, boAt, Etsy all full, Nykaa 4 of 6 through scrape.do. Myntra 0 of 10, Croma and Tata CLiQ 0 of 6 (no price), Meesho 1 of 4, Ajio 0 of 1. Fixes made the same day:
+- **Myntra:** it answers Cloudflare with an empty page rather than a refusal, so the retries never ran. Empty pages now go through Supabase and scrape.do too (scrape.do reads Myntra in full).
+- **Croma:** the price is in the page's own data (`pdpPriceData`), now read.
+- **FirstCry:** the price is worked out from the product's MRP and discount in the page data.
+- **Tata CLiQ:** the page is an empty shell; its product API (`/marketplacewebservices/v2/mpl/products/productDetails/MP…`) gives name, photo and price.
+- **Home-page shells:** a product link answered with the shop's home page (Lenskart's US pages) now counts as unreadable instead of giving the shop's name as the product.
+- **Removed products:** a 404 page now says "That page is gone from nykaa.com" and skips the paid retries.
+- **Trail:** each answer lists the steps it went through (`cloudflare unreadable > supabase blocked > scrapedo 403`), so the next run shows why Meesho and Ajio still fail.
+- The cache key carries a parser version, so pages read by the old parser are read again.
+
+### Phase 4.5 — Pre-beta check (after Phase 4; before the private beta)
+**Goal:** friends find the app solid on the first try. Bugs and edge cases get caught by us, not by them.
+
+Scope
+- **Automated edge-case tests (database checks, run on every push):** two claims on the same wish at the same moment (only one wins); a member removed in the middle of a claim; a Circle deleted while a hand-off is pending; leaving a couple Circle; wishes with no price, a huge price, a very long or emoji name; expired and reused invite codes.
+- **App robustness pass:** every screen empty and with a lot of data; slow and dropped connections; double taps on every button; error messages on every form; long names everywhere; phone, tablet and desktop sizes.
+- **Manual test script (the owner, about 20 minutes, two accounts on two phones):** sign up, start and join a Circle, add wishes by link and by hand, upload a photo, claim, buy, the gift hand-off, Received, a couple Circle, Help and bug report.
+- **Light load check (optional):** about 20 simulated users for a couple of minutes against a test copy (a second free Supabase project), never the live database. The full stress test stays in Phase 7.5.
+- Then: fix what turns up, turn email confirmation back on, and open sign-up for the people invited.
+
+Done when: all automated checks pass, the manual script runs clean on two phones, and nothing in the robustness pass is left open. Then the private beta (5–10 couples and friend groups).
 
 ### Phase 5 — PWA Experience & Quick-Add (2 weeks)
 **Goal:** the web app feels like a native app and items can be added from anywhere.
@@ -493,6 +515,20 @@ Scope
 - SEO landing pages, referral through invite links.
 
 Done when: tracked by metrics — weekly active Circles, items added per user, claim rate, affiliate revenue.
+
+---
+
+### Phase 7.5 — Stress Testing (added 19 Nov 2026; much later, before any big growth push)
+**Goal:** know where the site and app break under load, and fix the first bottleneck before real users find it.
+
+Scope
+- **Tools (free):** k6 or Artillery (open source), run from a laptop or GitHub Actions.
+- **Never against the live database:** test on a second free Supabase project (the free plan allows two) and a separate Worker, both filled with fake accounts, Circles and wishes.
+- **Scenarios:** many people opening lists and Circles at once; many claims on the same wish at the same moment (only one may win); link reading at the rate limit; photo uploads; sign-in bursts after an invite link is shared widely.
+- **Limits to watch:** Supabase free plan (database connections, 500 MB database, 5 GB egress, Edge Function calls), Cloudflare Workers free plan (100,000 requests a day), scrape.do credits.
+- **Output:** a short report of the numbers where things slowed or failed, the first limit to hit, and what fixing it would cost.
+
+Done when: the site holds the expected launch load (to be set at the time) with pages under 2 s and no wrong claim results, and the first limit to hit is written down with its fix.
 
 ---
 

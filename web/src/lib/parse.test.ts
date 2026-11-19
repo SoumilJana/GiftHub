@@ -104,3 +104,17 @@ describe('looksBlocked', () => {
     expect(looksBlocked(200, page('<title>Noise TWO</title>', 'x'.repeat(20000) + ' access denied to reviews '))).toBe(false)
   })
 })
+
+describe('store data the page keeps outside tags', () => {
+  it('reads the Croma selling price', () => {
+    const html = '<title>Croma 30W Speaker</title><meta property="og:image" content="https://media.croma.com/a.png">'
+      + '<script>{"pdpPriceReducer":{"pdpPriceData":{"sellingPrice":{"value":"4694.00"},"mrp":{"value":"8000.00"}}}}</script>'
+    const x = extract(html, 'https://www.croma.com/croma-30w-speaker/p/303051')
+    expect([x.price, x.currency]).toEqual([4694, 'INR'])
+  })
+  it('works out the FirstCry price for this product, not the ones recommended beside it', () => {
+    const html = '<title>Labubu keychain</title><meta property="og:image" content="https://cdn.fcglcdn.com/a.jpg">'
+      + '{"Dis":10,"mrp":5000,"pid":111}{"Dis":78.55,"SDis":0,"mrp":999,"pd":"Keychain toy","pid":20630432,"pn":"Labubu"}'
+    expect(extract(html, 'https://www.firstcry.com/yamama/labubu/20630432/product-detail').price).toBe(214)
+  })
+})

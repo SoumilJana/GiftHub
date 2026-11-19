@@ -1,0 +1,104 @@
+# Phase 4 test set: real product pages from the stores people use most (collected 19 Nov 2026).
+# Some may be out of stock or gone by the time you run it; that is part of the test.
+
+# Amazon.in
+https://www.amazon.in/Zebronics-Kettle-Bluetooth-Speakers-Black/dp/B01HM09Y3E
+https://www.amazon.in/Speakers-Amazon-20-Watt-Bluetooth-Festivals/dp/B084VG3G6B
+https://www.amazon.in/amazon-basics-Headphones-Noise-Cancelling-Lightweight/dp/B0CXXZ1KKM
+https://www.amazon.in/TAS1400BK-Wireless-Bluetooth-Radiator-Rechargable/dp/B0F8W13YTS
+https://www.amazon.in/Philips-TAS2400BK-Bluetooth-Speaker/dp/B0F8W13YV4
+https://www.amazon.in/Backpack-Bamboo-School-Bookbag-Schoolbag/dp/B09GDFVXJS
+https://www.amazon.in/JanSport-Superbreak-Backpack-Bottle-Pocket/dp/B083VRFLVN
+https://www.amazon.in/DIP-Water-Bottle-Natural-Liter/dp/B01D14KJ20
+https://www.amazon.in/uppercase-Compartment-Standard-Backpack-Water-Bottle/dp/B0CV7NC8JB
+https://www.amazon.in/LEGO%C2%AE-Creator-Floral-Perfume-Bottle/dp/B0FPXG3QB9
+https://www.amazon.in/Perfume-Holder-Birthday-Special-Occasions/dp/B0D9LHT6BK
+https://www.amazon.in/Ceramic-Coffee-Adults-Novelty-Collectible/dp/B0GM1F721R
+https://www.amazon.in/Iconic-Ceramic-Coffee-Durable-Dishwasher/dp/B0BZVTT77X
+https://www.amazon.in/LUXIFY-SCENTTM-Perfume-Long-Lasting-Fragrance/dp/B0F2ZQ413Z
+https://www.amazon.in/dp/B0FMDL81GS
+
+# Flipkart
+https://www.flipkart.com/fsn/p/itm?pid=COMHHT9G4VBJRAGK
+https://www.flipkart.com/fsn/p/itm?pid=COMHGYAFCZG8YRYS
+https://www.flipkart.com/p-chair-school-tution-bench-duel-desk-medium-class-2-pc-metal-2-seater/p/itm54c0bb607f00d
+https://www.flipkart.com/banistrokes-icerem-pencil-12/p/itm7aff8b88480b8
+https://www.flipkart.com/safa-mobile-battery-xiaomi-redmi-9a-9c-9i-poco-c3-5000mah/p/itmd580df968cb0d
+https://www.flipkart.com/tree-of-qliphoth/p/itmfcy92wsy3yryw
+https://www.flipkart.com/life-like-ht58-2-1-smart-watch-tws-earbuds-smartwatch/p/itm060201f5f6017
+https://www.flipkart.com/taxture-i20-smart-watch-tws-earbuds-smartwatch/p/itme06898e58a85a
+https://www.flipkart.com/evaaenterprises-7-1-smartwatch-earbuds-combo/p/itm78bc0b50884ec
+https://www.flipkart.com/flipkart-smartbuy-ft-201-tws-24hrs-playtime-bt5-3-10mm-drivers-made-india-bluetooth/p/itm0e5770fda8883
+https://www.flipkart.com/oxilag-combo-10-one-smart-watch-earbuds-7-straps-bluetooth-calling-smartwatch/p/itm534f6c2d2b9a3
+
+# Myntra
+https://www.myntra.com/tshirts/triple+dot/triple-dot-men-solid-round-neck-t-shirt/35965014/buy
+https://www.myntra.com/tshirts/champion/champion-men-black-solid-round-neck-t-shirt/1562207/buy
+https://www.myntra.com/tshirts/tinted/tinted-men-black-solid-round-neck-t-shirt/2444670/buy
+https://www.myntra.com/tshirts/gant/gant-men-solid-round-neck-t-shirt/33418423/buy
+https://www.myntra.com/tshirts/max/max-men-round-neck-solid-polyester-t-shirt/29559712/buy
+https://www.myntra.com/tshirts/vanheusenflex/van-heusen-flex-men-solid-round-neck-t-shirt/36784061/buy
+https://www.myntra.com/tshirts/roadster/roadster-men-black-solid-round-neck-t-shirt/2475892/buy
+https://www.myntra.com/tshirts/sti/sti-men-solid-round-neck-t-shirt/30486415/buy
+https://www.myntra.com/tshirts/minusone/minus-one-men-pure-cotton-t-shirt/32568875/buy
+https://www.myntra.com/casual-shoes/hrx+by+hrithik+roshan/hrx-by-hrithik-roshan-unisex-round-toe-lace-ups-sneakers/32064729/buy
+
+# Nykaa
+https://www.nykaa.com/nykaa-cosmetics-ultra-silk-hydrating-lipstick/p/22537242
+https://www.nykaa.com/kay-beauty-signature-creme-lipstick-panache/p/16439255
+https://www.nykaa.com/maybelline-new-york-serum-matte-lipstick-8hr-hydration/p/24700514
+https://www.nykaa.com/sugar-glide-peptide-serum-lipstick/p/17490913
+https://www.nykaa.com/namyaa-natural-lip-serum/p/458639
+https://www.nykaa.com/maybelline-new-york-serum-lipstick-blind-date-kit/p/25090905
+
+# Croma
+https://www.croma.com/croma-30w-portable-bluetooth-speaker-ipx4-water-resistant-20-hours-playtime-black-/p/303051
+https://www.croma.com/croma-crse030epa301510-tws-earbuds-with-active-noise-cancellation-ipx4-water-sweat-resistant-10mm-driver-white-/p/305886
+https://www.croma.com/croma-sliding-tws-earbuds-with-passive-noise-cancellation-ipx4-waterproof-30-hours-playback-time-black-/p/275524
+https://www.croma.com/croma-ie-771-crse030epa301506-tws-earbuds-with-environmental-noise-cancellation-ipx5-water-resistant-38-hours-playback-black-/p/303133
+https://www.croma.com/croma-crsp010bpe301506-10w-portable-bluetooth-speaker-rgb-light-5-hours-playback-mono-channel-black-/p/303427
+https://www.croma.com/croma-20w-portable-bluetooth-speaker-ipx5-water-resistant-5-hours-playback-time-premium-black-/p/302520
+
+# Tata CLiQ
+https://www.tatacliq.com/apple-airpods-2nd-gen-with-charging-case-bluetooth-headset-with-mic-white-true-wireless/p-mp000000004870365
+https://www.tatacliq.com/boat-airdopes-207-in-ear-bluetooth-earbuds-with-50-hours-playtime-carbon-black-true-wireless/p-mp000000021644642
+https://www.tatacliq.com/realme-buds-air-6-pro-in-ear-bt-earbuds-with-50db-anc-upto-40h-playback-titanium-twilight-tws/p-mp000000023853230
+https://www.tatacliq.com/realme-buds-air-8-pro-tws-earbuds-55db-anc-dual-dac-50h-playtime-ip55--master-white/p-mp000000032376504
+https://www.tatacliq.com/noise-master-buds-sound-by-bose-in-ear-bluetooth-earbuds-up-to-49db-adaptive-anc-titanium/p-mp000000025829168
+https://www.tatacliq.com/oneplus-buds-pro-3-bluetooth-tws-in-ear-buds-dual-drivers/p-mp000000030017803
+
+# Decathlon
+https://www.decathlon.in/p/8600920/500-ml-flexible-trail-running-water-bottle-blue
+https://www.decathlon.in/p/8640384/trail-running-bottle-holder-belt-500-ml-sold-with-500ml-bottle
+https://www.decathlon.in/p/8550490/bottle-carrier
+
+# Meesho
+https://www.meesho.com/kurti-style-attractive-saree/p/1yd7v3
+https://www.meesho.com/saree-swarg-cotton-blend-printed-kurti/p/4zyn3y
+https://www.meesho.com/kurti/p/7qkr8m
+https://www.meesho.com/trendy-cotton-printed-matching-couple-set-saree-and-kurta-combo/p/d0u7z6
+
+# FirstCry
+https://www.firstcry.com/yamama/yamama-cute-labubu-energy-monster-style-vinyl-plush-keychain-mystery-box-collectible-toy-for-kids-and-adults-17-cm-pack-of-1-color-and-design-may-vary/20630432/product-detail
+https://www.firstcry.com/saregama/saregama-carvaan-mini-kids-pre-loaded-with-stories-rhymes-learnings-mantras-with-bluetooth-usb-aux-in-out/10293931/product-detail
+
+# Ajio
+https://www.ajio.com/buda-jeans-co-men-checked-regular-fit-shirt/p/703846742_pink
+
+# Shopify shops (boAt)
+https://www.boat-lifestyle.com/products/airdopes-131
+https://www.boat-lifestyle.com/products/boat-airdopes-148
+
+# Lenskart
+https://www.lenskart.com/vincent-chase-vc-e11262-c1-eyeglasses.html
+
+# Etsy
+https://www.etsy.com/listing/1864731701/vintage-handmade-mexican-folk-art
+https://www.etsy.com/listing/782905249/ceramic-mug-handmade-hand-painted
+
+# IKEA (US site; IKEA India pages follow the same layout)
+https://www.ikea.com/us/en/p/evedal-table-lamp-marble-gray-10405745/
+https://www.ikea.com/us/en/p/dejsa-table-lamp-beige-opal-glass-00404987/
+https://www.ikea.com/us/en/p/lampan-table-lamp-white-20055421/
+https://www.ikea.com/us/en/p/storsegel-table-lamp-ash-white-60573576/
+https://www.ikea.com/us/en/p/kuddlava-table-lamp-pleated-white-10601204/
