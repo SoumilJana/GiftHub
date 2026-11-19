@@ -86,11 +86,15 @@ export function IntroPage() {
           <GiftMark size={40} />
           GiftHub
         </span>
-        {!last && (
-          <Button variant="text" onClick={() => finish('sign-up')}>
-            Skip
-          </Button>
-        )}
+        <Button
+          variant="text"
+          className={`transition-opacity duration-150 ${last ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+          tabIndex={last ? -1 : 0}
+          aria-hidden={last || undefined}
+          onClick={() => finish('sign-up')}
+        >
+          Skip
+        </Button>
       </div>
 
       <div
@@ -127,7 +131,7 @@ export function IntroPage() {
         ))}
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-4">
+      <div className="mt-6 flex justify-center">
         <div className="flex gap-1" role="group" aria-label="Cards">
           {cards.map((c, i) => (
             <button
@@ -142,15 +146,28 @@ export function IntroPage() {
             </button>
           ))}
         </div>
-        {!last && <Button onClick={() => go(active + 1)}>Next</Button>}
       </div>
 
-      <div className={`mt-4 flex flex-col gap-2 ${last ? '' : 'invisible'}`} aria-hidden={!last || undefined}>
-        <Button className="h-[46px]! w-full" tabIndex={last ? 0 : -1} onClick={() => finish('sign-up')}>
-          {session ? 'Done' : 'Create an account'}
+      {/* One button that stays put: "Next" crossfades into the last card's action, so nothing jumps. */}
+      <div className="mt-4 flex flex-col gap-2">
+        <Button className="h-[46px]! w-full" onClick={() => (last ? finish('sign-up') : go(active + 1))}>
+          <span className="grid">
+            <span className={`col-start-1 row-start-1 transition-opacity duration-150 ${last ? 'opacity-0' : 'opacity-100'}`} aria-hidden={last}>
+              Next
+            </span>
+            <span className={`col-start-1 row-start-1 transition-opacity duration-150 ${last ? 'opacity-100' : 'opacity-0'}`} aria-hidden={!last}>
+              {session ? 'Done' : 'Create an account'}
+            </span>
+          </span>
         </Button>
         {!session && (
-          <Button variant="text" className="self-center" tabIndex={last ? 0 : -1} onClick={() => finish('sign-in')}>
+          <Button
+            variant="text"
+            className={`self-center transition-opacity duration-150 ${last ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+            tabIndex={last ? 0 : -1}
+            aria-hidden={!last || undefined}
+            onClick={() => finish('sign-in')}
+          >
             I already have an account
           </Button>
         )}

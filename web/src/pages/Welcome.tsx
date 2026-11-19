@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useState, type FormEvent, type ReactNode } from 'react'
+import { CodeInput } from '../components/CodeInput'
 import { CurrencySelect } from '../components/CurrencySelect'
 import { EditItemSheet } from '../components/ItemSheet'
 import { Page } from '../components/Page'
@@ -177,10 +178,11 @@ export function StartCircle({
     }
   }
 
-  async function doJoin(e: FormEvent) {
-    e.preventDefault()
+  async function doJoin(e?: FormEvent, typed: string = code) {
+    e?.preventDefault()
+    if (join.isPending) return
     setJoinError(null)
-    const normalized = normalizeInviteCode(code)
+    const normalized = normalizeInviteCode(typed)
     if (!normalized) return setJoinError('Codes are 6 letters and numbers, like K7QX3M.')
     try {
       const circle = await join.mutateAsync(normalized)
@@ -238,7 +240,17 @@ export function StartCircle({
         <h2 className="font-extrabold">Join with a code</h2>
         <p className="mt-1 text-small text-plum-soft">Paste the code or link someone sent you.</p>
         <form onSubmit={doJoin} className="mt-4 flex flex-col gap-3" noValidate>
-          <TextField label="Invite code" placeholder="K7QX3M" autoCapitalize="characters" autoComplete="off" value={code} onChange={(e) => setCode(e.target.value)} error={joinError} autoFocus={only === 'join'} />
+          <CodeInput
+            value={code}
+            onChange={(c) => {
+              setCode(c)
+              setJoinError(null)
+            }}
+            onComplete={(c) => doJoin(undefined, c)}
+            error={joinError}
+            hint="Six letters and numbers. You can paste the whole link."
+            autoFocus={only === 'join'}
+          />
           <Button type="submit" busy={join.isPending} className="self-start">
             Join Circle
           </Button>

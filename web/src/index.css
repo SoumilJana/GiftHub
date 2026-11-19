@@ -96,6 +96,9 @@
     transition-property: background-color, color; transition-delay: 0s;
   }
   [data-motion-move] { transition-property: opacity, color, background-color !important; }
+  /* Code boxes: characters fade in, no shake. */
+  .code-pop { animation-name: fade-in; }
+  .code-shake { animation: none; }
   /* Intro: the pictures sit in their final places and fade in. */
   .intro-slide .print-out, .intro-slide[data-active] .print-out { transform: none; }
   .intro-slide .deal, .intro-slide[data-active] .deal {
@@ -176,6 +179,15 @@
     transform: translateX(calc(-50% + var(--i) * 92px)) translateY(calc(var(--i) * var(--i) * 10px)) rotate(calc(var(--i) * 7deg));
     transition: transform .7s calc(.2s + (var(--i) + 1) * 70ms) var(--ease-out);
   }
+
+  /* Invite code boxes (components/CodeInput.tsx): each character pops in, the caret blinks,
+     and a wrong code shakes the row once. */
+  .code-pop { display: inline-block; animation: code-pop .22s var(--ease-out); }
+  @keyframes code-pop { from { transform: scale(.4) translateY(6px); opacity: 0; } }
+  .code-caret { animation: code-caret 1s steps(1) infinite; }
+  @keyframes code-caret { 50% { opacity: 0; } }
+  .code-shake { animation: code-shake .32s cubic-bezier(.36, .07, .19, .97); }
+  @keyframes code-shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
 
   /* Running text on Help and legal pages. */
   .prose-info { max-width: 68ch; }

@@ -14,6 +14,13 @@ export function normalizeInviteCode(input: string): string | null {
 }
 
 /** The join link; with the inviter's first name, the invite screen can say who sent it. */
+/** Turns whatever was typed or pasted into up to six code characters, for the code boxes. A pasted join link works too. */
+export function cleanCode(raw: string): string {
+  const fromLink = raw.includes('/') ? normalizeInviteCode(raw) : null
+  if (fromLink) return fromLink
+  return (raw.toUpperCase().match(/[A-HJKMNP-Z2-9]/g) ?? []).join('').slice(0, 6)
+}
+
 export function inviteLink(code: string, from?: string | null, origin: string = window.location.origin): string {
   const first = from?.trim().split(/\s+/)[0]
   return `${origin}/join/${code}${first ? `?from=${encodeURIComponent(first)}` : ''}`

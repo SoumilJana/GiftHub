@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { inviteLink, normalizeInviteCode } from './invite'
+import { cleanCode, inviteLink, normalizeInviteCode } from './invite'
 
 describe('normalizeInviteCode', () => {
   it('accepts a bare code in any case', () => {
@@ -31,5 +31,17 @@ describe('inviteLink', () => {
   })
   it('adds the inviter’s first name only', () => {
     expect(inviteLink('K7QX3M', '  Zoë Anne Smith ', 'https://x.dev')).toBe('https://x.dev/join/K7QX3M?from=Zo%C3%AB')
+  })
+})
+
+describe('cleanCode', () => {
+  it('keeps code characters, uppercased, up to six', () => {
+    expect(cleanCode('k7q x3-m99')).toBe('K7QX3M')
+  })
+  it('drops look-alike characters the codes never use', () => {
+    expect(cleanCode('O0I1L')).toBe('')
+  })
+  it('reads a pasted join link', () => {
+    expect(cleanCode('https://gifthub.grave07.workers.dev/join/K7QX3M?from=Maya')).toBe('K7QX3M')
   })
 })
