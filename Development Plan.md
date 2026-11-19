@@ -405,7 +405,7 @@ Scope
     - A reservation stayed when the owner stopped sharing the wish, or when the giver left or was removed. The wish was stuck as "claimed" for everyone else. Now the reservation is dropped once the giver can't see the wish; a gift already bought stays claimed.
     - A price too big to store, or a made-up currency, gave a raw database error. Now: "That price is too high." / "Pick a currency code like INR or USD."
     - A photo address wasn't checked at all. Now it must be a web address.
-    - Not yet applied to the live database.
+    - Applied to the live database on 19 Nov 2026.
 - **App robustness pass:** every screen empty and with a lot of data; slow and dropped connections; double taps on every button; error messages on every form; long names everywhere; phone, tablet and desktop sizes.
 - **Manual test script (the owner, about 20 minutes, two accounts on two phones):** sign up, start and join a Circle, add wishes by link and by hand, upload a photo, claim, buy, the gift hand-off, Received, a couple Circle, Help and bug report.
 - **Light load check (optional):** about 20 simulated users for a couple of minutes against a test copy (a second free Supabase project), never the live database. The full stress test stays in Phase 7.5.
