@@ -314,6 +314,52 @@ export function ViewSwitch({ view, onView, className = '' }: { view: ViewMode; o
   )
 }
 
+const bone = 'rounded-full bg-blush'
+
+/** Grey-pink stand-ins shaped like the real prints or rows while wishes load. */
+export function ItemsSkeleton({ view }: { view: ViewMode }) {
+  const label = <span className="sr-only">Loading wishes…</span>
+  if (view === 'list')
+    return (
+      <div role="status" className="mt-4 motion-safe:animate-pulse">
+        {label}
+        <ul aria-hidden className="rounded-panel bg-print px-3 py-0.5 sm:px-3.5 sm:py-1">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <li key={i} className="grid grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-x-3.5 border-b border-blush py-2 last:border-b-0">
+              <div className="aspect-square w-12 rounded-print bg-blush" />
+              <div className="flex flex-col gap-2">
+                <div className={`${bone} h-2.5 w-16`} />
+                <div className={`${bone} h-3 ${i % 2 ? 'w-3/5' : 'w-4/5'}`} />
+              </div>
+              <div className={`${bone} h-3 w-12`} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  return (
+    <div role="status" className="mt-4 motion-safe:animate-pulse">
+      {label}
+      {/* Phone: two rows of two. Wider: exactly one full row, however many columns fit. */}
+      <ul
+        aria-hidden
+        className="grid grid-cols-2 gap-x-3 gap-y-3.5 sm:auto-rows-[0] sm:grid-cols-[repeat(auto-fill,minmax(204px,1fr))] sm:grid-rows-[auto] sm:gap-x-[18px] sm:gap-y-0 sm:overflow-hidden sm:pb-1"
+      >
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+          <li key={i} className={`flex-col rounded-print bg-print px-[7px] pt-[7px] shadow-[0_1px_2px_rgba(59,29,63,.08)] sm:px-2 sm:pt-2 ${i > 3 ? 'hidden sm:flex' : 'flex'}`}>
+            <div className="aspect-square rounded-photo bg-blush" />
+            <div className="flex flex-col gap-2 px-[3px] pt-3 pb-4">
+              <div className={`${bone} h-2.5 w-14`} />
+              <div className={`${bone} h-3 ${i % 2 ? 'w-2/3' : 'w-11/12'}`} />
+              <div className={`${bone} mt-1 h-3 w-1/3`} />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export function ItemsView({ view, ...props }: ViewProps & { view: ViewMode }) {
   return view === 'list' ? <ItemList {...props} /> : <ItemStrip {...props} />
 }

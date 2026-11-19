@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { HandoffPrompts } from '../components/Handoff'
 import { EditItemSheet } from '../components/ItemSheet'
-import { ItemsView, ListTools } from '../components/ItemViews'
+import { ItemsSkeleton, ItemsView, ListTools } from '../components/ItemViews'
 import { useDismissed, useStoredView } from '../lib/view'
 import { EmptyState } from '../components/Page'
-import { Button, LoadError, LockIcon, Notice, Spinner } from '../components/ui'
+import { Button, LoadError, LockIcon, Notice } from '../components/ui'
 import { useMyItems } from '../lib/items'
 import { useUserId } from '../lib/auth'
 import { circleRef, useMyCircles, useProfile } from '../lib/queries'
@@ -55,7 +55,7 @@ export function MyListPage() {
       )}
 
       {items.isPending ? (
-        <Spinner />
+        <ItemsSkeleton view={view} />
       ) : items.error ? (
         <LoadError error={items.error} onRetry={() => items.refetch()} />
       ) : all.length === 0 ? (

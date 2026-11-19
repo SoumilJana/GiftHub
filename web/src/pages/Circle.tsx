@@ -2,11 +2,11 @@ import { Link, useParams } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
 import { GiveDateSheet } from '../components/Handoff'
 import { EditItemSheet, ViewItemSheet } from '../components/ItemSheet'
-import { ItemsView, ListTools } from '../components/ItemViews'
+import { ItemsSkeleton, ItemsView, ListTools } from '../components/ItemViews'
 import { useStoredView } from '../lib/view'
 import { EmptyState, Page } from '../components/Page'
 import { SlidingPill } from '../components/SlidingPill'
-import { Avatar, Button, LoadError, Panel, Spinner } from '../components/ui'
+import { Avatar, Button, LoadError, Panel } from '../components/ui'
 import { useUserId } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
 import { inviteLink } from '../lib/invite'
@@ -40,7 +40,7 @@ export function CirclePage() {
   // One claim at a time, even for taps that land before the next render.
   const claiming = useRef(false)
 
-  if (q.isPending) return <Spinner />
+  if (q.isPending) return <ItemsSkeleton view={view} />
   if (q.error) return <LoadError error={q.error} onRetry={() => q.refetch()} />
   if (!q.data) {
     return (
@@ -177,7 +177,7 @@ export function CirclePage() {
             )}
 
             {loading ? (
-              <Spinner />
+              <ItemsSkeleton view={view} />
             ) : loadError ? (
               <LoadError error={loadError} onRetry={() => (isMe ? mine.refetch() : circleItems.refetch())} />
             ) : all.length === 0 ? (
