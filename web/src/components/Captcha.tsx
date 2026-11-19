@@ -43,7 +43,12 @@ export function useCaptcha() {
       .catch(() => settle(null))
     return () => {
       cancelled = true
-      if (id.current) window.turnstile?.remove(id.current)
+      // Never let the widget's own cleanup break the page that replaces the form.
+      try {
+        if (id.current) window.turnstile?.remove(id.current)
+      } catch {
+        /* already gone */
+      }
       id.current = null
     }
   }, [])
@@ -57,7 +62,11 @@ export function useCaptcha() {
         setTimeout(() => resolve(null), 20_000)
       }))
     token.current = null
-    if (id.current) window.turnstile?.reset(id.current)
+    try {
+      if (id.current) window.turnstile?.reset(id.current)
+    } catch {
+      /* the form is closing */
+    }
     if (!t) throw new Error(NOT_CHECKED)
     return t
   }, [])

@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { AuthFrame } from '../components/AuthFrame'
 import { useCaptcha } from '../components/Captcha'
 import { GoogleButton } from '../components/GoogleButton'
-import { Button, Notice, TextField } from '../components/ui'
+import { Button, Notice, Spinner, TextField } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { detectUserCurrency } from '../lib/currency'
 import { friendlyError } from '../lib/errors'
@@ -12,6 +12,22 @@ import { readPendingJoin } from '../lib/invite'
 import { supabase } from '../lib/supabase'
 
 type Mode = 'sign-in' | 'sign-up'
+
+/**
+ * Safety net after a successful sign-in: if the page is still on /sign-in a moment
+ * later (it once stayed blank there on a phone after Google sign-in), load the
+ * destination directly, as a refresh would. A plain timer, so it runs even if the
+ * page has stopped rendering.
+ */
+let leaving = false
+function leaveSignIn(target: string) {
+  if (leaving) return
+  leaving = true
+  setTimeout(() => {
+    leaving = false
+    if (window.location.pathname.startsWith('/sign-in')) window.location.replace(target)
+  }, 2500)
+}
 
 export function SignInPage() {
   const { session, loading } = useAuth()
@@ -30,10 +46,23 @@ export function SignInPage() {
   // Only same-site paths are allowed as a destination after sign-in.
   const next = search.redirect && /^\/(?![/\\])/.test(search.redirect) && !/[\\\s]/.test(search.redirect) ? search.redirect : '/'
 
-  if (!loading && session) return pending ? <Redirect to="/join/$code" params={{ code: pending }} /> : <Redirect href={next} />
+  const target = pending ? `/join/${encodeURIComponent(pending)}` : next
 
-  const goNext = () =>
-    pending ? navigate({ to: '/join/$code', params: { code: pending }, replace: true }) : navigate({ href: next, replace: true })
+  if (!loading && session) {
+    leaveSignIn(target)
+    return (
+      <>
+        <Spinner label="Signing you in" />
+        {pending ? <Redirect to="/join/$code" params={{ code: pending }} /> : <Redirect href={next} />}
+      </>
+    )
+  }
+
+  const goNext = () => {
+    if (pending) navigate({ to: '/join/$code', params: { code: pending }, replace: true })
+    else navigate({ href: next, replace: true })
+    leaveSignIn(target)
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault()
