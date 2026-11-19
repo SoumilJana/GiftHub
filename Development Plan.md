@@ -277,7 +277,7 @@ Decided with the user (18 Nov 2026): icons with labels in the bottom bar, a Circ
 ---
 
 ### Phase 4 — Automated Link Parsing (2–3 weeks, in progress: link reading built 19 Nov 2026)
-**Goal:** paste a URL and get a clean product card in ~3 s for most stores.
+**Goal:** paste a URL and get a clean product card in ~3 s for most stores. **Status (19 Nov 2026): done when the phone check passes; the 80% target is met (84%).**
 
 **Built 19 Nov 2026** (the original scope below is kept for reference; where they differ, this wins):
 - **Where it runs:** `POST /api/parse` on the site's own Cloudflare Worker (`web/worker/index.ts`), not an Edge Function, because the blocking test showed Cloudflare gets through to more stores. When a store refuses Cloudflare, the Worker asks the Edge Function `parse-url` once (`supabase/functions/parse-url`), which FirstCry and Croma let through. Still refused: scrape.do (see the fallback test below).
@@ -293,7 +293,7 @@ Decided with the user (18 Nov 2026): icons with labels in the bottom bar, a Circ
 
 **Still to do in Phase 4:**
 1. ~~Deploy `parse-url`~~ (deployed 19 Nov 2026).
-2. Try it live on a phone with real links. The link test (`web/scripts/link-test.mjs`, links in `web/scripts/links.txt`) is built and was run once; see the results below. Run it again after the fixes are deployed.
+2. Try it live on a phone with real links. ~~Link test~~: done, 84% on the second run (see below). Rerun `web/scripts/link-test.mjs` after parser changes.
 3. ~~Save Myntra photos to GiftHub's storage~~: not needed. Checked 19 Nov 2026 in a browser from another site: photos from all 13 stores in the test (Myntra, Amazon, Flipkart, Nykaa, Croma, Meesho and others) load fine.
 4. Daily link limit: Free 15 a day, Pro 30 or more (Phase 5.5, with a `usage_daily` count). Until then, 30 a minute for everyone, as built. Cached links don't count.
 5. ~~Add scrape.do as the third retry~~ (built 19 Nov 2026; needs the `SCRAPEDO_TOKEN` secret). Other untested fallbacks for the blocked stores: ScraperAPI's free tier, GitHub Actions + Playwright on `parse_jobs`, and the share text from store apps (Phase 5).
@@ -393,6 +393,8 @@ Fully parsed product pages: Worker 10 of 18, Edge Function 8 of 18 (+1 partial).
 - **Removed products:** a 404 page now says "That page is gone from nykaa.com" and skips the paid retries.
 - **Trail:** each answer lists the steps it went through (`cloudflare unreadable > supabase blocked > scrapedo 403`), so the next run shows why Meesho and Ajio still fail.
 - The cache key carries a parser version, so pages read by the old parser are read again.
+
+**Link test, second run (19 Nov 2026, after the fixes, 74 links): 62 of 74 with name, photo and price (84%). ✅ Target met.** Myntra 10 of 10, Croma 6 of 6, Tata CLiQ 6 of 6, FirstCry 2 of 2, Lenskart 1 of 1, Nykaa 4 of 6, Amazon 13 of 15, Flipkart 7 of 11, Meesho 1 of 4, Ajio 0 of 1. Of the 12 misses, 6 are products that no longer exist or aren't for sale (Nykaa 2 and Meesho 2 gone, Amazon 2 unavailable) and 4 are Flipkart listings with no price shown. Only 2 are real failures: scrape.do timed out on Meesho and Ajio after 25 s. Leaving out the gone products: 62 of 68 (91%). Follow-up fixes: scrape.do's 404/410 now reports "gone" instead of "blocked", and its time limit went up to 40 s (Save no longer waits for the read, so a slow read only fills in later).
 
 ### Phase 4.5 — Pre-beta check (after Phase 4; before the private beta)
 **Goal:** friends find the app solid on the first try. Bugs and edge cases get caught by us, not by them.

@@ -81,10 +81,12 @@ async function fromScrapeDo(env: Env, url: string, trail: string[]): Promise<Rea
   const host = new URL(url).hostname
   const q = new URLSearchParams({ token: env.SCRAPEDO_TOKEN, url, geoCode: 'in', ...(RESIDENTIAL.test(host) ? { super: 'true' } : {}) })
   try {
-    const res = await fetch('https://api.scrape.do/?' + q, { signal: AbortSignal.timeout(25_000) })
+    const res = await fetch('https://api.scrape.do/?' + q, { signal: AbortSignal.timeout(40_000) })
     if (!res.ok) {
       // Refused, or out of credits. scrape.do passes on the store's own status.
       trail.push(`scrapedo ${res.status}`)
+      // The store says the product is gone (Nykaa and Meesho refuse Cloudflare even for missing pages).
+      if (res.status === 404 || res.status === 410) return { ok: false, reason: 'gone', url: cleanUrl(url), store: storeName(url), via: 'scrapedo' }
       return null
     }
     const html = (await res.text()).slice(0, 2_500_000)
