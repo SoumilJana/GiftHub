@@ -217,9 +217,9 @@ export function ItemList({ items, slot, claims, onOpen }: ViewProps) {
 }
 
 const chip =
-  'h-[34px] shrink-0 rounded-full px-[13px] text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)] aria-pressed:bg-print aria-pressed:shadow-[inset_0_0_0_1.5px_var(--color-plum)]'
+  'tap h-[34px] shrink-0 rounded-full px-[13px] text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)] aria-pressed:bg-print aria-pressed:shadow-[inset_0_0_0_1.5px_var(--color-plum)]'
 const pill =
-  'h-[34px] rounded-full bg-print pl-3.5 text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
+  'h-[34px] pointer-coarse:h-11 rounded-full bg-print pl-3.5 text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
 
 /** Occasion chips, priority and price filters, sort, and the Strip/List control. */
 export function ListTools({
@@ -243,7 +243,7 @@ export function ListTools({
   return (
     <div className="mt-4 mb-[22px] flex flex-wrap items-center gap-x-5 gap-y-3">
       {occasions.length > 0 && (
-        <div role="group" aria-label="Occasion" className="-mx-4 flex w-[calc(100%+32px)] gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:w-auto sm:flex-wrap sm:px-0">
+        <div role="group" aria-label="Occasion" className="-mx-4 -my-[5px] flex w-[calc(100%+32px)] gap-1.5 overflow-x-auto px-4 py-[5px] [scrollbar-width:none] sm:mx-0 sm:w-auto sm:flex-wrap sm:px-0">
           <button type="button" className={chip} aria-pressed={filter.occasion === null} onClick={() => set({ occasion: null })}>
             All
           </button>
@@ -305,7 +305,7 @@ export function ViewSwitch({ view, onView, className = '' }: { view: ViewMode; o
           type="button"
           aria-pressed={view === v}
           onClick={() => onView(v)}
-          className="relative h-7 rounded-full px-3 text-small font-semibold text-plum-soft transition-colors duration-200 hover:text-plum aria-pressed:text-white"
+          className="tap relative h-7 rounded-full px-3 text-small font-semibold text-plum-soft transition-colors duration-200 hover:text-plum aria-pressed:text-white"
         >
           {v === 'strip' ? 'Strip' : 'List'}
         </button>

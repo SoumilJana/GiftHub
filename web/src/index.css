@@ -148,6 +148,11 @@
   .thumb .ribbon::after { height: 5px; top: calc(58% - 2.5px); }
   .thumb .ribbon .bow { display: none; }
   /* The booth flash, once, when a claim lands while you're looking. */
+  /* Touch screens: small controls keep their look but get a 44px-tall hit area. */
+  @media (pointer: coarse) {
+    :where(.tap) { position: relative; }
+    .tap::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - 44px) / 2)); }
+  }
   /* A film camera's date imprint: orange digits burned into the corner, with a faint glow so they read on any photo. */
   .date-imprint { line-height: 1; pointer-events: none; text-shadow: 0 0 1px rgb(255 255 255 / .9), 0 0 3px rgb(255 255 255 / .75), 0 0 6px rgb(255 150 70 / .45); }
   .booth-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }

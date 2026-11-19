@@ -3,7 +3,7 @@ import { useId, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactN
 type Variant = 'primary' | 'ghost' | 'text' | 'danger'
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50'
+  'tap inline-flex items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50'
 
 const variants: Record<Variant, string> = {
   primary: 'h-10 px-[18px] bg-plum text-white hover:bg-plum-hover',

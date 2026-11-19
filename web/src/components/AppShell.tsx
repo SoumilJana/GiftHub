@@ -71,7 +71,10 @@ export function AppShell() {
       </header>
 
       <main className="min-w-0 px-4 pt-7 pb-28 shell:px-[clamp(16px,3.4vw,44px)] shell:pt-7">
-        <Outlet />
+        {/* Capped so wide monitors keep the tools next to the wishes they act on. */}
+        <div className="mx-auto w-full max-w-[1320px]">
+          <Outlet />
+        </div>
       </main>
 
       <nav

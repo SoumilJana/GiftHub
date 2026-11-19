@@ -175,7 +175,9 @@ Product photos sit on pale per-item tints (around 92–96% lightness, e.g. #E8EE
 
 ## Layout
 
-The desktop shell is a 240px white rail with rounded right corners (22px) next to the blush main column, with padding clamp(16px, 3.4vw, 44px). The rail holds the wordmark, sections, Circles and the invite code. Below 900px the rail becomes a white top bar (wordmark and profile avatar, rounded bottom corners) and a white bottom nav with rounded top corners (22px).
+The desktop shell is a 240px white rail with rounded right corners (22px) next to the blush main column, with padding clamp(16px, 3.4vw, 44px). Its content is centred and capped at 1320px, so on wide monitors the list tools stay next to the wishes (five or six frames across at most). The rail holds the wordmark, sections, Circles and the invite code. Below 900px the rail becomes a white top bar (wordmark and profile avatar, rounded bottom corners) and a white bottom nav with rounded top corners (22px).
+
+Touch screens (`pointer: coarse`): every small control keeps its look but gets a 44px-tall hit area (the `tap` class adds an invisible layer above and below). The list's priority and sort selects and the price box can't carry that layer, so they grow to 44px instead. Scrolling chip rows carry 5px of vertical padding so the hit area isn't clipped.
 
 Main column order: heading with the next-occasion line, and the paste-a-link pill beside it (full width on phones); member pills; tools (occasion chips, then the "See it as Maya does" switch, sort and the Strip/List control); an optional note; then items. There is no floating Add button: it would duplicate the paste bar and break the ribbon rule.
 

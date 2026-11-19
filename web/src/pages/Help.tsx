@@ -125,7 +125,7 @@ export function HelpPage() {
           <a
             key={g.id}
             href={`#${g.id}`}
-            className="inline-flex h-[34px] items-center rounded-full px-[13px] text-small font-semibold shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)]"
+            className="tap inline-flex h-[34px] items-center rounded-full px-[13px] text-small font-semibold shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)]"
           >
             {g.title}
           </a>

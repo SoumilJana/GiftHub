@@ -124,7 +124,7 @@ export function CirclePage() {
             className={
               couple
                 ? 'relative inline-flex gap-1 rounded-full bg-print p-1 shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
-                : 'relative -mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0'
+                : 'relative -mx-4 -my-[5px] flex gap-1.5 overflow-x-auto px-4 py-[5px] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0'
             }
           >
             <SlidingPill active='[aria-selected="true"]' watch={selected.user_id} />
@@ -138,7 +138,7 @@ export function CirclePage() {
                   setWho(m.user_id)
                   clearFilters()
                 }}
-                className={`${couple ? 'h-[34px]' : 'h-[38px]'} relative shrink-0 rounded-full px-4 font-semibold text-plum-soft transition-colors duration-200 hover:bg-blush-deep aria-selected:text-white aria-selected:hover:bg-transparent`}
+                className={`${couple ? 'h-[34px]' : 'h-[38px]'} tap relative shrink-0 rounded-full px-4 font-semibold text-plum-soft transition-colors duration-200 hover:bg-blush-deep aria-selected:text-white aria-selected:hover:bg-transparent`}
               >
                 {m.user_id === uid ? 'Your list' : couple ? `${firstName(m.display_name)}’s list` : firstName(m.display_name)}
                 <span className="ml-1.5 opacity-75">{listFor(m.user_id).length}</span>
@@ -237,7 +237,7 @@ export function CirclePage() {
           </div>
         )
       ) : (
-      <div className="mt-10 grid max-w-[900px] gap-4 md:grid-cols-[1fr_1fr]">
+      <div className="mt-10 grid gap-4 md:grid-cols-[1fr_1fr]">
         <InvitePanel circle={circle} />
         <Panel>
           <h2 className="font-extrabold">Members</h2>

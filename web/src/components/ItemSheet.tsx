@@ -60,7 +60,7 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
 }
 
 const chip =
-  'h-[34px] rounded-full px-[13px] text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)] aria-pressed:bg-plum aria-pressed:text-white aria-pressed:shadow-none'
+  'tap h-[34px] rounded-full px-[13px] text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)] aria-pressed:bg-plum aria-pressed:text-white aria-pressed:shadow-none'
 
 /** Add or edit one of your own wishes. */
 export function EditItemSheet({

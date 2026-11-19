@@ -128,7 +128,7 @@ export function CircleSwitcher() {
           <Link
             to="/circles"
             onClick={() => setOpen(false)}
-            className="mt-3 inline-flex h-[34px] items-center rounded-full px-[13px] text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)]"
+            className="tap mt-3 inline-flex h-[34px] items-center rounded-full px-[13px] text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)]"
           >
             Start or join a Circle
           </Link>

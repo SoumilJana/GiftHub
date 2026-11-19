@@ -132,7 +132,7 @@ export function CirclesPage() {
               aria-expanded={adding === mode}
               aria-controls="add-circle-form"
               onClick={() => setAdding((a) => (a === mode ? null : mode))}
-              className="h-[34px] rounded-full px-[13px] text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)] aria-expanded:bg-print aria-expanded:shadow-[inset_0_0_0_1.5px_var(--color-plum)]"
+              className="tap h-[34px] rounded-full px-[13px] text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)] aria-expanded:bg-print aria-expanded:shadow-[inset_0_0_0_1.5px_var(--color-plum)]"
             >
               {mode === 'create' ? 'Start a new Circle' : 'Join with a code'}
             </button>

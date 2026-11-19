@@ -64,7 +64,7 @@ const kindChoices: { value: CircleKind; label: string }[] = [
   { value: 'group', label: 'A group' },
 ]
 const kindChip =
-  'h-[34px] rounded-full px-[13px] text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)] aria-pressed:bg-plum aria-pressed:text-white aria-pressed:shadow-none disabled:opacity-50 disabled:hover:shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
+  'tap h-[34px] rounded-full px-[13px] text-small font-semibold text-plum shadow-[inset_0_0_0_1.5px_var(--color-edge)] hover:shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)] aria-pressed:bg-plum aria-pressed:text-white aria-pressed:shadow-none disabled:opacity-50 disabled:hover:shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
 
 /** Create a Circle or join one with a code. Used on Welcome and the Circles page. */
 export function StartCircle({
