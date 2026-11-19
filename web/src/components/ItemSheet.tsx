@@ -202,7 +202,10 @@ export function EditItemSheet({
     const next: typeof errors = {}
     const link = url.trim() ? (linkFromText(url)?.url ?? null) : null
     if (url.trim() && !link) next.url = 'That doesn’t look like a web link. Check it, or leave it empty.'
-    if (!title.trim()) next.title = 'Give your wish a name.'
+    // Saved while the page is still being read and no name yet: a stand-in name, which the
+    // name from the page replaces when it arrives (fillWishLater), unless they rename it first.
+    const standIn = !item && !title.trim() && link && pending.current ? `Wish from ${storeOf(link) ?? 'a store'}` : null
+    if (!title.trim() && !standIn) next.title = 'Give your wish a name.'
     const img = imageUrl.trim() ? normalizeUrl(imageUrl) : null
     if (imageUrl.trim() && !img) next.image = 'That image link doesn’t work. Paste a full link starting with https://.'
     const priceText = price.replace(/[\s,]/g, '')
@@ -213,7 +216,7 @@ export function EditItemSheet({
 
     const draft: ItemDraft = {
       id: item?.id ?? null,
-      title: title.trim().slice(0, 300),
+      title: (title.trim() || standIn || '').slice(0, 300),
       url: link,
       image_url: img,
       price: priceNum === null ? null : Math.round(priceNum * 100) / 100,
