@@ -651,3 +651,11 @@ About 3.5 months part-time to public launch (~7–8 weeks full-time), at a total
 4. ~~Show who claimed an item to other members, or only "Claimed"?~~ Decided 18 Nov 2026: only "Already claimed", for everyone except the claimer.
 5. ~~Monetisation: affiliate-only, or freemium too?~~ Decided 19 Nov 2026: freemium (Free, Pro and an Event pass, see Phase 5.5) alongside affiliate links.
 6. Make the GitHub repo public? (Unlimited free Actions minutes and F-Droid eligibility, but the code becomes visible; secrets stay safe in repo secrets.)
+
+---
+
+## 7. Ideas to plan later (added 19 Nov 2026)
+Not scheduled yet. Each needs a short design pass before building.
+
+1. **Buy something for yourself.** On My list, an option to mark one of your own wishes as bought by you (a treat, or you gave up waiting). Open points: what it's called ("I bought it myself"?), whether it moves straight to Received or to its own "Bought myself" group, and what Circle members see. It must never look like a giver's claim, and a giver who already reserved it should be told gently, without revealing who else did.
+2. **See which Circles each wish is shared with, on My list.** Today that's only visible inside the edit sheet. The page is clean, so keep it light. Option to try first: small Circle dots or the Circle icon beside the edit button on each wish (one dot per Circle, with a tooltip or label, and "Only you" when it's in none). Other options: a "Shared with" filter dropdown next to the existing filters, or tapping the dots to change sharing without opening the sheet. Must work at 375 px in both Strip and List views and with long Circle names.
