@@ -13,8 +13,10 @@ export function normalizeInviteCode(input: string): string | null {
   return CODE.test(raw) ? raw : null
 }
 
-export function inviteLink(code: string, origin: string = window.location.origin): string {
-  return `${origin}/join/${code}`
+/** The join link; with the inviter's first name, the invite screen can say who sent it. */
+export function inviteLink(code: string, from?: string | null, origin: string = window.location.origin): string {
+  const first = from?.trim().split(/\s+/)[0]
+  return `${origin}/join/${code}${first ? `?from=${encodeURIComponent(first)}` : ''}`
 }
 
 const PENDING_KEY = 'gifthub.pendingJoin'

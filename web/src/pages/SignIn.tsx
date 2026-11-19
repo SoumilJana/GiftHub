@@ -8,6 +8,7 @@ import { Button, Notice, Spinner, TextField } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { detectUserCurrency } from '../lib/currency'
 import { friendlyError } from '../lib/errors'
+import { introSeen } from '../lib/intro'
 import { readPendingJoin } from '../lib/invite'
 import { supabase } from '../lib/supabase'
 
@@ -59,6 +60,9 @@ export function SignInPage() {
       </>
     )
   }
+
+  // First visit on this device: the three intro cards come first (an invite link has its own screen).
+  if (!loading && !session && !pending && !introSeen()) return <Redirect to="/intro" search={{ redirect: search.redirect }} />
 
   const goNext = () => {
     if (pending) navigate({ to: '/join/$code', params: { code: pending }, replace: true })

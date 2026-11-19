@@ -96,6 +96,14 @@
     transition-property: background-color, color; transition-delay: 0s;
   }
   [data-motion-move] { transition-property: opacity, color, background-color !important; }
+  /* Intro: the pictures sit in their final places and fade in. */
+  .intro-slide .print-out, .intro-slide[data-active] .print-out { transform: none; }
+  .intro-slide .deal, .intro-slide[data-active] .deal {
+    transform: translateX(calc(-50% + var(--i) * 92px)) translateY(calc(var(--i) * var(--i) * 10px)) rotate(calc(var(--i) * 7deg));
+    transition: none;
+  }
+  .intro-slide [aria-hidden="true"] { transition: opacity var(--dur-slow); }
+  .intro-slide:not([data-active]) > [aria-hidden="true"] { opacity: 0; }
 }
 
 /* Pill dropdowns: our own chevron with room around it, instead of the browser's arrow pressed against the edge. */
@@ -158,6 +166,16 @@
   .booth-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
   .booth-flash.go { animation: booth-flash .6s cubic-bezier(.25, .8, .25, 1); }
   @keyframes booth-flash { 0% { opacity: 0; } 18% { opacity: .7; } 100% { opacity: 0; } }
+
+  /* Intro cards (pages/Intro.tsx). Card 1: the print slides out of the booth slot.
+     Card 2: three prints are dealt out from one stack. Both replay each time the card comes into view. */
+  .intro-slide .print-out { transform: translateY(-104%); }
+  .intro-slide[data-active] .print-out { transform: none; transition: transform .9s .25s var(--ease-out); }
+  .intro-slide .deal { transform: translateX(-50%) rotate(0deg); }
+  .intro-slide[data-active] .deal {
+    transform: translateX(calc(-50% + var(--i) * 92px)) translateY(calc(var(--i) * var(--i) * 10px)) rotate(calc(var(--i) * 7deg));
+    transition: transform .7s calc(.2s + (var(--i) + 1) * 70ms) var(--ease-out);
+  }
 
   /* Running text on Help and legal pages. */
   .prose-info { max-width: 68ch; }

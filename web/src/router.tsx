@@ -5,6 +5,7 @@ import { CirclePage } from './pages/Circle'
 import { CirclesPage } from './pages/Circles'
 import { CircleSettingsPage } from './pages/CircleSettings'
 import { HelpPage } from './pages/Help'
+import { IntroPage } from './pages/Intro'
 import { JoinPage } from './pages/Join'
 import { CookiesPage, PrivacyPage, TermsPage } from './pages/Legal'
 import { MyListPage } from './pages/MyList'
@@ -46,6 +47,12 @@ const updatePasswordRoute = createRoute({ getParentRoute: () => rootRoute, path:
 const joinRoute = createRoute({ getParentRoute: () => rootRoute, path: '/join/$code', component: JoinPage })
 
 // Public reading pages, signed in or out
+const introRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/intro',
+  validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({ redirect: typeof s.redirect === 'string' ? s.redirect : undefined }),
+  component: IntroPage,
+})
 const helpRoute = createRoute({ getParentRoute: () => rootRoute, path: '/help', component: HelpPage })
 const privacyRoute = createRoute({ getParentRoute: () => rootRoute, path: '/privacy', component: PrivacyPage })
 const termsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/terms', component: TermsPage })
@@ -67,6 +74,7 @@ const routeTree = rootRoute.addChildren([
   resetRoute,
   updatePasswordRoute,
   joinRoute,
+  introRoute,
   helpRoute,
   privacyRoute,
   termsRoute,

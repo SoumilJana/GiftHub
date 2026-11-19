@@ -3,10 +3,10 @@ import { useRef, useState } from 'react'
 import { GiveDateSheet } from '../components/Handoff'
 import { EditItemSheet, ViewItemSheet } from '../components/ItemSheet'
 import { ItemsSkeleton, ItemsView, ListTools } from '../components/ItemViews'
-import { useStoredView } from '../lib/view'
+import { useDismissed, useStoredView } from '../lib/view'
 import { EmptyState, Page } from '../components/Page'
 import { SlidingPill } from '../components/SlidingPill'
-import { Avatar, Button, LoadError, Panel } from '../components/ui'
+import { Avatar, Button, LoadError, LockIcon, Notice, Panel } from '../components/ui'
 import { useUserId } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
 import { inviteLink } from '../lib/invite'
@@ -197,6 +197,7 @@ export function CirclePage() {
               </EmptyState>
             ) : (
               <>
+                <ListHint isMe={isMe} name={firstName(selected.display_name)} couple={couple} />
                 <ListTools items={all} filter={filter} onFilter={setFilter} view={view} onView={setView} couple={couple} />
                 {shown.length ? (
                   <ItemsView
@@ -338,9 +339,38 @@ function ClaimSlot({
   )
 }
 
+/** Shown once each: how claiming works (someone else's list) and that claims stay hidden (your own). */
+function ListHint({ isMe, name, couple }: { isMe: boolean; name: string; couple: boolean }) {
+  const [claimSeen, dismissClaim] = useDismissed('claim-hint')
+  // Same key as My list's note: dismissing it in one place hides it in both.
+  const [ownerSeen, dismissOwner] = useDismissed('owner-privacy')
+  if (isMe ? ownerSeen : claimSeen) return null
+  return (
+    <div className="mt-5">
+      <Notice>
+        <LockIcon />
+        {isMe ? (
+          <>
+            <strong className="font-extrabold">You won’t see who is buying what.</strong> Claims on your wishes stay hidden until you mark one received.
+          </>
+        ) : (
+          <>
+            <strong className="font-extrabold">{name} won’t see this.</strong> Tap “{couple ? 'Plan to get' : 'Reserve'}” for something you mean to buy, or “I bought it” once you have.
+            {couple ? '' : ' Others here only see that it’s taken.'}
+          </>
+        )}{' '}
+        <button type="button" onClick={isMe ? dismissOwner : dismissClaim} className="font-semibold underline underline-offset-3 hover:text-plum">
+          Got it
+        </button>
+      </Notice>
+    </div>
+  )
+}
+
 function InvitePanel({ circle, couple = false }: { circle: Circle; couple?: boolean }) {
   const toast = useToast()
-  const link = inviteLink(circle.invite_code)
+  const profile = useProfile()
+  const link = inviteLink(circle.invite_code, profile.data?.display_name)
   const expired = isCodeExpired(circle.invite_expires_at)
 
   async function share() {

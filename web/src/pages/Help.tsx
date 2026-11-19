@@ -131,6 +131,12 @@ export function HelpPage() {
           </a>
         ))}
       </nav>
+      <p className="mt-4 text-small text-plum-soft">
+        New here?{' '}
+        <Link to="/intro" className="font-semibold text-plum underline underline-offset-3">
+          See the quick intro
+        </Link>
+      </p>
 
       {groups.map((g) => (
         <section key={g.id} id={g.id} aria-labelledby={`${g.id}-h`} className="mt-8 scroll-mt-6">

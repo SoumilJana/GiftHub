@@ -401,7 +401,7 @@ Fully parsed product pages: Worker 10 of 18, Edge Function 8 of 18 (+1 partial).
 ### Phase 4.5 — Pre-beta check (after Phase 4; before the private beta)
 **Goal:** friends find the app solid on the first try. Bugs and edge cases get caught by us, not by them.
 
-**Status (19 Nov 2026):** edge-case tests, security pass, Security Advisor fixes and the robustness pass are done. Next: the manual two-phone test.
+**Status (19 Nov 2026):** edge-case tests, security pass, Security Advisor fixes and the robustness pass are done. First-run onboarding (Phase 4.6) is built. Next: the manual two-phone test, which now covers the new first run.
 
 Scope
 - **Automated edge-case tests (database checks, run on every push):** two claims on the same wish at the same moment (only one wins); a member removed in the middle of a claim; a Circle deleted while a hand-off is pending; leaving a couple Circle; wishes with no price, a huge price, a very long or emoji name; expired and reused invite codes.
@@ -439,6 +439,24 @@ Scope
 - Then: fix what turns up and open sign-up for the people invited (email confirmation is already back on).
 
 Done when: all automated checks pass, the manual script runs clean on two phones, and nothing in the robustness pass is left open. Then the private beta (5–10 couples and friend groups).
+
+### Phase 4.6 — First-run onboarding (added 19 Nov 2026; about 2–3 days, before the private beta)
+**Status (19 Nov 2026): built, not yet live.** Intro cards at `/intro` (shown once per device before sign-in, linked from Help), an invite screen on `/join/<code>` that names the inviter from the link (`?from=Maya`, display only), Welcome in three numbered steps (name and currency → Circle → first wish), and one-time hints on Circle lists. Checked locally at phone and desktop sizes, with the keyboard and in calm mode.
+
+**Goal:** a new person understands GiftHub in under 30 seconds and has a Circle and a first wish within 2 minutes, without help. Today the first run is only "name and currency, then start a Circle", and nothing explains the secret claims, which is the whole point.
+
+Scope
+- **Intro, before sign-up:** three short cards, swiped or tapped through, in the photo-booth style of Phase 3.7:
+  1. "Save wishes from any store": paste a link, a print slides out.
+  2. "Share with your Circle": a couple, or a group of friends or family.
+  3. "Gifts stay a surprise": givers reserve and buy in secret; you only see who gave what once you mark it received.
+  Skip at any point; dots show where you are. Shown once per device, and again from Help. Works with swipe, buttons and keyboard; with reduced motion the cards fade instead of sliding.
+- **Invite links get their own first screen:** "Maya invited you to …" with one line on secret claims, then sign-up, then straight into the Circle. No generic intro.
+- **Welcome steps, with "Step 1 of 3":** name and currency → start or join a Circle (or skip) → add your first wish (paste a link, or add by hand). After starting a Circle, the invite step offers the phone's own Share menu as well as copying the code.
+- **First visit hints, once each:** the first time you open someone else's list, one line explains Reserve and "I bought it" and that they won't see it. The first time you open your own list in a Circle, one line explains that claims stay hidden. (The existing privacy note on My list stays.)
+- Plain words, no jargon; every screen fits a phone at 375 px with no scrolling for the intro.
+
+Done when: on a phone, a tester who has never seen GiftHub gets from an invite link, or from the home page, to a Circle and a first wish in under 2 minutes without help; the intro shows once; and it works at 375 px, with a keyboard and with reduced motion.
 
 ### Phase 5 — PWA Experience & Quick-Add (2 weeks)
 **Goal:** the web app feels like a native app and items can be added from anywhere.
@@ -518,6 +536,8 @@ Done when: someone can upgrade, renew and cancel on the live site; limits switch
 
 **→ Public launch** of the web app.
 
+**Launch trailer (motion graphic):** made after Phase 5 is done, while Phase 5.5 is being built, so the screens it shows are final and it can include the headline features (share from any store app, the secret claim, the gift hand-off, install and notifications). Record from the real app with made-up names and wishes, never real accounts. The script and storyboard can start any time.
+
 ---
 
 ### Phase 6 — Price Tracking (2 weeks)
@@ -583,7 +603,7 @@ Out of scope (cost money): Google Play ($25), Apple App Store ($99/yr). iOS user
 
 ```
 Weeks:  1-2     3-4        5-7         8-9          10-12        13-14          15-16       17+        later
-      [P0 Base][P1 Circles][P2 Wishlist][P3 Secret ★][P4 Parsing][P5 PWA+QuickAdd][P5.5 Plans][P6 Prices][P7 Growth][P8 APK?]
+      [P0 Base][P1 Circles][P2 Wishlist][P3 Secret ★][P4 Parsing][P4.6 Onboarding][P5 PWA+QuickAdd][P5.5 Plans][P6 Prices][P7 Growth][P8 APK?]
                                             ↑ private beta                  ↑ public web launch
 ```
 

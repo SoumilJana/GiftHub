@@ -1,0 +1,265 @@
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { GiftMark } from '../components/GiftMark'
+import { Hearts, Photo } from '../components/ItemViews'
+import { Avatar, Button } from '../components/ui'
+import { useAuth } from '../lib/auth'
+import type { Claim } from '../lib/claims'
+import { markIntroSeen } from '../lib/intro'
+import { isCalm } from '../lib/motion'
+import type { Item } from '../lib/wishlist'
+
+/** A made-up wish for the intro's pictures: real frames, never real data. */
+const sample = (n: number, title: string, priority: number): Item => ({
+  id: `intro-${n}`,
+  owner_id: 'intro',
+  title,
+  url: null,
+  image_url: null,
+  domain: null,
+  price: null,
+  currency: 'USD',
+  original_price: null,
+  priority,
+  notes: null,
+  created_at: new Date().toISOString(),
+  occasions: [],
+  circle_ids: [],
+})
+
+const cards: { title: string; body: string }[] = [
+  {
+    title: 'Save wishes from any store',
+    body: 'Paste a link from any shop and GiftHub fills in the photo, name and price. Mark how much you want each one.',
+  },
+  {
+    title: 'Share with your Circle',
+    body: 'Start a private Circle with your partner, or with friends and family. You see each other’s lists, and you choose which wishes each Circle sees.',
+  },
+  {
+    title: 'Gifts stay a surprise',
+    body: 'When someone reserves or buys from your list, nothing changes on your screen. You find out who gave what when you mark it received.',
+  },
+]
+
+/** /intro: three cards before sign-up. Swipe, tap Next, or use the arrow keys. */
+export function IntroPage() {
+  const { session } = useAuth()
+  const search = useSearch({ strict: false }) as { redirect?: string }
+  const navigate = useNavigate()
+  const track = useRef<HTMLDivElement>(null)
+  const [active, setActive] = useState(0)
+  const last = active === cards.length - 1
+
+  // The card most in view is the current one, however it got there.
+  useEffect(() => {
+    const el = track.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setActive(Number((e.target as HTMLElement).dataset.index))
+      },
+      { root: el, threshold: 0.6 },
+    )
+    el.querySelectorAll('[data-index]').forEach((s) => io.observe(s))
+    return () => io.disconnect()
+  }, [])
+
+  function go(i: number) {
+    const el = track.current
+    if (!el) return
+    const n = Math.max(0, Math.min(cards.length - 1, i))
+    el.scrollTo({ left: n * el.clientWidth, behavior: isCalm() ? 'auto' : 'smooth' })
+    setActive(n)
+  }
+
+  function finish(mode: 'sign-up' | 'sign-in') {
+    markIntroSeen()
+    if (session) navigate({ to: '/', replace: true })
+    else navigate({ to: '/sign-in', search: { redirect: search.redirect, mode: mode === 'sign-up' ? 'sign-up' : undefined }, replace: true })
+  }
+
+  return (
+    <div className="mx-auto flex min-h-dvh w-full max-w-[440px] flex-col px-4 pt-6 pb-8">
+      <div className="flex items-center justify-between">
+        <span className="flex items-center gap-3 text-[32px] leading-none font-extrabold tracking-[-0.03em]">
+          <GiftMark size={40} />
+          GiftHub
+        </span>
+        {!last && (
+          <Button variant="text" onClick={() => finish('sign-up')}>
+            Skip
+          </Button>
+        )}
+      </div>
+
+      <div
+        ref={track}
+        role="region"
+        aria-roledescription="carousel"
+        aria-label="What GiftHub does"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowRight') go(active + 1)
+          else if (e.key === 'ArrowLeft') go(active - 1)
+          else return
+          e.preventDefault()
+        }}
+        className="-mx-4 mt-6 flex flex-1 snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] focus-visible:outline-offset-[-3px] [&::-webkit-scrollbar]:hidden"
+      >
+        {cards.map((c, i) => (
+          <section
+            key={c.title}
+            data-index={i}
+            data-active={active === i || undefined}
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`${i + 1} of ${cards.length}: ${c.title}`}
+            aria-hidden={active !== i}
+            className="intro-slide flex w-full shrink-0 snap-center snap-always flex-col justify-center px-4"
+          >
+            <div className="grid h-[300px] place-items-center" aria-hidden="true">
+              {i === 0 ? <SaveStage /> : i === 1 ? <ShareStage /> : <SurpriseStage on={active === i} />}
+            </div>
+            <h1 className="mt-6 text-display leading-none font-extrabold tracking-[-0.035em] text-balance">{c.title}</h1>
+            <p className="mt-3 text-plum-soft">{c.body}</p>
+          </section>
+        ))}
+      </div>
+
+      <div className="mt-6 flex items-center justify-between gap-4">
+        <div className="flex gap-1" role="group" aria-label="Cards">
+          {cards.map((c, i) => (
+            <button
+              key={c.title}
+              type="button"
+              aria-label={`Card ${i + 1}: ${c.title}`}
+              aria-current={active === i || undefined}
+              onClick={() => go(i)}
+              className="tap grid h-6 place-items-center px-1"
+            >
+              <span className={`block h-2 rounded-full transition-[width,background-color] duration-300 ${active === i ? 'w-6 bg-plum' : 'w-2 bg-plum-soft/40'}`} />
+            </button>
+          ))}
+        </div>
+        {!last && <Button onClick={() => go(active + 1)}>Next</Button>}
+      </div>
+
+      <div className={`mt-4 flex flex-col gap-2 ${last ? '' : 'invisible'}`} aria-hidden={!last || undefined}>
+        <Button className="h-[46px]! w-full" tabIndex={last ? 0 : -1} onClick={() => finish('sign-up')}>
+          {session ? 'Done' : 'Create an account'}
+        </Button>
+        {!session && (
+          <Button variant="text" className="self-center" tabIndex={last ? 0 : -1} onClick={() => finish('sign-in')}>
+            I already have an account
+          </Button>
+        )}
+      </div>
+
+      <p className="mt-4 text-center text-small text-plum-soft">
+        <Link to="/help" className="underline underline-offset-3 hover:text-plum">
+          Help
+        </Link>
+      </p>
+    </div>
+  )
+}
+
+function Print({ item, claim, children, className = '' }: { item: Item; claim?: Claim | null; children?: ReactNode; className?: string }) {
+  return (
+    <div className={`w-[150px] rounded-print bg-print px-[7px] pt-[7px] pb-3 shadow-[0_2px_6px_rgba(59,29,63,.12)] ${className}`}>
+      <Photo item={item} claim={claim} />
+      <div className="flex flex-col gap-1 px-[3px] pt-2.5">{children}</div>
+    </div>
+  )
+}
+
+/** Card 1: a link goes in, a print slides out of the booth. */
+function SaveStage() {
+  const lamp = sample(1, 'Marble table lamp', 10)
+  return (
+    <div className="flex w-full max-w-[300px] flex-col items-center">
+      <div className="flex h-[46px] w-full items-center gap-2 rounded-full bg-print pr-1.5 pl-[18px] shadow-[inset_0_0_0_1.5px_var(--color-edge)]">
+        <span className="min-w-0 flex-1 truncate text-plum-soft">shop.example/marble-lamp</span>
+        <span className="grid h-[34px] place-items-center rounded-full bg-plum px-3.5 text-small font-semibold text-white">Add</span>
+      </div>
+      <div className="mt-5 h-1.5 w-[190px] rounded-full bg-plum" />
+      <div className="-mt-0.5 overflow-hidden px-3 pb-3">
+        <Print item={lamp} className="print-out">
+          <span className="text-small text-plum-soft">shop.example</span>
+          <span className="leading-tight font-semibold">{lamp.title}</span>
+          <Hearts priority={lamp.priority} className="mt-0.5 h-[1.25em]" />
+        </Print>
+      </div>
+    </div>
+  )
+}
+
+/** Card 2: two people, their prints dealt between them. */
+function ShareStage() {
+  const prints = [sample(2, 'Film camera', 9), sample(3, 'Wool scarf', 6), sample(4, 'Cookbook', 4)]
+  return (
+    <div className="flex flex-col items-center">
+      <div className="flex items-center gap-3">
+        <Person name="You" />
+        <span className="h-0.5 w-10 rounded-full bg-edge" />
+        <Person name="Maya" />
+      </div>
+      <div className="relative mt-6 h-[170px] w-[280px]">
+        {prints.map((p, i) => (
+          <div key={p.id} className="deal absolute top-0 left-1/2" style={{ ['--i' as string]: i - 1 }}>
+            <div className="w-[104px] rounded-print bg-print p-1.5 pb-3 shadow-[0_2px_6px_rgba(59,29,63,.12)]">
+              <Photo item={p} />
+              <span className="mt-2 block truncate px-0.5 text-small font-semibold">{p.title}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Person({ name }: { name: string }) {
+  return (
+    <span className="flex flex-col items-center gap-1.5">
+      <span className="rounded-full ring-3 ring-print">
+        <Avatar name={name} size={48} />
+      </span>
+      <span className="text-small font-semibold">{name}</span>
+    </span>
+  )
+}
+
+/** Card 3: the giver's view wraps in ribbon; the owner's view stays the same. */
+function SurpriseStage({ on }: { on: boolean }) {
+  const watch = sample(5, 'Leather watch', 8)
+  // The ribbon wraps a moment after the card arrives, and unwraps when it leaves.
+  const [wrapped, setWrapped] = useState(false)
+  useEffect(() => {
+    if (!on) return
+    const t = setTimeout(() => setWrapped(true), 450)
+    return () => {
+      clearTimeout(t)
+      setWrapped(false)
+    }
+  }, [on])
+  const claim: Claim | null = on && wrapped ? { status: 'reserved', mine: true } : null
+  return (
+    <div className="flex gap-3">
+      <figure className="flex flex-col items-center gap-2">
+        <Print item={watch} claim={claim} className="w-[136px]!">
+          <span className="leading-tight font-semibold">{watch.title}</span>
+          <span className={`text-small font-semibold text-ribbon-deep transition-opacity duration-300 ${claim ? 'opacity-100 delay-700' : 'opacity-0'}`}>Reserved by you</span>
+        </Print>
+        <figcaption className="text-small text-plum-soft">What Sam sees</figcaption>
+      </figure>
+      <figure className="flex flex-col items-center gap-2">
+        <Print item={watch} className="w-[136px]!">
+          <span className="leading-tight font-semibold">{watch.title}</span>
+          <span className="text-small text-plum-soft">On your list</span>
+        </Print>
+        <figcaption className="text-small text-plum-soft">What you see</figcaption>
+      </figure>
+    </div>
+  )
+}

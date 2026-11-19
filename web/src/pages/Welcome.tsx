@@ -1,13 +1,16 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { CurrencySelect } from '../components/CurrencySelect'
+import { EditItemSheet } from '../components/ItemSheet'
 import { Page } from '../components/Page'
 import { Button, LoadError, Notice, Panel, Spinner, TextField } from '../components/ui'
 import { detectUserCurrency, FALLBACK_CURRENCY } from '../lib/currency'
 import { friendlyError } from '../lib/errors'
 import { normalizeInviteCode, readPendingJoin } from '../lib/invite'
 import { useCreateCircle, useJoinCircle, useMyCircles, useProfile, useUpdateProfile, type CircleKind, type Profile } from '../lib/queries'
+import { useMyItems } from '../lib/items'
 import { useToast } from '../lib/toast'
+import { AddBar } from './MyList'
 
 export function WelcomePage() {
   const profile = useProfile()
@@ -18,7 +21,10 @@ export function WelcomePage() {
 
 function Welcome({ profile }: { profile: Profile }) {
   const update = useUpdateProfile()
-  const [step, setStep] = useState<'profile' | 'circle'>('profile')
+  const [step, setStep] = useState<'profile' | 'circle' | 'wish'>('profile')
+  const [circleId, setCircleId] = useState<string | null>(null)
+  // Someone arriving from an invite goes straight to that Circle after step 1.
+  const joining = !!readPendingJoin()
   const [name, setName] = useState(profile.display_name)
   // Google sign-ups arrive without a detected currency; offer the detected one instead of USD.
   const [currency, setCurrency] = useState(profile.currency === FALLBACK_CURRENCY ? detectUserCurrency() : profile.currency)
@@ -41,7 +47,8 @@ function Welcome({ profile }: { profile: Profile }) {
 
   if (step === 'profile') {
     return (
-      <Page title="Welcome to GiftHub" lead="Two quick things, then you can start a Circle.">
+      <Page title="Welcome to GiftHub" lead={joining ? 'One quick thing, then you’re in.' : 'Three quick steps and you’re set up.'}>
+        {!joining && <Steps at={1} />}
         <Panel className="mt-6 max-w-[480px]">
           <form onSubmit={saveProfile} className="flex flex-col gap-4" noValidate>
             <TextField label="Your name" hint="This is how you appear in your Circles." autoComplete="name" maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
@@ -56,7 +63,70 @@ function Welcome({ profile }: { profile: Profile }) {
     )
   }
 
-  return <StartCircle onDone={(id) => navigate({ to: '/circles/$circleId', params: { circleId: id }, replace: true })} onSkip={() => navigate({ to: '/', replace: true })} />
+  const finish = () => (circleId ? navigate({ to: '/circles/$circleId', params: { circleId }, replace: true }) : navigate({ to: '/', replace: true }))
+
+  if (step === 'circle')
+    return (
+      <StartCircle
+        progress={<Steps at={2} />}
+        onDone={(id) => {
+          setCircleId(id)
+          setStep('wish')
+        }}
+        onSkip={() => setStep('wish')}
+      />
+    )
+
+  return <FirstWish userCurrency={currency} onDone={finish} />
+}
+
+/** "Step 2 of 3" with three short bars, under the page's lead. */
+function Steps({ at }: { at: 1 | 2 | 3 }) {
+  return (
+    <div className="mt-5 flex items-center gap-3">
+      <span className="text-small font-semibold text-plum-soft">Step {at} of 3</span>
+      <span className="flex gap-1.5" aria-hidden="true">
+        {[1, 2, 3].map((n) => (
+          <span key={n} className={`h-1.5 w-8 rounded-full ${n <= at ? 'bg-plum' : 'bg-plum-soft/30'}`} />
+        ))}
+      </span>
+    </div>
+  )
+}
+
+/** Step 3: the first wish, by link or by hand. Then on to the new Circle or the list. */
+function FirstWish({ userCurrency, onDone }: { userCurrency: string; onDone: () => void }) {
+  const items = useMyItems()
+  const circles = useMyCircles()
+  const [adding, setAdding] = useState<{ url: string | null; title?: string | null } | null>(null)
+  const added = (items.data?.length ?? 0) > 0
+
+  return (
+    <Page title={added ? 'You’re all set' : 'Add your first wish'} lead={added ? 'Your wish is on your list. Add more any time from My list.' : 'Paste a link to something you’d like. GiftHub fills in the details.'}>
+      <Steps at={3} />
+      <Panel className="mt-6 max-w-[540px]">
+        {added ? (
+          <Button onClick={onDone}>Continue</Button>
+        ) : (
+          <>
+            <AddBar onAdd={(url, title) => setAdding({ url, title })} />
+            <p className="mt-3 text-small text-plum-soft">
+              No link?{' '}
+              <button type="button" className="font-semibold text-plum underline underline-offset-3" onClick={() => setAdding({ url: null })}>
+                Add a wish by hand
+              </button>
+            </p>
+          </>
+        )}
+      </Panel>
+      {!added && (
+        <Button variant="text" className="mt-4" onClick={onDone}>
+          Skip for now
+        </Button>
+      )}
+      {adding && <EditItemSheet item={null} initialUrl={adding.url} initialTitle={adding.title} circles={circles.data ?? []} userCurrency={userCurrency} onClose={() => setAdding(null)} />}
+    </Page>
+  )
 }
 
 const kindChoices: { value: CircleKind; label: string }[] = [
@@ -72,8 +142,11 @@ export function StartCircle({
   onSkip,
   compact = false,
   only,
+  progress,
 }: {
   onDone: (circleId: string) => void
+  /** Shown under the lead (Welcome's step counter). */
+  progress?: ReactNode
   onSkip?: () => void
   compact?: boolean
   /** Show just one of the two forms. */
@@ -179,6 +252,7 @@ export function StartCircle({
 
   return (
     <Page title="Start or join a Circle" lead="A Circle is a private group where you see each other’s lists.">
+      {progress}
       {body}
       {onSkip && (
         <Button variant="text" className="mt-4" onClick={onSkip}>

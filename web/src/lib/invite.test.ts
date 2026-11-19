@@ -27,6 +27,9 @@ describe('normalizeInviteCode', () => {
 
 describe('inviteLink', () => {
   it('builds a join link', () => {
-    expect(inviteLink('K7QX3M', 'https://gifthub.grave07.workers.dev')).toBe('https://gifthub.grave07.workers.dev/join/K7QX3M')
+    expect(inviteLink('K7QX3M', null, 'https://gifthub.grave07.workers.dev')).toBe('https://gifthub.grave07.workers.dev/join/K7QX3M')
+  })
+  it('adds the inviter’s first name only', () => {
+    expect(inviteLink('K7QX3M', '  Zoë Anne Smith ', 'https://x.dev')).toBe('https://x.dev/join/K7QX3M?from=Zo%C3%AB')
   })
 })
