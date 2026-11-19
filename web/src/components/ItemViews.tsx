@@ -297,7 +297,7 @@ export function ListTools({
 /** Strip or List, with the plum pill sliding between them. */
 export function ViewSwitch({ view, onView, className = '' }: { view: ViewMode; onView: (v: ViewMode) => void; className?: string }) {
   return (
-    <div role="group" aria-label="View" className={`relative grid grid-cols-2 rounded-full bg-print p-[3px] shadow-[inset_0_0_0_1.5px_var(--color-edge)] ${className}`}>
+    <div role="group" aria-label="View" className={`relative grid h-[34px] grid-cols-2 self-center rounded-full bg-print p-[3px] shadow-[inset_0_0_0_1.5px_var(--color-edge)] pointer-coarse:h-11 ${className}`}>
       <SlidingPill active='[aria-pressed="true"]' watch={view} />
       {(['strip', 'list'] as const).map((v) => (
         <button
@@ -305,7 +305,7 @@ export function ViewSwitch({ view, onView, className = '' }: { view: ViewMode; o
           type="button"
           aria-pressed={view === v}
           onClick={() => onView(v)}
-          className="tap relative h-7 rounded-full px-3 text-small font-semibold text-plum-soft transition-colors duration-200 hover:text-plum aria-pressed:text-white"
+          className="tap relative h-full rounded-full px-3 text-small font-semibold text-plum-soft transition-colors duration-200 hover:text-plum aria-pressed:text-white"
         >
           {v === 'strip' ? 'Strip' : 'List'}
         </button>

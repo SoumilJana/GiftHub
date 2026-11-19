@@ -40,6 +40,8 @@ export function SignInPage() {
   const [busy, setBusy] = useState<'form' | 'link' | 'google' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
+  // After an email goes out, the form gives way to a clear "check your inbox" screen.
+  const [sent, setSent] = useState<{ to: string; kind: 'confirm' | 'link' } | null>(null)
   const pending = readPendingJoin()
   const captcha = useCaptcha()
 
@@ -64,6 +66,11 @@ export function SignInPage() {
     leaveSignIn(target)
   }
 
+  function showSent(to: string, kind: 'confirm' | 'link') {
+    setSent({ to, kind })
+    window.scrollTo({ top: 0 })
+  }
+
   async function submit(e: FormEvent) {
     e.preventDefault()
     setError(null)
@@ -84,7 +91,7 @@ export function SignInPage() {
         })
         if (error) throw error
         if (data.session) goNext()
-        else setInfo(`Check your inbox: we sent a link to ${email} to confirm your account.`)
+        else showSent(email, 'confirm')
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken } })
         if (error) throw error
@@ -109,7 +116,7 @@ export function SignInPage() {
         options: { captchaToken, emailRedirectTo: `${window.location.origin}${next}`, data: { currency: detectUserCurrency() } },
       })
       if (error) throw error
-      setInfo(`Check your inbox: we sent a sign-in link to ${email}.`)
+      showSent(email, 'link')
     } catch (err) {
       setError(friendlyError(err))
     } finally {
@@ -149,81 +156,122 @@ export function SignInPage() {
 
   return (
     <AuthFrame
-      title={signUp ? 'Create your account' : 'Welcome back'}
-      lead={signUp ? 'Make a wishlist and share it with the people who buy you gifts.' : 'Sign in to see your lists and Circles.'}
+      title={sent ? 'Check your inbox' : signUp ? 'Create your account' : 'Welcome back'}
+      lead={
+        sent
+          ? sent.kind === 'confirm'
+            ? 'One more step to finish your account.'
+            : 'Your sign-in link is on its way.'
+          : signUp
+            ? 'Make a wishlist and share it with the people who buy you gifts.'
+            : 'Sign in to see your lists and Circles.'
+      }
     >
-      {pending && (
-        <div className="mb-4">
-          <Notice>You’re joining a Circle with code {pending}. Sign in or create an account to finish.</Notice>
+      {sent && (
+        <div role="status" className="flex flex-col items-start gap-4">
+          <MailIcon />
+          <p>
+            We sent {sent.kind === 'confirm' ? 'a link to confirm your account' : 'a sign-in link'} to
+            <strong className="my-1 block font-extrabold [overflow-wrap:anywhere]">{sent.to}</strong>
+            Open it on this device to {sent.kind === 'confirm' ? 'finish signing up' : 'sign in'}.
+          </p>
+          <p className="text-small text-plum-soft">It usually arrives within a minute. Not there? Check Spam or Promotions.</p>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setSent(null)
+              setInfo(null)
+              setError(null)
+            }}
+          >
+            Use a different email
+          </Button>
         </div>
       )}
-
-      <GoogleButton busy={busy === 'google'} onToken={googleToken} onFallback={google} />
-
-      <div className="my-5 flex items-center gap-3 text-small text-plum-soft" aria-hidden="true">
-        <span className="h-px flex-1 bg-blush-deep" />
-        or with email
-        <span className="h-px flex-1 bg-blush-deep" />
-      </div>
-
-      <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
-        {signUp && (
-          <TextField label="Your name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required />
+      {/* Hidden, not removed, so the Turnstile check stays ready for another try. */}
+      <div hidden={!!sent}>
+        {pending && (
+          <div className="mb-4">
+            <Notice>You’re joining a Circle with code {pending}. Sign in or create an account to finish.</Notice>
+          </div>
         )}
-        <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <TextField
-          label="Password"
-          type="password"
-          autoComplete={signUp ? 'new-password' : 'current-password'}
-          hint={signUp ? 'At least 8 characters.' : undefined}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        {captcha.widget}
-        {error && <Notice tone="alert">{error}</Notice>}
-        {info && <Notice>{info}</Notice>}
-        <Button type="submit" className="w-full" busy={busy === 'form'}>
-          {signUp ? 'Create account' : 'Sign in'}
-        </Button>
-      </form>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-        <Button variant="text" busy={busy === 'link'} onClick={emailLink}>
-          Email me a sign-in link
-        </Button>
-        {!signUp && (
-          <Link to="/reset-password" className="px-1 py-1.5 text-small text-plum-soft underline underline-offset-3 hover:text-plum">
-            Forgot password?
+        <GoogleButton busy={busy === 'google'} onToken={googleToken} onFallback={google} />
+
+        <div className="my-5 flex items-center gap-3 text-small text-plum-soft" aria-hidden="true">
+          <span className="h-px flex-1 bg-blush-deep" />
+          or with email
+          <span className="h-px flex-1 bg-blush-deep" />
+        </div>
+
+        <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
+          {signUp && <TextField label="Your name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required />}
+          <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <TextField
+            label="Password"
+            type="password"
+            autoComplete={signUp ? 'new-password' : 'current-password'}
+            hint={signUp ? 'At least 8 characters.' : undefined}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          {captcha.widget}
+          {error && <Notice tone="alert">{error}</Notice>}
+          {info && <Notice>{info}</Notice>}
+          <Button type="submit" className="w-full" busy={busy === 'form'}>
+            {busy === 'form' ? (signUp ? 'Creating your account…' : 'Signing in…') : signUp ? 'Create account' : 'Sign in'}
+          </Button>
+        </form>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+          <Button variant="text" busy={busy === 'link'} disabled={busy === 'form'} onClick={emailLink}>
+            {busy === 'link' ? 'Sending link…' : 'Email me a sign-in link'}
+          </Button>
+          {!signUp && (
+            <Link to="/reset-password" className="px-1 py-1.5 text-small text-plum-soft underline underline-offset-3 hover:text-plum">
+              Forgot password?
+            </Link>
+          )}
+        </div>
+
+        <p className="mt-5 border-t border-blush pt-4 text-small text-plum-soft">
+          {signUp ? 'Already have an account?' : 'New to GiftHub?'}{' '}
+          <button
+            type="button"
+            className="font-semibold text-plum underline underline-offset-3"
+            onClick={() => {
+              setMode(signUp ? 'sign-in' : 'sign-up')
+              setError(null)
+              setInfo(null)
+            }}
+          >
+            {signUp ? 'Sign in' : 'Create an account'}
+          </button>
+        </p>
+        <p className="mt-4 text-small text-plum-soft">
+          By continuing, you agree to the{' '}
+          <Link to="/terms" className="underline underline-offset-3 hover:text-plum">
+            Terms
+          </Link>{' '}
+          and{' '}
+          <Link to="/privacy" className="underline underline-offset-3 hover:text-plum">
+            Privacy Policy
           </Link>
-        )}
+          .
+        </p>
       </div>
-
-      <p className="mt-5 border-t border-blush pt-4 text-small text-plum-soft">
-        {signUp ? 'Already have an account?' : 'New to GiftHub?'}{' '}
-        <button
-          type="button"
-          className="font-semibold text-plum underline underline-offset-3"
-          onClick={() => {
-            setMode(signUp ? 'sign-in' : 'sign-up')
-            setError(null)
-            setInfo(null)
-          }}
-        >
-          {signUp ? 'Sign in' : 'Create an account'}
-        </button>
-      </p>
-      <p className="mt-4 text-small text-plum-soft">
-        By continuing, you agree to the{' '}
-        <Link to="/terms" className="underline underline-offset-3 hover:text-plum">
-          Terms
-        </Link>{' '}
-        and{' '}
-        <Link to="/privacy" className="underline underline-offset-3 hover:text-plum">
-          Privacy Policy
-        </Link>
-        .
-      </p>
     </AuthFrame>
+  )
+}
+
+function MailIcon() {
+  return (
+    <span className="grid size-12 place-items-center rounded-full bg-blush text-plum" aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="5" width="18" height="14" rx="2.5" />
+        <path d="m4 7 8 6 8-6" />
+      </svg>
+    </span>
   )
 }

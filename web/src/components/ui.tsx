@@ -4,7 +4,7 @@ import { useId, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactN
 type Variant = 'primary' | 'ghost' | 'text' | 'danger'
 
 const base =
-  'tap inline-flex items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50'
+  'tap inline-flex items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50 aria-busy:disabled:cursor-wait aria-busy:disabled:opacity-80'
 
 const variants: Record<Variant, string> = {
   primary: 'h-10 px-[18px] bg-plum text-white hover:bg-plum-hover',
@@ -31,6 +31,7 @@ export function Button({
       aria-busy={busy || undefined}
       className={`${base} ${variants[variant]} ${className}`}
     >
+      {busy && <span aria-hidden="true" className="size-4 shrink-0 rounded-full border-2 border-current border-r-transparent motion-safe:animate-spin" />}
       {children}
     </button>
   )
