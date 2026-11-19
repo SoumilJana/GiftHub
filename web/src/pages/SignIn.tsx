@@ -2,6 +2,7 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { Redirect } from '../components/Redirect'
 import { useState, type FormEvent } from 'react'
 import { AuthFrame } from '../components/AuthFrame'
+import { useCaptcha } from '../components/Captcha'
 import { GoogleButton } from '../components/GoogleButton'
 import { Button, Notice, TextField } from '../components/ui'
 import { useAuth } from '../lib/auth'
@@ -24,6 +25,7 @@ export function SignInPage() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const pending = readPendingJoin()
+  const captcha = useCaptcha()
 
   // Only same-site paths are allowed as a destination after sign-in.
   const next = search.redirect && /^\/(?![/\\])/.test(search.redirect) && !/[\\\s]/.test(search.redirect) ? search.redirect : '/'
@@ -40,11 +42,13 @@ export function SignInPage() {
     if (mode === 'sign-up' && password.length < 8) return setError('Use a longer password: at least 8 characters.')
     setBusy('form')
     try {
+      const captchaToken = await captcha.take()
       if (mode === 'sign-up') {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
+            captchaToken,
             data: { full_name: name.trim(), currency: detectUserCurrency() },
             emailRedirectTo: `${window.location.origin}/welcome`,
           },
@@ -53,7 +57,7 @@ export function SignInPage() {
         if (data.session) goNext()
         else setInfo(`Check your inbox: we sent a link to ${email} to confirm your account.`)
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        const { error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken } })
         if (error) throw error
         goNext()
       }
@@ -69,24 +73,34 @@ export function SignInPage() {
     setInfo(null)
     if (!email) return setError('Enter your email first.')
     setBusy('link')
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}${next}`, data: { currency: detectUserCurrency() } },
-    })
-    setBusy(null)
-    if (error) setError(friendlyError(error))
-    else setInfo(`Check your inbox: we sent a sign-in link to ${email}.`)
+    try {
+      const captchaToken = await captcha.take()
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { captchaToken, emailRedirectTo: `${window.location.origin}${next}`, data: { currency: detectUserCurrency() } },
+      })
+      if (error) throw error
+      setInfo(`Check your inbox: we sent a sign-in link to ${email}.`)
+    } catch (err) {
+      setError(friendlyError(err))
+    } finally {
+      setBusy(null)
+    }
   }
 
   async function googleToken(token: string, nonce: string) {
     setError(null)
     setInfo(null)
     setBusy('google')
-    const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token, nonce })
-    if (error) {
+    try {
+      const captchaToken = await captcha.take()
+      const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token, nonce, options: { captchaToken } })
+      if (error) throw error
+      goNext()
+    } catch (err) {
       setBusy(null)
-      setError(friendlyError(error))
-    } else goNext()
+      setError(friendlyError(err))
+    }
   }
 
   async function google() {
@@ -137,6 +151,7 @@ export function SignInPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        {captcha.widget}
         {error && <Notice tone="alert">{error}</Notice>}
         {info && <Notice>{info}</Notice>}
         <Button type="submit" className="w-full" busy={busy === 'form'}>

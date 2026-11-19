@@ -416,7 +416,12 @@ Scope
   - **Already in place:** database access rules (96 checks), rate limits on link reading (30 a minute), invite-code guessing (5 tries) and bug reports (daily cap), quotas on wishes, Circles and photos.
   - **Still open:**
     - Before opening sign-up: in the Supabase dashboard, turn on email confirmation, set the minimum password length to 8, turn on "Secure password change", and run Advisors → Security.
-    - Consider Cloudflare Turnstile (free) on sign-up against bot accounts.
+    - Cloudflare Turnstile (free person check): built 19 Nov 2026 on sign-up, sign-in, Google sign-in, email links and password reset. Site key set and deployed 19 Nov 2026; the last step is the secret key in Supabase → Authentication → Attack Protection.
+- **Security Advisor (19 Nov 2026):**
+  - `rls_auto_enable()` (Supabase's own function that turns RLS on for new tables) was callable by anyone. Migration `20261124000000_lock_rls_auto_enable.sql` removes that (applied live 19 Nov 2026).
+  - The 18 "signed-in users can run a SECURITY DEFINER function" warnings are intended: these are the app's own actions (claim, join, create Circle…). Each one checks who is asking, and the database tests cover them.
+  - "RLS enabled, no policy" on `bug_reports`, `join_attempts`, `parse_cache` and `parse_jobs` is intended: only the server uses these tables. (`parse_cache` and `parse_jobs` are unused leftovers from the first design.)
+  - Leaked password protection needs Supabase's paid plan, so it stays off; minimum length 8 instead.
     - The `parse-url` Supabase function can be called directly by any signed-in person without the 30-a-minute limit. Low risk while sign-up is invite-only.
 - **App robustness pass:** every screen empty and with a lot of data; slow and dropped connections; double taps on every button; error messages on every form; long names everywhere; phone, tablet and desktop sizes.
 - **Manual test script (the owner, about 20 minutes, two accounts on two phones):** sign up, start and join a Circle, add wishes by link and by hand, upload a photo, claim, buy, the gift hand-off, Received, a couple Circle, Help and bug report.

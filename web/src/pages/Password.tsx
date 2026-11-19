@@ -1,6 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 import { AuthFrame } from '../components/AuthFrame'
+import { useCaptcha } from '../components/Captcha'
 import { Button, Notice, TextField } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
@@ -11,23 +12,32 @@ export function ResetPasswordPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
+  const captcha = useCaptcha()
 
   async function submit(e: FormEvent) {
     e.preventDefault()
     setError(null)
     setBusy(true)
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`,
-    })
-    setBusy(false)
-    if (error) setError(friendlyError(error))
-    else setSent(true)
+    try {
+      const captchaToken = await captcha.take()
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        captchaToken,
+        redirectTo: `${window.location.origin}/update-password`,
+      })
+      if (error) throw error
+      setSent(true)
+    } catch (err) {
+      setError(friendlyError(err))
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
     <AuthFrame title="Reset your password" lead="We’ll email you a link to choose a new one.">
       <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
         <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        {captcha.widget}
         {error && <Notice tone="alert">{error}</Notice>}
         {sent && <Notice>If there’s an account for {email}, a reset link is on its way.</Notice>}
         <Button type="submit" className="w-full" busy={busy}>
