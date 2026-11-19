@@ -10,6 +10,7 @@ import { friendlyError } from '../lib/errors'
 import { normalizeInviteCode, readPendingJoin } from '../lib/invite'
 import { useCreateCircle, useJoinCircle, useMyCircles, useProfile, useUpdateProfile, type CircleKind, type Profile } from '../lib/queries'
 import { useMyItems } from '../lib/items'
+import { isCalm } from '../lib/motion'
 import { useToast } from '../lib/toast'
 import { AddBar } from './MyList'
 
@@ -163,6 +164,7 @@ export function StartCircle({
   const [code, setCode] = useState('')
   const [createError, setCreateError] = useState<string | null>(null)
   const [joinError, setJoinError] = useState<string | null>(null)
+  const [joined, setJoined] = useState(false)
 
   async function doCreate(e: FormEvent) {
     e.preventDefault()
@@ -187,6 +189,9 @@ export function StartCircle({
     try {
       const circle = await join.mutateAsync(normalized)
       if (!circle) return setJoinError('That code doesn’t match an open Circle. Check it with the person who sent it.')
+      // A short moment for the boxes to turn plum before the Circle opens.
+      setJoined(true)
+      await new Promise((r) => setTimeout(r, isCalm() ? 250 : 600))
       toast(circle.name ? `You joined ${circle.name}.` : 'You joined their couple Circle.')
       onDone(circle.id)
     } catch (err) {
@@ -248,6 +253,7 @@ export function StartCircle({
             }}
             onComplete={(c) => doJoin(undefined, c)}
             error={joinError}
+            done={joined}
             hint="Six letters and numbers. You can paste the whole link."
             autoFocus={only === 'join'}
           />

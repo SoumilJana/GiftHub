@@ -16,8 +16,11 @@ export function CodeInput({
   label = 'Invite code',
   hint,
   autoFocus,
+  done = false,
 }: {
   value: string
+  /** Joined: the boxes turn plum before the Circle opens. */
+  done?: boolean
   onChange: (code: string) => void
   onComplete?: (code: string) => void
   error?: string | null
@@ -47,35 +50,7 @@ export function CodeInput({
         {label}
       </label>
       <div ref={row} className="relative">
-        <div className="grid grid-cols-[repeat(3,1fr)_10px_repeat(3,1fr)] gap-1.5 sm:gap-2" aria-hidden="true">
-          {Array.from({ length: LENGTH }, (_, i) => {
-            const ch = value[i]
-            const current = focused && (i === value.length || (value.length === LENGTH && i === LENGTH - 1))
-            return [
-              i === 3 && <span key="gap" className="self-center justify-self-center text-plum-soft">·</span>,
-              <span
-                key={i}
-                className={`relative grid h-14 place-items-center rounded-print bg-print text-[26px] leading-none font-extrabold text-plum tabular-nums transition-shadow duration-150 ${
-                  error
-                    ? 'shadow-[inset_0_0_0_1.5px_var(--color-alert)]'
-                    : current
-                      ? 'shadow-[inset_0_0_0_2px_var(--color-plum)]'
-                      : ch
-                        ? 'shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)]'
-                        : 'shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
-                }`}
-              >
-                {ch ? (
-                  <span key={`${i}${ch}`} className="code-pop">
-                    {ch}
-                  </span>
-                ) : (
-                  current && <span className="code-caret h-7 w-0.5 rounded-full bg-plum" />
-                )}
-              </span>,
-            ]
-          })}
-        </div>
+        <CodeBoxes value={value} cursor={focused && !done} error={!!error} done={done} />
         <input
           ref={input}
           id={id}
@@ -115,6 +90,53 @@ export function CodeInput({
           {error}
         </p>
       )}
+    </div>
+  )
+}
+
+/**
+ * The six boxes on their own: used under the code input, and on the join screen, where the
+ * code from the link fills in one character at a time. `done` turns them plum, box by box.
+ */
+export function CodeBoxes({ value, cursor = false, error = false, done = false }: { value: string; cursor?: boolean; error?: boolean; done?: boolean }) {
+  return (
+    <div className="grid grid-cols-[repeat(3,1fr)_10px_repeat(3,1fr)] gap-1.5 sm:gap-2" aria-hidden="true">
+      {Array.from({ length: LENGTH }, (_, i) => {
+        const ch = value[i]
+        const current = cursor && (i === value.length || (value.length === LENGTH && i === LENGTH - 1))
+        return [
+          i === 3 && (
+            <span key="gap" className="self-center justify-self-center text-plum-soft">
+              ·
+            </span>
+          ),
+          <span
+            key={i}
+            style={{ transitionDelay: done ? `${i * 45}ms` : undefined }}
+            className={`relative grid h-14 place-items-center rounded-print text-[26px] leading-none font-extrabold tabular-nums transition-[box-shadow,background-color,color] duration-200 ${
+              done
+                ? 'bg-plum text-white shadow-none'
+                : `bg-print text-plum ${
+                    error
+                      ? 'shadow-[inset_0_0_0_1.5px_var(--color-alert)]'
+                      : current
+                        ? 'shadow-[inset_0_0_0_2px_var(--color-plum)]'
+                        : ch
+                          ? 'shadow-[inset_0_0_0_1.5px_var(--color-plum-soft)]'
+                          : 'shadow-[inset_0_0_0_1.5px_var(--color-edge)]'
+                  }`
+            }`}
+          >
+            {ch ? (
+              <span key={`${i}${ch}`} className="code-pop">
+                {ch}
+              </span>
+            ) : (
+              current && <span className="code-caret h-7 w-0.5 rounded-full bg-plum" />
+            )}
+          </span>,
+        ]
+      })}
     </div>
   )
 }

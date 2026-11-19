@@ -1,20 +1,23 @@
-/** The three-card intro shows once per device (it's also linked from Help). */
+/**
+ * The intro cards are the front door: every signed-out visit starts there, and once someone
+ * moves on to sign-in they aren't sent back for the rest of that visit (this browser tab).
+ */
 const KEY = 'gifthub.introSeen'
 
 export function introSeen(): boolean {
   try {
-    return localStorage.getItem(KEY) === '1'
+    return sessionStorage.getItem(KEY) === '1'
   } catch {
-    // Storage blocked: don't trap people in the intro on every visit.
+    // Storage blocked: don't trap people in the intro.
     return true
   }
 }
 
 export function markIntroSeen() {
   try {
-    localStorage.setItem(KEY, '1')
+    sessionStorage.setItem(KEY, '1')
   } catch {
-    /* private mode: it may show again next visit */
+    /* storage blocked: introSeen() already lets them through */
   }
 }
 

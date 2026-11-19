@@ -441,7 +441,7 @@ Scope
 Done when: all automated checks pass, the manual script runs clean on two phones, and nothing in the robustness pass is left open. Then the private beta (5–10 couples and friend groups).
 
 ### Phase 4.6 — First-run onboarding (added 19 Nov 2026; about 2–3 days, before the private beta)
-**Status (19 Nov 2026): built, not yet live.** Intro cards at `/intro` (shown once per device before sign-in, linked from Help), an invite screen on `/join/<code>` that names the inviter from the link (`?from=Maya`, display only), Welcome in three numbered steps (name and currency → Circle → first wish), and one-time hints on Circle lists. Checked locally at phone and desktop sizes, with the keyboard and in calm mode.
+**Status (19 Nov 2026): built, not yet live.** Intro cards at `/intro` (the front door: every signed-out visit starts there; linked from Help), an invite screen on `/join/<code>` that names the inviter from the link (`?from=Maya`, display only), Welcome in three numbered steps (name and currency → Circle → first wish), one-time hints on Circle lists, six-box invite code entry, and an invite link that types its code into the boxes before the Circle opens. Checked locally at phone and desktop sizes, with the keyboard and in calm mode.
 
 **Goal:** a new person understands GiftHub in under 30 seconds and has a Circle and a first wish within 2 minutes, without help. Today the first run is only "name and currency, then start a Circle", and nothing explains the secret claims, which is the whole point.
 
@@ -450,7 +450,7 @@ Scope
   1. "Save wishes from any store": paste a link, a print slides out.
   2. "Share with your Circle": a couple, or a group of friends or family.
   3. "Gifts stay a surprise": givers reserve and buy in secret; you only see who gave what once you mark it received.
-  Skip at any point; dots show where you are. Shown once per device, and again from Help. Works with swipe, buttons and keyboard; with reduced motion the cards fade instead of sliding.
+  Skip at any point; dots show where you are. Shown on every signed-out visit (decided 19 Nov 2026), and from Help. Works with swipe, buttons and keyboard; with reduced motion the cards fade instead of sliding.
 - **Invite links get their own first screen:** "Maya invited you to …" with one line on secret claims, then sign-up, then straight into the Circle. No generic intro.
 - **Welcome steps, with "Step 1 of 3":** name and currency → start or join a Circle (or skip) → add your first wish (paste a link, or add by hand). After starting a Circle, the invite step offers the phone's own Share menu as well as copying the code.
 - **First visit hints, once each:** the first time you open someone else's list, one line explains Reserve and "I bought it" and that they won't see it. The first time you open your own list in a Circle, one line explains that claims stay hidden. (The existing privacy note on My list stays.)

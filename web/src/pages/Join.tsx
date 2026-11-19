@@ -1,10 +1,12 @@
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { AuthFrame } from '../components/AuthFrame'
-import { LockIcon, Notice, Spinner } from '../components/ui'
+import { CodeBoxes } from '../components/CodeInput'
+import { LockIcon, Notice } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { friendlyError } from '../lib/errors'
 import { inviterFromSearch, markIntroSeen } from '../lib/intro'
+import { isCalm } from '../lib/motion'
 import { clearPendingJoin, normalizeInviteCode, savePendingJoin } from '../lib/invite'
 import { useJoinCircle } from '../lib/queries'
 import { useToast } from '../lib/toast'
@@ -19,19 +21,41 @@ export function JoinPage() {
   const navigate = useNavigate()
   const toast = useToast()
   const [error, setError] = useState<string | null>(null)
+  const [shown, setShown] = useState(0)
+  const [done, setDone] = useState(false)
   const started = useRef(false)
 
+  // Signed in: the code from the link types itself into the boxes while the join runs.
+  // Once both are done the boxes turn plum, then the Circle opens.
   useEffect(() => {
     if (loading || !session || !code || started.current) return
     started.current = true
-    join
-      .mutateAsync(code)
-      .then((circle) => {
+    const calm = isCalm()
+    const filled = new Promise<void>((resolve) => {
+      if (calm) {
+        setShown(6)
+        return resolve()
+      }
+      let n = 0
+      const t = setInterval(() => {
+        n += 1
+        setShown(n)
+        if (n >= 6) {
+          clearInterval(t)
+          resolve()
+        }
+      }, 110)
+    })
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
+    Promise.all([join.mutateAsync(code), filled.then(() => wait(250))])
+      .then(async ([circle]) => {
         clearPendingJoin()
         if (!circle) {
           setError('That code doesn’t match an open Circle. Check it with the person who sent it.')
           return
         }
+        setDone(true)
+        await wait(calm ? 300 : 650)
         toast(circle.name ? `You joined ${circle.name}.` : 'You joined their couple Circle.')
         navigate({ to: '/circles/$circleId', params: { circleId: circle.id }, replace: true })
       })
@@ -104,8 +128,11 @@ export function JoinPage() {
   }
 
   return (
-    <AuthFrame title="Joining your Circle">
-      <Spinner label={`Joining with code ${code}`} />
+    <AuthFrame title={done ? 'You’re in' : 'Joining your Circle'} lead={done ? 'Opening the Circle…' : from ? `With ${from}’s invite code.` : 'With your invite code.'}>
+      <div role="status" className="py-2">
+        <span className="sr-only">{done ? 'Joined. Opening the Circle.' : `Joining with code ${code.split('').join(' ')}`}</span>
+        <CodeBoxes value={code.slice(0, shown)} cursor={!done && shown < 6} done={done} />
+      </div>
     </AuthFrame>
   )
 }
