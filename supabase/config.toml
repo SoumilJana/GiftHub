@@ -428,3 +428,7 @@ enabled = true
 # Bug reports: the function verifies the user's session itself.
 [functions.report-bug]
 verify_jwt = false
+
+# Link reading fallback: the function checks the caller's session itself.
+[functions.parse-url]
+verify_jwt = false

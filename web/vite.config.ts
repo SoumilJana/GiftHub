@@ -17,6 +17,8 @@ function appVersion() {
 }
 
 export default defineConfig({
+  // In development, link reading runs in `npx wrangler dev` (port 8787).
+  server: { proxy: { '/api': 'http://localhost:8787' } },
   define: { __APP_VERSION__: JSON.stringify(appVersion()) },
   plugins: [
     react(),
@@ -45,7 +47,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallback: '/index.html',
         // The design prototype is its own page, not an app route.
-        navigateFallbackDenylist: [/^\/demo/],
+        navigateFallbackDenylist: [/^\/demo/, /^\/api\//],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

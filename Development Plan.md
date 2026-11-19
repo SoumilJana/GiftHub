@@ -151,7 +151,7 @@ Needs from the owner: a free Resend account and its API key, stored as a Supabas
 
 ---
 
-### Phase 3 — "Secretly Bought" (1–2 weeks) → **MVP milestone**
+### Phase 3 — "Secretly Bought" (1–2 weeks, live 18 Nov 2026) → **MVP milestone**
 **Goal:** the core differentiator works and is provably private.
 
 Scope
@@ -171,7 +171,7 @@ Done when: RLS tests pass, and with the owner signed in on a second device, noth
 
 ---
 
-### Phase 3.5 — Gift Hand-off (3–4 days, built 18 Nov 2026; goes live with migration `20261121000000_gift_handoff.sql`)
+### Phase 3.5 — Gift Hand-off (3–4 days, live 18 Nov 2026)
 **Goal:** a bought gift ends up in Received without anyone having to remember to mark it.
 
 Flow
@@ -220,7 +220,7 @@ Decisions (18 Nov 2026)
 
 ---
 
-### Phase 3.7 — Navigation and Motion (built 18 Nov 2026)
+### Phase 3.7 — Navigation and Motion (live 18 Nov 2026)
 **Goal:** on a phone, your partner's list is one tap away, and the app moves like a photo booth: prints slide out, sheets rise, and a few small gift moments make it fun without clutter. No database changes and no new libraries.
 
 Decided with the user (18 Nov 2026): icons with labels in the bottom bar, a Circle switcher in the phone top bar, and "a few playful moments" of motion.
@@ -276,8 +276,26 @@ Decided with the user (18 Nov 2026): icons with labels in the bottom bar, a Circ
 
 ---
 
-### Phase 4 — Automated Link Parsing (2–3 weeks)
+### Phase 4 — Automated Link Parsing (2–3 weeks, in progress: link reading built 19 Nov 2026)
 **Goal:** paste a URL and get a clean product card in ~3 s for most stores.
+
+**Built 19 Nov 2026** (the original scope below is kept for reference; where they differ, this wins):
+- **Where it runs:** `POST /api/parse` on the site's own Cloudflare Worker (`web/worker/index.ts`), not an Edge Function, because the blocking test showed Cloudflare gets through to more stores. When a store refuses Cloudflare, the Worker asks the Edge Function `parse-url` once (`supabase/functions/parse-url`), which FirstCry and Croma let through.
+- **One parser for both:** `supabase/functions/_shared/parse.ts`, plain web APIs and no imports. Order: JSON-LD `Product` → Amazon page adapter → Open Graph and meta tags → page title. Store suffixes are trimmed from names ("| Flipkart.com"). Tested in `web/src/lib/parse.test.ts`.
+- **Clean links:** tracking parameters removed; Amazon cut to `/dp/ASIN`; Flipkart kept to `?pid=`; short links followed to the product.
+- **Safety:** signed-in users only (the Supabase session is checked with Supabase), 30 links a minute per person (Cloudflare rate-limit binding), https/http pages on ordinary hostnames only (no IP addresses, local names or odd ports, also after redirects), 2.5 MB and 10 s per page, HTML only.
+- **Cache:** Cloudflare's cache, not the `parse_cache` table: a day for read pages, an hour for refusals. `parse_cache` and `parse_jobs` stay unused for now.
+- **In the app:** pasting a link in the bar, or into the Link field of a new wish, reads the page. Name, price with currency, and photo fill in; anything you've typed yourself is kept. The line under Link says "Reading the page on flipkart.com…", then "Filled in from flipkart.com. Check it looks right." or, when refused, "ajio.com doesn't let us read its pages yet. Fill in the rest yourself." Editing a wish offers "Update from the store", which refreshes name, price and photo (an uploaded photo stays).
+- **Local development:** `npm run dev` proxies `/api` to `npx wrangler dev` on port 8787 (the "worker" entry in `.claude/launch.json`; run `npm run build` first).
+
+**Still to do in Phase 4:**
+1. ~~Deploy `parse-url`~~ (deployed 19 Nov 2026).
+2. Try it live on a phone with real links, then run the 100-link test set for the "Done when" figure.
+3. Myntra blocks its images on other sites: save store photos to GiftHub's storage when that matters.
+4. Decide the limit: `PRODUCT.md` says 30 parses a day per person; what's built is 30 a minute (a daily count needs storage, e.g. a small Supabase table). Cached links don't count against either.
+5. Untested fallbacks for the blocked stores: ScraperAPI's free tier, GitHub Actions + Playwright on `parse_jobs`, and the share text from store apps (Phase 5).
+
+**Original scope:**
 
 Scope
 - Edge Function `parse-url`:

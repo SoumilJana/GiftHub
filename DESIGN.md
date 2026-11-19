@@ -235,6 +235,7 @@ Nearly flat. Depth comes from white prints on the blush ground. A print frame ha
 
 ### Inputs
 - **Paste-a-link:** a white 46px pill with an inset edge, hint text in the placeholder colour and a plum Add button.
+- **Link reading (add form):** no spinner or card. The Link field's hint line carries the state in plain words: "Reading the page on flipkart.com…", then "Filled in from flipkart.com. Check it looks right.", or, when a store refuses, "ajio.com doesn't let us read its pages yet. Fill in the rest yourself." (Honest about limits, never an error colour.) While reading, an empty Name field shows "Reading the page…" as its placeholder. Fields the person typed in are never overwritten.
 - **Errors:** shown as a plain-language toast that says what to do next.
 
 ### Navigation

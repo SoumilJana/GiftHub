@@ -6,6 +6,7 @@ import { celebrate, flyHome, sheetExit } from '../lib/motion'
 import { priorityBand } from '../lib/format'
 import { useMarkReceived } from '../lib/claims'
 import { useDeleteItem, useSaveItem, type ItemDraft } from '../lib/items'
+import { readLink, type LinkRead } from '../lib/linkReader'
 import { isUploadedPhoto, removePhoto, uploadPhoto } from '../lib/photo'
 import { circleTitle, type MyCircle } from '../lib/queries'
 import { useToast } from '../lib/toast'
@@ -96,6 +97,54 @@ export function EditItemSheet({
   const [uploading, setUploading] = useState(false)
   const [uploaded, setUploaded] = useState<string[]>([])
   const [errors, setErrors] = useState<{ title?: string; url?: string; price?: string; image?: string; form?: string }>({})
+  const [reading, setReading] = useState<{ state: 'idle' | 'reading' | 'done' | 'failed'; store?: string | null; reason?: string }>({ state: 'idle' })
+  // Fields you've typed in yourself are never overwritten by what the link says.
+  const edited = useRef({ title: false, price: false, image: false })
+  const lastRead = useRef<string | null>(null)
+  const reader = useRef<AbortController | null>(null)
+
+  /** Read the store page and fill in what's still empty (or everything you haven't changed, when `all`). */
+  async function fillFromLink(link: string, all = false) {
+    if (!all && lastRead.current === link) return
+    lastRead.current = link
+    reader.current?.abort()
+    const c = new AbortController()
+    reader.current = c
+    setReading({ state: 'reading', store: storeOf(link) })
+    let r: LinkRead
+    try {
+      r = await readLink(link, c.signal)
+    } catch {
+      return
+    }
+    if (c.signal.aborted) return
+    if (!r.ok) {
+      setReading({ state: 'failed', store: r.store, reason: r.reason })
+      return
+    }
+    const d = r.data
+    if (d.title && (all || !edited.current.title)) setTitle(d.title)
+    if (d.price != null && (all || !edited.current.price)) {
+      setPrice(String(d.price))
+      if (d.currency) setCurrency(d.currency)
+    }
+    if (d.image && (all || !edited.current.image)) setImageUrl((cur) => (!cur.trim() || (all && !isUploadedPhoto(cur)) ? d.image! : cur))
+    setUrl((cur) => (normalizeUrl(cur) === link ? d.url : cur))
+    lastRead.current = d.url
+    setReading({ state: 'done', store: d.store })
+  }
+
+  // A new wish that arrives with a link (from the paste bar) is read straight away.
+  useEffect(() => {
+    const link = !item && initialUrl ? normalizeUrl(initialUrl) : null
+    // Started on the next tick, so development's double mount sends only one request.
+    const start = link ? setTimeout(() => fillFromLink(link)) : undefined
+    return () => {
+      clearTimeout(start)
+      reader.current?.abort()
+      lastRead.current = null
+    }
+  }, [item, initialUrl])
 
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 
@@ -112,6 +161,7 @@ export function EditItemSheet({
     try {
       const publicUrl = await uploadPhoto(uid, file)
       setUploaded((u) => [...u, publicUrl])
+      edited.current.image = true
       setImageUrl(publicUrl)
     } catch (err) {
       setErrors((e) => ({ ...e, image: friendlyError(err) }))
@@ -187,16 +237,48 @@ export function EditItemSheet({
           placeholder="https://"
           value={url}
           error={errors.url}
+          hint={linkHint(reading)}
           onChange={(e) => setUrl(e.target.value)}
+          onPaste={(e) => {
+            if (item) return
+            const el = e.currentTarget
+            setTimeout(() => {
+              const link = normalizeUrl(el.value)
+              if (link) fillFromLink(link)
+            })
+          }}
           onBlur={() => {
             const link = normalizeUrl(url)
             if (link && !title.trim()) setTitle(titleFromUrl(link))
+            if (link && !item) fillFromLink(link)
           }}
         />
-        <TextField label="Name" value={title} maxLength={300} error={errors.title} onChange={(e) => setTitle(e.target.value)} required />
+        {item && normalizeUrl(url) && reading.state !== 'reading' && (
+          <div className="-mt-2 px-1">
+            <Button variant="text" onClick={() => fillFromLink(normalizeUrl(url)!, true)}>
+              Update from the store
+            </Button>
+          </div>
+        )}
+        <TextField
+          label="Name"
+          value={title}
+          maxLength={300}
+          error={errors.title}
+          placeholder={reading.state === 'reading' ? 'Reading the page…' : undefined}
+          onChange={(e) => {
+            edited.current.title = true
+            setTitle(e.target.value)
+          }}
+          required
+        />
 
         <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-3">
-          <TextField label="Price" inputMode="decimal" placeholder="Optional" value={price} error={errors.price} onChange={(e) => setPrice(e.target.value)} />
+          <TextField label="Price" inputMode="decimal" placeholder="Optional" value={price} error={errors.price} onChange={(e) => {
+              edited.current.price = true
+              setPrice(e.target.value)
+            }}
+          />
           <SelectField label="Currency" value={currency} onChange={(e) => setCurrency(e.target.value)}>
             {currencies.map((c) => (
               <option key={c.code} value={c.code}>
@@ -249,7 +331,13 @@ export function EditItemSheet({
                 {uploading ? 'Uploading' : 'Upload a photo'}
               </Button>
               {imageUrl && (
-                <Button variant="text" onClick={() => setImageUrl('')}>
+                <Button
+                  variant="text"
+                  onClick={() => {
+                    edited.current.image = true
+                    setImageUrl('')
+                  }}
+                >
                   Remove photo
                 </Button>
               )}
@@ -263,7 +351,10 @@ export function EditItemSheet({
             value={isUploadedPhoto(imageUrl) ? '' : imageUrl}
             error={errors.image}
             hint={isUploadedPhoto(imageUrl) ? 'Using your uploaded photo.' : 'Right-click the product photo in the store and copy its image address.'}
-            onChange={(e) => setImageUrl(e.target.value)}
+            onChange={(e) => {
+              edited.current.image = true
+              setImageUrl(e.target.value)
+            }}
           />
         </fieldset>
 
@@ -352,6 +443,18 @@ export function EditItemSheet({
       </form>
     </Sheet>
   )
+}
+
+/** The line under the Link field while and after the page is read. */
+function linkHint(r: { state: string; store?: string | null; reason?: string }) {
+  const store = r.store ?? 'the store'
+  if (r.state === 'reading') return `Reading the page on ${store}…`
+  if (r.state === 'done') return `Filled in from ${store}. Check it looks right.`
+  if (r.state !== 'failed') return undefined
+  if (r.reason === 'blocked') return `${store} doesn’t let us read its pages yet. Fill in the rest yourself.`
+  if (r.reason === 'busy') return 'That’s a lot of links in a minute. Fill this one in, or try again shortly.'
+  if (r.reason === 'offline') return 'You’re offline, so fill in the rest yourself.'
+  return 'Couldn’t read that page. Fill in the rest yourself.'
 }
 
 /** Someone else's wish, read-only. */
