@@ -47,12 +47,3 @@ export function useDismissed(key: string): [boolean, () => void] {
     },
   ]
 }
-
-/** Mark a one-time hint or card as seen without showing it (e.g. new people already learned it in the intro). */
-export function markDismissed(key: string) {
-  try {
-    localStorage.setItem(`gifthub.dismissed.${key}`, '1')
-  } catch {
-    /* private mode */
-  }
-}

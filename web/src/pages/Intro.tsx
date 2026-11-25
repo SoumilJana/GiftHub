@@ -1,3 +1,4 @@
+import { PlusIcon } from '../components/NavIcons'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { GiftMark } from '../components/GiftMark'
@@ -32,7 +33,7 @@ const cards: { stage: 'save' | 'share' | 'tab' | 'surprise'; title: string; body
   {
     stage: 'save',
     title: 'Save wishes from any store',
-    body: 'Paste a link from any shop and GiftHub fills in the photo, name and price. Mark how much you want each one.',
+    body: 'Tap + and paste a link from any shop. GiftHub fills in the photo, name and price. Mark how much you want each one.',
   },
   {
     stage: 'share',
@@ -204,9 +205,14 @@ function SaveStage() {
   const lamp = sample(1, 'Marble table lamp', 10)
   return (
     <div className="flex w-full max-w-[300px] flex-col items-center">
-      <div className="flex h-[46px] w-full items-center gap-2 rounded-full bg-print pr-1.5 pl-[18px] shadow-[inset_0_0_0_1.5px_var(--color-edge)]">
-        <span className="min-w-0 flex-1 truncate text-plum-soft">shop.example/marble-lamp</span>
-        <span className="grid h-[34px] place-items-center rounded-full bg-plum px-3.5 text-small font-semibold text-white">Add</span>
+      {/* The + from the bottom bar, then the Link field it opens. */}
+      <div className="flex w-full items-center gap-2.5">
+        <span className="grid size-[46px] shrink-0 place-items-center rounded-full bg-plum text-white shadow-[0_3px_10px_rgba(59,29,63,0.28)]">
+          <PlusIcon />
+        </span>
+        <span className="flex h-[46px] min-w-0 flex-1 items-center rounded-full bg-print px-[18px] shadow-[inset_0_0_0_1.5px_var(--color-edge)]">
+          <span className="truncate text-plum-soft">shop.example/marble-lamp</span>
+        </span>
       </div>
       <div className="mt-5 h-1.5 w-[190px] rounded-full bg-plum" />
       <div className="-mt-0.5 overflow-hidden px-3 pb-3">

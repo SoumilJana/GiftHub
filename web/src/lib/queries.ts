@@ -4,7 +4,8 @@ import { supabase } from './supabase'
 
 export type Role = 'owner' | 'admin' | 'member'
 
-export type Profile = { id: string; display_name: string; avatar_url: string | null; currency: string }
+/** news_seen: the highest update note (lib/news.ts) this person has seen, on any device. */
+export type Profile = { id: string; display_name: string; avatar_url: string | null; currency: string; news_seen: number }
 
 export type CircleKind = 'couple' | 'group'
 
@@ -47,7 +48,7 @@ export function useProfile() {
     enabled: !!uid,
     queryFn: async () =>
       must<Profile>(
-        await supabase.from('profiles').select('id, display_name, avatar_url, currency').eq('id', uid!).single(),
+        await supabase.from('profiles').select('id, display_name, avatar_url, currency, news_seen').eq('id', uid!).single(),
       ),
   })
 }
@@ -56,7 +57,7 @@ export function useUpdateProfile() {
   const qc = useQueryClient()
   const { session } = useAuth()
   return useMutation({
-    mutationFn: async (patch: Partial<Pick<Profile, 'display_name' | 'currency'>>) => {
+    mutationFn: async (patch: Partial<Pick<Profile, 'display_name' | 'currency' | 'news_seen'>>) => {
       must(await supabase.from('profiles').update(patch).eq('id', session!.user.id))
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['profile'] }),

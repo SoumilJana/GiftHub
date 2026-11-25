@@ -32,3 +32,11 @@ export function ReceivedIcon() {
     </svg>
   )
 }
+
+export function PlusIcon({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" {...line} strokeWidth={2.4}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}

@@ -45,7 +45,6 @@ export function MyListPage() {
             {circleNames.length ? `Shared with ${listJoin(circleNames)}, item by item.` : 'Only you can see it until you start or join a Circle.'}
           </p>
         </div>
-        <AddBar onAdd={(url, title) => setEditing({ item: null, url, title })} />
       </div>
 
       <HandoffPrompts />
@@ -71,11 +70,11 @@ export function MyListPage() {
         <LoadError error={items.error} onRetry={() => items.refetch()} />
       ) : all.length === 0 ? (
         <EmptyState title="Your list is empty.">
-          Paste a link to something you’d like, or{' '}
+          Tap{' '}
           <button type="button" className="font-semibold text-plum underline underline-offset-3" onClick={() => setEditing({ item: null, url: null })}>
-            add a wish without a link
-          </button>
-          . You choose which Circles see each one.
+            + Add a wish
+          </button>{' '}
+          and paste a link from any store, or fill it in by hand. You choose which Circles see each one.
         </EmptyState>
       ) : (
         <>

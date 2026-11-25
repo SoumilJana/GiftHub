@@ -284,7 +284,10 @@ export function EditItemSheet({
           value={url}
           error={errors.url}
           hint={linkHint(reading, !item)}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(e) => {
+            setUrl(e.target.value)
+            if (errors.url) setErrors((x) => ({ ...x, url: undefined }))
+          }}
           onPaste={(e) => {
             // Store apps share "Product name https://...": keep the link, and use the words as the name.
             const text = e.clipboardData.getData('text')
@@ -302,6 +305,15 @@ export function EditItemSheet({
               const link = normalizeUrl(el.value)
               if (link) fillFromLink(link)
             })
+          }}
+          // Adding from the + button: the cursor starts here, ready to paste.
+          data-autofocus={!item && !initialUrl ? true : undefined}
+          onKeyDown={(e) => {
+            // Enter in the Link field reads the link (as the old paste bar did), rather than saving the form.
+            if (e.key !== 'Enter' || item) return
+            e.preventDefault()
+            if (url.trim() && !linkFromText(url)) setErrors((x) => ({ ...x, url: 'No link in that. Paste the address from the store.' }))
+            else e.currentTarget.blur()
           }}
           onBlur={() => {
             const found = url.trim() ? linkFromText(url) : null

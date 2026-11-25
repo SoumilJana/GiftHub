@@ -13,8 +13,7 @@ import { useMyItems } from '../lib/items'
 import { isCalm } from '../lib/motion'
 import { useToast } from '../lib/toast'
 import { AddBar } from './MyList'
-import { CIRCLE_TAB_NEWS } from '../lib/intro'
-import { markDismissed } from '../lib/view'
+import { LATEST_NEWS, requestAddPointer } from '../lib/news'
 
 export function WelcomePage() {
   const profile = useProfile()
@@ -40,9 +39,10 @@ function Welcome({ profile }: { profile: Profile }) {
     setError(null)
     if (!name.trim()) return setError('Add the name your Circle will see.')
     try {
-      await update.mutateAsync({ display_name: name.trim(), currency })
-      // New here: the intro covered the Circles tab, so its what's-new card never shows.
-      markDismissed(CIRCLE_TAB_NEWS)
+      // New here: the intro covered what the update notes say, so mark them all seen,
+      // and point at the + once Welcome is done.
+      await update.mutateAsync({ display_name: name.trim(), currency, news_seen: LATEST_NEWS })
+      requestAddPointer()
       const pending = readPendingJoin()
       if (pending) navigate({ to: '/join/$code', params: { code: pending }, replace: true })
       else setStep('circle')

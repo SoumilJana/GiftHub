@@ -28,11 +28,8 @@ export function inviterFromSearch(raw: unknown): string | null {
   return name && name.length <= 30 ? name : null
 }
 
-/** The Circles-tab card: in the intro, and shown on its own once to people who signed up before it (components/WhatsNew.tsx). */
+/** The Circles-tab card: in the intro, and update note 1 for people who signed up before it (lib/news.ts). */
 export const CIRCLE_TAB = {
   title: 'Your Circle, one tap away',
   body: 'Pick a Circle at the top right and the Circles tab opens straight to it. In just one Circle? It opens right away.',
 }
-
-/** Dismissed-key for that card. New people mark it seen in Welcome, since the intro already showed it. */
-export const CIRCLE_TAB_NEWS = 'news-circle-tab'
