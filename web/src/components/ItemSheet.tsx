@@ -71,6 +71,7 @@ export function EditItemSheet({
   circles,
   userCurrency,
   onClose,
+  onAdded,
 }: {
   item: Item | null
   initialUrl?: string | null
@@ -79,6 +80,8 @@ export function EditItemSheet({
   circles: MyCircle[]
   userCurrency: string
   onClose: () => void
+  /** A new wish was saved (not called for edits). */
+  onAdded?: (id: string) => void
 }) {
   const uid = useUserId()
   const toast = useToast()
@@ -245,7 +248,10 @@ export function EditItemSheet({
       // Clean up uploads that ended up unused, and the old upload if it was replaced.
       uploaded.filter((u) => u !== img).forEach((u) => removePhoto(u))
       if (item?.image_url && item.image_url !== img && isUploadedPhoto(item.image_url)) removePhoto(item.image_url)
-      if (!item) celebrate('wish-saved')
+      if (!item) {
+        celebrate('wish-saved')
+        onAdded?.(id)
+      }
       toast(item ? 'Saved.' : circleIds.length ? 'Added to your list.' : 'Added. Only you can see it.')
       onClose()
     } catch (err) {

@@ -119,6 +119,44 @@ function pageBox(el: HTMLElement): Box {
   return { left: r.left + window.scrollX, top: r.top + window.scrollY, width: r.width, height: r.height }
 }
 
+/** Hold a new wish out of sight until the form that added it has gone, then print it like a booth print. */
+function printIn(el: HTMLElement, calm: boolean) {
+  const hidden = calm ? { opacity: '0' } : { clipPath: 'inset(0 0 100% 0 round 6px)' }
+  Object.assign(el.style, hidden)
+  afterSheets().then(async () => {
+    // Bring it into view first if it landed off screen.
+    const r = el.getBoundingClientRect()
+    if (r.bottom < 60 || r.top > window.innerHeight - 80) {
+      el.scrollIntoView({ block: 'center', behavior: calm ? 'auto' : 'smooth' })
+      await new Promise((done) => window.setTimeout(done, calm ? 0 : 350))
+    }
+    el.animate(
+      calm
+        ? [{ opacity: 0 }, { opacity: 1 }]
+        : [
+            { clipPath: 'inset(0 0 100% 0 round 6px)', transform: 'translateY(-14px)' },
+            { clipPath: 'inset(0 0 0 0 round 6px)', transform: 'none' },
+          ],
+      { duration: calm ? 300 : 750, delay: 120, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'backwards' },
+    )
+    el.style.opacity = ''
+    el.style.clipPath = ''
+  })
+}
+
+const arriving = new Map<string, number>()
+
+/** A wish added away from Your list: print it when Your list next shows it (within a few seconds). */
+export function printOnArrival(id: string) {
+  arriving.set(id, performance.now() + 8000)
+}
+
+function takePrint(id: string) {
+  const until = arriving.get(id)
+  arriving.delete(id)
+  return !!until && until > performance.now()
+}
+
 /**
  * Wishes moving in a list (Strip or List view). Items need `data-id`.
  * - A few wishes added: each new one prints, revealed top to bottom like a booth print.
@@ -139,12 +177,16 @@ export function useListMotion<T extends HTMLElement = HTMLUListElement>(ids: str
     const now = new Map<string, { el: HTMLElement; box: Box }>()
     for (const el of list.querySelectorAll<HTMLElement>(':scope > [data-id]')) now.set(el.dataset.id!, { el, box: pageBox(el) })
     before.current = now
-    if (!prev.size) return
+    const calm = isCalm()
+    // First showing: print only a wish just added from another tab (see printOnArrival).
+    if (!prev.size) {
+      for (const [id, { el }] of now) if (takePrint(id)) printIn(el, calm)
+      return
+    }
 
     const added = [...now.keys()].filter((id) => !prev.has(id))
     const removed = [...prev.keys()].filter((id) => !now.has(id))
     if (!added.length && !removed.length) return
-    const calm = isCalm()
 
     // A whole new list: fade it in, nothing more.
     if (added.length + removed.length > 3 && (added.length + removed.length) * 2 > Math.max(prev.size, now.size)) {
@@ -177,28 +219,8 @@ export function useListMotion<T extends HTMLElement = HTMLUListElement>(ids: str
     for (const [id, { el, box }] of now) {
       const old = prev.get(id)
       if (!old) {
-        // Hold the new wish out of sight until the form that added it has gone, then print it.
-        const hidden = calm ? { opacity: '0' } : { clipPath: 'inset(0 0 100% 0 round 6px)' }
-        Object.assign(el.style, hidden)
-        afterSheets().then(async () => {
-          // Bring it into view first if it landed off screen.
-          const r = el.getBoundingClientRect()
-          if (r.bottom < 60 || r.top > window.innerHeight - 80) {
-            el.scrollIntoView({ block: 'center', behavior: calm ? 'auto' : 'smooth' })
-            await new Promise((done) => window.setTimeout(done, calm ? 0 : 350))
-          }
-          el.animate(
-            calm
-              ? [{ opacity: 0 }, { opacity: 1 }]
-              : [
-                  { clipPath: 'inset(0 0 100% 0 round 6px)', transform: 'translateY(-14px)' },
-                  { clipPath: 'inset(0 0 0 0 round 6px)', transform: 'none' },
-                ],
-            { duration: calm ? 300 : 750, delay: 120, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'backwards' },
-          )
-          el.style.opacity = ''
-          el.style.clipPath = ''
-        })
+        takePrint(id)
+        printIn(el, calm)
       } else if (!calm) {
         const dx = old.box.left - box.left
         const dy = old.box.top - box.top

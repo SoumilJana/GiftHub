@@ -8,6 +8,7 @@ import { GiftMark } from './GiftMark'
 import { EditItemSheet } from './ItemSheet'
 import { CirclesIcon, ListIcon, PlusIcon, ReceivedIcon } from './NavIcons'
 import { addPointerPending, clearAddPointer } from '../lib/news'
+import { printOnArrival } from '../lib/motion'
 import { SlidingPill } from './SlidingPill'
 import { WhatsNew } from './WhatsNew'
 import { Avatar } from './ui'
@@ -149,7 +150,14 @@ export function AppShell() {
       </nav>
 
       {adding && (
-        <EditItemSheet item={null} circles={circles.data ?? []} userCurrency={profile.data?.currency?.trim() || 'USD'} onClose={() => setAdding(false)} />
+        <EditItemSheet item={null} circles={circles.data ?? []} userCurrency={profile.data?.currency?.trim() || 'USD'} onClose={() => setAdding(false)}
+          onAdded={(id) => {
+            // Added from another tab: show it printing out on Your list. Nothing waits for it; every tap still works.
+            if (path === '/') return
+            printOnArrival(id)
+            navigate({ to: '/' })
+          }}
+        />
       )}
 
       <WhatsNew
