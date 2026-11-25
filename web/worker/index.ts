@@ -134,7 +134,11 @@ async function parse(req: Request, env: Env, ctx: ExecutionContext) {
 
   const key = cacheKey(cleanUrl(target.toString()))
   const cached = await cache().match(key)
-  if (cached) return json(200, { ...((await cached.json()) as object), cached: true })
+  if (cached) {
+    const hit = (await cached.json()) as { ok?: boolean; reason?: string; trail?: string[] }
+    console.log(JSON.stringify({ read: target.hostname, cached: true, ok: hit.ok, reason: hit.reason, trail: hit.trail }))
+    return json(200, { ...hit, cached: true })
+  }
 
   let result = await readPage(target.toString(), 'cloudflare')
   // Which steps ran and how each ended, for the link test (no secrets in it).
