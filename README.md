@@ -99,6 +99,23 @@ Apply a migration before pushing app code that needs it.
 
 Page security headers (Content Security Policy and others) are in `web/public/_headers`. A new outside script, frame or connection must be added there, or the browser blocks it.
 
+## Watching link reads
+
+Each link read writes one line to Workers Logs: the store, how each step ended (Cloudflare, then Supabase up to twice, then scrape.do) and, when scrape.do ran, its credits left. From `web/`:
+
+```bash
+npm run logs                      # live, one line per read
+npm run logs -- saved.jsonl       # a saved `wrangler tail --format json` file
+```
+
+Older reads (about 3 days) are in the Cloudflare dashboard under Workers > gifthub > Logs; search for `read`. Fewer than 100 scrape.do credits left logs a warning.
+
+scrape.do's monthly allowance (10 checks a minute at most; the token is never printed):
+
+```powershell
+$env:SCRAPEDO_TOKEN = '<your token>'; npm run scrapedo-usage
+```
+
 ## Rules
 
 - No paid services. Free tiers are fine.

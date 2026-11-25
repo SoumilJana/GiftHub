@@ -80,7 +80,13 @@ async function fromSupabase(env: Env, url: string, auth: string, apikey: string,
 /** Stores whose pages need scrape.do's residential proxies (about 10 credits instead of 1). */
 const RESIDENTIAL = /(^|\.)etsy\.com$/
 
-async function fromScrapeDo(env: Env, url: string, trail: string[]): Promise<ReadResult | null> {
+/** Whether a second Supabase try could help: not when it's switched off, refused us (wrong secret) or timed out. */
+const supabaseWorthRetry = (trail: string[]) => !/^supabase (off|401|403|timeout)$/.test(trail[trail.length - 1] ?? '')
+
+/** scrape.do's own figures from its response headers, for the log line. */
+type Credits = { cost?: number; left?: number }
+
+async function fromScrapeDo(env: Env, url: string, trail: string[], credits: Credits): Promise<ReadResult | null> {
   if (!env.SCRAPEDO_TOKEN) {
     trail.push('scrapedo off')
     return null
@@ -89,6 +95,9 @@ async function fromScrapeDo(env: Env, url: string, trail: string[]): Promise<Rea
   const q = new URLSearchParams({ token: env.SCRAPEDO_TOKEN, url, geoCode: 'in', ...(RESIDENTIAL.test(host) ? { super: 'true' } : {}) })
   try {
     const res = await fetch('https://api.scrape.do/?' + q, { signal: AbortSignal.timeout(40_000) })
+    const num = (h: string) => (res.headers.get(h) == null ? undefined : Number(res.headers.get(h)))
+    credits.cost = num('Scrape.do-Request-Cost')
+    credits.left = num('Scrape.do-Remaining-Credits')
     if (!res.ok) {
       // Refused, or out of credits. scrape.do passes on the store's own status.
       trail.push(`scrapedo ${res.status}`)
@@ -149,14 +158,20 @@ async function parse(req: Request, env: Env, ctx: ExecutionContext) {
   const trail = [result.ok ? 'cloudflare ok' : `cloudflare ${result.reason}`]
   // Refused, or an empty page shell (Myntra sends Cloudflare one): try Supabase's servers, then scrape.do.
   const retry = (r: ReadResult) => !r.ok && (r.reason === 'blocked' || r.reason === 'unreadable')
+  // Supabase twice (its servers' addresses change between calls), then scrape.do, which costs credits.
   if (retry(result)) result = (await fromSupabase(env, target.toString(), auth, apikey, trail)) ?? result
-  if (retry(result)) result = (await fromScrapeDo(env, target.toString(), trail)) ?? result
+  if (retry(result) && supabaseWorthRetry(trail)) result = (await fromSupabase(env, target.toString(), auth, apikey, trail)) ?? result
+  const credits: Credits = {}
+  if (retry(result)) result = (await fromScrapeDo(env, target.toString(), trail, credits)) ?? result
   if (!result.ok && !result.store) result.store = storeName(target.toString())
 
   const keep = result.ok ? DAY : result.reason === 'blocked' || result.reason === 'gone' ? 3600 : 0
   const answer = { ...result, trail }
   // One line per fresh read in Workers Logs: the store and how each step ended (no link path, no user, no secrets).
-  console.log(JSON.stringify({ read: target.hostname, ok: result.ok, reason: result.ok ? undefined : result.reason, trail }))
+  const line = JSON.stringify({ read: target.hostname, ok: result.ok, reason: result.ok ? undefined : result.reason, trail, scrapedo: credits.left != null ? credits : undefined })
+  // Running low on scrape.do's free credits shows up as a warning in Workers Logs.
+  if (credits.left != null && credits.left < 100) console.warn(line)
+  else console.log(line)
   if (keep) ctx.waitUntil(cache().put(key, new Response(JSON.stringify(answer), { headers: { 'cache-control': `max-age=${keep}` } })))
   return json(200, answer)
 }
