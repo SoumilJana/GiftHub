@@ -147,6 +147,8 @@ async function parse(req: Request, env: Env, ctx: ExecutionContext) {
 
   const keep = result.ok ? DAY : result.reason === 'blocked' || result.reason === 'gone' ? 3600 : 0
   const answer = { ...result, trail }
+  // One line per fresh read in Workers Logs: the store and how each step ended (no link path, no user, no secrets).
+  console.log(JSON.stringify({ read: target.hostname, ok: result.ok, reason: result.ok ? undefined : result.reason, trail }))
   if (keep) ctx.waitUntil(cache().put(key, new Response(JSON.stringify(answer), { headers: { 'cache-control': `max-age=${keep}` } })))
   return json(200, answer)
 }
