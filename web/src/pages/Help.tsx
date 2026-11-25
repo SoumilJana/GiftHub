@@ -32,6 +32,22 @@ const groups: { id: string; title: string; items: QA[] }[] = [
     ],
   },
   {
+    id: 'adding',
+    title: 'Adding wishes',
+    items: [
+      {
+        q: 'Can I add a wish straight from a shopping app?',
+        a: (
+          <p>
+            On Android, yes. Install GiftHub first (Profile, then Install the app). Then in Amazon, Flipkart or any store app or browser, tap
+            Share on a product and choose GiftHub. The wish opens with the link filled in, and the name, price and photo follow. On iPhone, copy
+            the link and paste it into the bar on Your list.
+          </p>
+        ),
+      },
+    ],
+  },
+  {
     id: 'privacy',
     title: 'Privacy and the surprise',
     items: [

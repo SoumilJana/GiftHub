@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from 'react'
+import { useNavigate, useSearch } from '@tanstack/react-router'
+import { useEffect, useState, type FormEvent } from 'react'
 import { HandoffPrompts } from '../components/Handoff'
 import { InstallCard } from '../components/InstallApp'
 import { EditItemSheet } from '../components/ItemSheet'
@@ -21,7 +22,13 @@ export function MyListPage() {
   const profile = useProfile()
   const [filter, setFilter] = useState<ListFilter>(defaultFilter)
   const [view, setView] = useStoredView()
-  const [editing, setEditing] = useState<Editing>(null)
+  // Arriving from the Share menu (?add=…): open the add sheet with the shared link, once.
+  const search = useSearch({ from: '/app/' })
+  const navigate = useNavigate()
+  const [editing, setEditing] = useState<Editing>(() => (search.add ? { item: null, url: search.add, title: search.name ?? null } : null))
+  useEffect(() => {
+    if (search.add) navigate({ to: '/', search: {}, replace: true })
+  }, [search.add, navigate])
   const [privacySeen, dismissPrivacy] = useDismissed('owner-privacy')
 
   const myCircles = circles.data ?? []

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyFilter, dateStamp, defaultFilter, heartCount, linkFromText, normalizeUrl, shortName, storeOf, titleFromUrl, usedOccasions, type Item } from './wishlist'
+import { applyFilter, dateStamp, defaultFilter, heartCount, linkFromText, normalizeUrl, sharedWish, shortName, storeOf, titleFromUrl, usedOccasions, type Item } from './wishlist'
 
 const item = (over: Partial<Item>): Item => ({
   id: 'x',
@@ -100,5 +100,28 @@ describe('linkFromText', () => {
   it('returns nothing without a link', () => {
     expect(linkFromText('just some words')).toBeNull()
     expect(linkFromText('')).toBeNull()
+  })
+})
+
+describe('sharedWish', () => {
+  it('takes the link and name from store-app share text', () => {
+    expect(sharedWish({ title: 'Amazon', text: 'Samsung Original 25W Travel Adapter, Black https://amzn.in/d/1aBcD2e' })).toEqual({
+      url: 'https://amzn.in/d/1aBcD2e',
+      title: 'Samsung Original 25W Travel Adapter, Black',
+    })
+  })
+  it('prefers the url field and uses a real title', () => {
+    expect(sharedWish({ title: 'Marble table lamp', url: 'https://www.ikea.com/in/en/p/evedal-lamp-123/' })).toEqual({
+      url: 'https://www.ikea.com/in/en/p/evedal-lamp-123/',
+      title: 'Marble table lamp',
+    })
+  })
+  it('ignores a title that is only the store or app name', () => {
+    expect(sharedWish({ title: 'Flipkart: Online Shopping App', text: 'https://dl.flipkart.com/s/abc123' })?.title).toBeNull()
+    expect(sharedWish({ title: 'https://dl.flipkart.com/s/abc123', url: 'https://dl.flipkart.com/s/abc123' })?.title).toBeNull()
+  })
+  it('returns nothing when no link was shared', () => {
+    expect(sharedWish({ title: 'A photo', text: 'look at this' })).toBeNull()
+    expect(sharedWish({})).toBeNull()
   })
 })

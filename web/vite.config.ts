@@ -35,6 +35,12 @@ export default defineConfig({
         display: 'standalone',
         background_color: '#FFE4EC',
         theme_color: '#FFE4EC',
+        // Installed on Android, GiftHub shows up in the Share menu; shared links land on /share.
+        share_target: {
+          action: '/share',
+          method: 'GET',
+          params: { title: 'title', text: 'text', url: 'url' },
+        },
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },

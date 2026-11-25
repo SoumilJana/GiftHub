@@ -136,6 +136,22 @@ export function linkFromText(text: string): { url: string; title: string | null 
 }
 
 /**
+ * What another app sent through the Share menu (the manifest's `share_target`). Apps differ:
+ * some put the link in `url`, most Android store apps put "Product name https://…" in `text`,
+ * and `title` is often just the app's or store's name. Returns the link and the best name guess.
+ */
+export function sharedWish(shared: { title?: string; text?: string; url?: string }): { url: string; title: string | null } | null {
+  const fromText = shared.text ? linkFromText(shared.text) : null
+  const fromUrl = shared.url ? linkFromText(shared.url) : null
+  const url = fromUrl?.url ?? fromText?.url
+  if (!url) return null
+  const t = shared.title?.replace(/\s+/g, ' ').trim() ?? ''
+  // A bare store or app name ("Amazon", "Flipkart: Online Shopping App") or a link is not a product name.
+  const usableTitle = t.length >= 3 && !/^https?:\/\//i.test(t) && !/^(amazon|flipkart|myntra|ajio|nykaa|meesho|croma|share|shared)\b[^a-z]*(\.[a-z.]+)?(\s*[:|-].*app.*)?$/i.test(t) ? t.slice(0, 300) : null
+  return { url, title: fromText?.title ?? usableTitle }
+}
+
+/**
  * Store listing titles pack the specs into the name ("Samsung Galaxy M35 5G (Moonlight Blue, 8GB RAM) | 6000mAh
  * Battery | …"). Keep the brand and model as the name, and hand back the rest as details for Notes.
  */

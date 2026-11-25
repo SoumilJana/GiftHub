@@ -11,6 +11,7 @@ import { CookiesPage, PrivacyPage, TermsPage } from './pages/Legal'
 import { MyListPage } from './pages/MyList'
 import { ResetPasswordPage, UpdatePasswordPage } from './pages/Password'
 import { ProfilePage } from './pages/Profile'
+import { SharePage } from './pages/Share'
 import { ReceivedPage } from './pages/Received'
 import { SignInPage } from './pages/SignIn'
 import { WelcomePage } from './pages/Welcome'
@@ -61,7 +62,21 @@ const cookiesRoute = createRoute({ getParentRoute: () => rootRoute, path: '/cook
 // Signed-in area
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: 'app', component: AppLayout })
 
-const myListRoute = createRoute({ getParentRoute: () => appRoute, path: '/', component: MyListPage })
+const str = (v: unknown) => (typeof v === 'string' && v ? v.slice(0, 2000) : undefined)
+const myListRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/',
+  // ?add=<link>&name=<guess>: open the add sheet with them (from the Share menu).
+  validateSearch: (s: Record<string, unknown>): { add?: string; name?: string } => ({ add: str(s.add), name: str(s.name) }),
+  component: MyListPage,
+})
+// The Share menu target (manifest `share_target`, Android). Signed-out people sign in first and come back here.
+const shareRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/share',
+  validateSearch: (s: Record<string, unknown>): { title?: string; text?: string; url?: string } => ({ title: str(s.title), text: str(s.text), url: str(s.url) }),
+  component: SharePage,
+})
 const welcomeRoute = createRoute({ getParentRoute: () => appRoute, path: '/welcome', component: WelcomePage })
 const circlesRoute = createRoute({ getParentRoute: () => appRoute, path: '/circles', component: CirclesPage })
 const circleRoute = createRoute({ getParentRoute: () => appRoute, path: '/circles/$circleId', component: CirclePage })
@@ -79,7 +94,7 @@ const routeTree = rootRoute.addChildren([
   privacyRoute,
   termsRoute,
   cookiesRoute,
-  appRoute.addChildren([myListRoute, welcomeRoute, circlesRoute, circleRoute, circleSettingsRoute, receivedRoute, profileRoute]),
+  appRoute.addChildren([myListRoute, shareRoute, welcomeRoute, circlesRoute, circleRoute, circleSettingsRoute, receivedRoute, profileRoute]),
 ])
 
 export const router = createRouter({ routeTree })
