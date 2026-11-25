@@ -1,6 +1,7 @@
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useState, type FormEvent } from 'react'
 import { HandoffPrompts } from '../components/Handoff'
+import { CircleIcons } from '../components/CircleIcons'
 import { InstallCard } from '../components/InstallApp'
 import { EditItemSheet } from '../components/ItemSheet'
 import { ItemsSkeleton, ItemsView, ListTools } from '../components/ItemViews'
@@ -88,7 +89,7 @@ export function MyListPage() {
                   <Button variant="ghost" className="h-[34px]! px-3.5! text-small" onClick={() => setEditing({ item, url: null })}>
                     Edit
                   </Button>
-                  <span className="min-w-[4.75rem] text-small text-plum-soft">{sharedWith(item, myCircles.length)}</span>
+                  <CircleIcons circleIds={item.circle_ids} circles={myCircles} uid={uid} />
                 </>
               )}
             />
@@ -115,12 +116,6 @@ export function MyListPage() {
       )}
     </>
   )
-}
-
-function sharedWith(item: Item, circleCount: number) {
-  if (!item.circle_ids.length) return 'Only you'
-  if (item.circle_ids.length === circleCount && circleCount > 1) return 'All Circles'
-  return item.circle_ids.length === 1 ? '1 Circle' : `${item.circle_ids.length} Circles`
 }
 
 function listJoin(names: string[]) {
