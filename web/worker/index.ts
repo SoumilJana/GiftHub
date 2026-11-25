@@ -52,6 +52,8 @@ async function userId(env: Env, auth: string, apikey: string) {
   return user.id
 }
 
+const UPDATE_COOLDOWN = 15 * 60_000
+
 async function fromSupabase(env: Env, url: string, auth: string, apikey: string, trail: string[]): Promise<ReadResult | null> {
   if (!env.PARSE_URL_SECRET) {
     trail.push('supabase off')
@@ -146,9 +148,12 @@ async function parse(req: Request, env: Env, ctx: ExecutionContext) {
   if (!target) return json(400, { ok: false, reason: 'bad-link', url: String(input ?? ''), store: null })
 
   const key = cacheKey(cleanUrl(target.toString()))
-  const cached = fresh ? undefined : await cache().match(key)
-  if (cached) {
-    const hit = (await cached.json()) as { ok?: boolean; reason?: string; trail?: string[] }
+  const cached = await cache().match(key)
+  const hit = cached ? ((await cached.json()) as { ok?: boolean; reason?: string; trail?: string[]; at?: number }) : null
+  // "Update from the store" reads afresh, but not more than once every 15 minutes per link:
+  // repeated taps get the recent answer, so they can't use up scrape.do credits.
+  const recent = typeof hit?.at === 'number' && Date.now() - hit.at < UPDATE_COOLDOWN
+  if (hit && (!fresh || recent)) {
     console.log(JSON.stringify({ read: target.hostname, cached: true, ok: hit.ok, reason: hit.reason, trail: hit.trail }))
     return json(200, { ...hit, cached: true })
   }
@@ -166,7 +171,7 @@ async function parse(req: Request, env: Env, ctx: ExecutionContext) {
   if (!result.ok && !result.store) result.store = storeName(target.toString())
 
   const keep = result.ok ? DAY : result.reason === 'blocked' || result.reason === 'gone' ? 3600 : 0
-  const answer = { ...result, trail }
+  const answer = { ...result, trail, at: Date.now() }
   // One line per fresh read in Workers Logs: the store and how each step ended (no link path, no user, no secrets).
   const line = JSON.stringify({ read: target.hostname, ok: result.ok, reason: result.ok ? undefined : result.reason, trail, scrapedo: credits.left != null ? credits : undefined })
   // Running low on scrape.do's free credits shows up as a warning in Workers Logs.
