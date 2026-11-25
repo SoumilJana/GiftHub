@@ -551,16 +551,23 @@ Done when: someone can upgrade, renew and cancel on the live site; limits switch
 ### Phase 6 — Price Tracking (2 weeks)
 **Goal:** notice price drops and tell the people who might buy.
 
+**Updated 25 Nov 2026** to match how link reading was built in Phase 4. Already in the database since Phase 0: `items.original_price` and the `price_history` table (readable with the item, written by the server only).
+
 Scope
-- pg_cron job batches active, unclaimed items and re-parses the price (Edge Function; Playwright fallback via GitHub Actions).
-- Frequency: daily for priority ≥ 6, weekly for the rest; stops for received/archived items.
-- Write to `price_history`; show a **Sale** badge when the price is ≥ 5% below baseline.
-- Item detail: price-history sparkline, "was / now" display.
-- Web Push alerts to Circle members (optionally the owner) when a watched item drops.
+- **Checking prices:** a Cloudflare Cron Trigger on the site's Worker (free) runs the same reader as `/api/parse`: Cloudflare first, then the `parse-url` Edge Function, then scrape.do. Price checks skip the one-day cache so they see today's price, and they only update the price, never the name, photo or notes.
+- **Frequency:** daily for priority ≥ 6, weekly for the rest. Checks stop for received and archived wishes, wishes with no link, and links that came back "gone" (the wish shows "No longer sold at <store>").
+- **Privacy:** claimed wishes are checked on the same schedule as unclaimed ones. If checks stopped on a claim, the owner could tell from the badge or chart that someone reserved it, which breaks the core privacy rule.
+- **scrape.do budget:** the free plan is about 1,000 credits a month, shared with link reading. Pasted links always come first. Price checks may use at most about 300 credits a month (a setting in the Worker). Stores that need scrape.do (Myntra, Nykaa, Ajio, Meesho, Etsy) are checked weekly whatever their priority, and once the budget is used up their checks wait until next month. Etsy (residential proxies, about 10 credits) is left out of price checks.
+- **Spread the load:** checks run in small batches through the day, at most a few per store a minute, with an honest user agent. A store that starts refusing is paused for a day.
+- **Saving:** every check that finds a price writes a row to `price_history`, then updates `items.price`. The first price saved is the baseline. The original-price form field (a smaller leftover) is built here, and the check fills it from the store's MRP or "was" price when the page shows one.
+- **Sale badge:** shown when the price is at least 5% below the baseline, on My list, in Circles and on the wish.
+- **On the wish:** a price-history sparkline and a "was / now" price.
+- **Alerts:** Web Push (Phase 5) to Circle members who can see the wish, and to the owner if they turn it on, when a wish's price drops by 5% or more. At most one alert per wish a week, and none for a drop smaller than the last one. Free plans get 5 drop alerts a month and Pro every wish (Phase 5.5); until 5.5 is built, everyone gets every wish.
+- **Fallback:** if all three readers fail, the wish keeps its last price and the chart shows a gap. GitHub Actions + Playwright stays untested and is not part of this phase.
 
-Deliverables: sale badges, price chart, drop notifications.
+Deliverables: scheduled price checks, sale badges, price chart, original-price field, drop notifications.
 
-Done when: changing a test item's price on a mock store triggers a badge and a notification within one cycle.
+Done when: changing a test item's price on a mock store triggers a badge and a notification within one cycle; a claimed wish keeps being checked; price checks stay within their monthly scrape.do budget.
 
 ---
 
