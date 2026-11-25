@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
-import { storeLink } from '../lib/affiliate'
+import { isTaggedAmazon, storeLink } from '../lib/affiliate'
 import type { Claim } from '../lib/claims'
 import { useHeartPop, useListMotion } from '../lib/motion'
 import type { ViewMode } from '../lib/view'
@@ -362,5 +362,13 @@ export function ItemsSkeleton({ view }: { view: ViewMode }) {
 }
 
 export function ItemsView({ view, ...props }: ViewProps & { view: ViewMode }) {
-  return view === 'list' ? <ItemList {...props} /> : <ItemStrip {...props} />
+  // Wish titles open Amazon with GiftHub's Associates tag, so the disclosure sits right under the wishes
+  // (Amazon's rules and India's ASCI ask for it near the link), and only when an Amazon wish is shown.
+  const amazon = props.items.some((i) => isTaggedAmazon(i.url))
+  return (
+    <>
+      {view === 'list' ? <ItemList {...props} /> : <ItemStrip {...props} />}
+      {amazon && <p className="mt-6 text-center text-small text-plum-soft">GiftHub may earn a small commission on Amazon purchases, at no extra cost to you.</p>}
+    </>
+  )
 }

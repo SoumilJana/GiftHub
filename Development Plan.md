@@ -560,6 +560,8 @@ Done when: someone can upgrade, renew and cancel on the live site; limits switch
 ### Phase 6 — Price Tracking (2 weeks)
 **Goal:** notice price drops and tell the people who might buy.
 
+**⚠️ IMP: read `docs/IMP-price-tracking-options.md` first** — where to read prices from now that Amazon blocks Cloudflare, free alternatives, and how checks should pace themselves.
+
 **Updated 25 Nov 2026** to match how link reading was built in Phase 4. Already in the database since Phase 0: `items.original_price` and the `price_history` table (readable with the item, written by the server only).
 
 Scope

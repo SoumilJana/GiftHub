@@ -102,10 +102,6 @@ const groups: { id: string; title: string; items: QA[] }[] = [
     title: 'Wishes',
     items: [
       {
-        q: 'How do I add a wish?',
-        a: <p>Paste a link to the product on Your list and press Add, then check the details. You can also add a wish without a link, for things that aren’t sold online.</p>,
-      },
-      {
         q: 'Why is the price in the wrong currency?',
         a: <p>GiftHub guesses the currency from the store’s address, such as .in for rupees. You can change it on each wish, and change your usual currency on your profile.</p>,
       },
@@ -135,6 +131,16 @@ const groups: { id: string; title: string; items: QA[] }[] = [
       {
         q: 'Is GiftHub free?',
         a: <p>Yes. To stay free there are limits: 150 active wishes per person, 10 Circles per person and 20 people per Circle.</p>,
+      },
+      {
+        q: 'How does GiftHub make money?',
+        a: (
+          <p>
+            When someone buys a wish from Amazon through GiftHub, Amazon pays us a small commission. The price is the same for you, and Amazon never tells
+            us who bought what. There are no ads, and we never sell your data. Other stores’ links are left exactly as they are. See the{' '}
+            <Link to="/terms">Terms</Link> for details.
+          </p>
+        ),
       },
     ],
   },
