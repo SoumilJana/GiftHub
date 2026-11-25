@@ -124,8 +124,12 @@ async function parse(req: Request, env: Env, ctx: ExecutionContext) {
   if (env.PARSE_LIMIT && !(await env.PARSE_LIMIT.limit({ key: uid })).success) return json(429, { error: 'Too many links at once. Try again in a minute.' })
 
   let input: unknown
+  let fresh = false
   try {
-    input = ((await req.json()) as { url?: unknown }).url
+    const body = (await req.json()) as { url?: unknown; fresh?: unknown }
+    input = body.url
+    // "Update from the store" asks for today's page, not the cached answer (still rate-limited above).
+    fresh = body.fresh === true
   } catch {
     input = null
   }
@@ -133,7 +137,7 @@ async function parse(req: Request, env: Env, ctx: ExecutionContext) {
   if (!target) return json(400, { ok: false, reason: 'bad-link', url: String(input ?? ''), store: null })
 
   const key = cacheKey(cleanUrl(target.toString()))
-  const cached = await cache().match(key)
+  const cached = fresh ? undefined : await cache().match(key)
   if (cached) {
     const hit = (await cached.json()) as { ok?: boolean; reason?: string; trail?: string[] }
     console.log(JSON.stringify({ read: target.hostname, cached: true, ok: hit.ok, reason: hit.reason, trail: hit.trail }))

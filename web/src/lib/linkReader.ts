@@ -6,7 +6,8 @@ export type LinkRead =
   | { ok: false; reason: 'blocked' | 'unreadable' | 'bad-link' | 'gone' | 'busy' | 'offline'; store: string | null }
 
 /** Ask the server to read a store page. Never throws: failures come back as `ok: false`. */
-export async function readLink(url: string, signal?: AbortSignal): Promise<LinkRead> {
+/** `fresh`: skip the Worker's one-day cache (Update from the store). */
+export async function readLink(url: string, signal?: AbortSignal, fresh = false): Promise<LinkRead> {
   const { data } = await supabase.auth.getSession()
   const token = data.session?.access_token
   const store = (() => {
@@ -25,7 +26,7 @@ export async function readLink(url: string, signal?: AbortSignal): Promise<LinkR
         authorization: `Bearer ${token}`,
         apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
       },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify(fresh ? { url, fresh: true } : { url }),
       signal,
     })
     if (res.status === 429) return { ok: false, reason: 'busy', store }

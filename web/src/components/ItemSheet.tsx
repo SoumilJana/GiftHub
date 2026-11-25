@@ -105,7 +105,7 @@ export function EditItemSheet({
   const [imageLinkOpen, setImageLinkOpen] = useState(false)
   const [uploaded, setUploaded] = useState<string[]>([])
   const [errors, setErrors] = useState<{ title?: string; url?: string; price?: string; image?: string; form?: string }>({})
-  const [reading, setReading] = useState<{ state: 'idle' | 'reading' | 'done' | 'failed'; store?: string | null; reason?: string }>({ state: 'idle' })
+  const [reading, setReading] = useState<{ state: 'idle' | 'reading' | 'done' | 'failed'; store?: string | null; reason?: string; missing?: string[] }>({ state: 'idle' })
   // Fields you've typed in yourself are never overwritten by what the link says.
   const edited = useRef({ title: false, price: false, image: false })
   const lastRead = useRef<string | null>(null)
@@ -130,7 +130,7 @@ export function EditItemSheet({
     const c = new AbortController()
     reader.current = c
     setReading({ state: 'reading', store: storeOf(link) })
-    const promise = readLink(link, c.signal)
+    const promise = readLink(link, c.signal, all)
     pending.current = promise
     let r: LinkRead
     try {
@@ -154,7 +154,9 @@ export function EditItemSheet({
     if (d.image && (all || !edited.current.image)) setImageUrl((cur) => (!cur.trim() || (all && !isUploadedPhoto(cur)) ? d.image! : cur))
     setUrl((cur) => (normalizeUrl(cur) === link ? d.url : cur))
     lastRead.current = d.url
-    setReading({ state: 'done', store: d.store })
+    // Say what the page didn't have, so an empty field isn't mistaken for a failed update.
+    const missing = [d.price == null && 'a price', !d.image && 'a photo'].filter((x): x is string => !!x)
+    setReading({ state: 'done', store: d.store, missing })
   }
 
   // A new wish that arrives with a link (from the paste bar) is read straight away.
@@ -529,10 +531,13 @@ export function EditItemSheet({
 }
 
 /** The line under the Link field while and after the page is read. */
-function linkHint(r: { state: string; store?: string | null; reason?: string }, isNew: boolean) {
+function linkHint(r: { state: string; store?: string | null; reason?: string; missing?: string[] }, isNew: boolean) {
   const store = r.store ?? 'the store'
   if (r.state === 'reading') return isNew ? `Getting details from ${store}. You can save now.` : `Reading the page on ${store}…`
-  if (r.state === 'done') return `Filled in from ${store}. Check it looks right.`
+  if (r.state === 'done')
+    return r.missing?.length
+      ? `Filled in from ${store}, which doesn’t show ${r.missing.join(' or ')}. Add ${r.missing.length > 1 ? 'them' : 'it'} yourself if you like.`
+      : `Filled in from ${store}. Check it looks right.`
   if (r.state !== 'failed') return undefined
   if (r.reason === 'blocked') return `${store} doesn’t let us read its pages yet. Fill in the rest yourself.`
   if (r.reason === 'gone') return `That page is gone from ${store}. Check the link, or fill in the rest yourself.`
