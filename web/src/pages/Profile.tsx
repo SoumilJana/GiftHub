@@ -3,6 +3,7 @@ import { useId, useState, type FormEvent } from 'react'
 import { BugReportSheet } from '../components/BugReport'
 import { CurrencySelect } from '../components/CurrencySelect'
 import { InfoLinks } from '../components/InfoFrame'
+import { InstallPanel } from '../components/InstallApp'
 import { Page } from '../components/Page'
 import { Button, ConfirmButton, LoadError, Notice, Panel, Spinner, TextField } from '../components/ui'
 import { useAuth } from '../lib/auth'
@@ -60,6 +61,8 @@ function ProfileForm({ profile }: { profile: Profile }) {
             </Button>
           </form>
         </Panel>
+
+        <InstallPanel />
 
         <MotionPanel />
 

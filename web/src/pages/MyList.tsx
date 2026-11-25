@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { HandoffPrompts } from '../components/Handoff'
+import { InstallCard } from '../components/InstallApp'
 import { EditItemSheet } from '../components/ItemSheet'
 import { ItemsSkeleton, ItemsView, ListTools } from '../components/ItemViews'
 import { useDismissed, useStoredView } from '../lib/view'
@@ -53,6 +54,9 @@ export function MyListPage() {
           </Notice>
         </div>
       )}
+
+      {/* One note at a time: the install nudge waits until the privacy note is dismissed. */}
+      {all.length > 0 && privacySeen && <InstallCard />}
 
       {items.isPending ? (
         <ItemsSkeleton view={view} />

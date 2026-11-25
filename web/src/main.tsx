@@ -8,6 +8,7 @@ import { ToastProvider } from "./components/ToastProvider";
 // Self-hosted so visitors' IP addresses are not sent to Google Fonts.
 import "@fontsource-variable/bricolage-grotesque/opsz.css";
 import "./index.css";
+import { startInstallCapture } from "./lib/install";
 import { startMotion } from "./lib/motion";
 import { startAutoUpdate } from "./lib/pwa";
 import { router } from "./router";
@@ -20,6 +21,7 @@ const queryClient = new QueryClient({
 
 startMotion();
 startAutoUpdate();
+startInstallCapture();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -467,6 +467,8 @@ Done when: on a phone, a tester who has never seen GiftHub gets from an invite l
 ### Phase 5 — PWA Experience & Quick-Add (2 weeks)
 **Goal:** the web app feels like a native app and items can be added from anywhere.
 
+**Status (25 Nov 2026):** started. Already in place from Phase 0: the manifest and automatic updates (a new version loads on its own, so no "refresh" prompt is needed). Built: the install prompt (Chrome, Edge and Samsung Internet show an Install button; iPhone and iPad get the Share → Add to Home Screen steps; Safari on a Mac gets File → Add to Dock), as a one-time card on My list on phones and an "Install the app" panel on Profile. App icons redone so the home-screen icon is one solid blush tile, not a pink square on a white card. Next: offline reading, the Share menu, quick-add, push.
+
 Scope
 - **Install experience:** custom install prompt (Android/desktop), iOS "Add to Home Screen" guide.
 - **Offline:** cached wishlists and Circles readable offline; adds queued and synced when back online.
